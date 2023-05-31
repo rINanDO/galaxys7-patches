@@ -1,12 +1,12 @@
-# LineageOS 20/Android 13 patches for Exynos 8890 support
-Just copy them to coresponding folder and git apply them (or git am --signoff < path/to/file.patch)
+# LineageOS 20.0/Android 13 for Galaxy S7 (herolte) 
 
-Patches here are used to make device without bpf boot and work properly (As of now there is no 3.18 eBPF port)
+This is my personal build. All credits goes to Ivan Meler.
+I forked his repo from here: https://github.com/8890q/patches
+And the local_manifests here: https://github.com/ivanmeler/local_manifests
 
-8895 can use system_security patch due to some keystore issues
+This repository contains everything you need to build LineageOS 20.0 for the Galaxy S7 (herolte).  
+- Put this repository inside a folder you like in ~/android/system.
+- Run ./apply.sh to apply the S7 patches only.
+- Run ./roomservice.sh to configure the additional repositories for S7.
+- Run ./build.sh to configure and start a full clean build.
 
-Simplest way to apply patches is to clone this repo to ~/patches
-copy apply.sh script to root of your android source dir and run apply.sh
-
-you can use revert.sh script to build for 8895 devices after compiling 8890 builds which require 
-extra patches, this will only leave system/security patch applied
