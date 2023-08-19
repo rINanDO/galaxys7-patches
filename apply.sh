@@ -62,3 +62,11 @@ git checkout $LOSBRANCH
 git am --signoff < "$PATCHESDIR/system_core/0001-Add-no-BPF-usecase-support.patch"
 
 cd $PATCHESDIR
+
+echo
+echo "======= APPLY BATTERY LIFE EXTENDER PATCHES =========="
+cd "features/batterylifeextender/"
+. apply.sh
+
+cd $PATCHESDIR
+
