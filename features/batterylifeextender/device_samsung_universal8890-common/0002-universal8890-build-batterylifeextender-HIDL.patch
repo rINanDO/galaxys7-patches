@@ -1,4 +1,4 @@
-From 957c20563d25479eeb0cfc217eb6d41d10d8d923 Mon Sep 17 00:00:00 2001
+From 734fec5fc16a3626f18dd1f8e56b95f7929b65ee Mon Sep 17 00:00:00 2001
 From: Francescodario Cuzzocrea <bosconovic@gmail.com>
 Date: Sat, 31 Jul 2021 10:20:35 +0200
 Subject: [PATCH 2/2] universal8890: build batterylifeextender HIDL
