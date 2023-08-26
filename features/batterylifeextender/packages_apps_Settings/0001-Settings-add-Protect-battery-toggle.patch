@@ -1,9 +1,10 @@
-From 7565b3c31c6bc92bf74c3cf143897d2ccd9ccac2 Mon Sep 17 00:00:00 2001
+From f11aff0b4a566bfed613093fa82368c6c4b1c296 Mon Sep 17 00:00:00 2001
 From: Francescodario Cuzzocrea <bosconovic@gmail.com>
 Date: Sat, 31 Jul 2021 10:18:02 +0200
 Subject: [PATCH] Settings: add Protect battery toggle
 
 Change-Id: I877dfe127aff0bfb5ebb042830346070809374a2
+Signed-off-by: Dominggoes Isakh <drjisakh@gmail.com>
 ---
  Android.bp                                    |  1 +
  res/values/cm_strings.xml                     |  3 +
@@ -25,13 +26,13 @@ index 0307ccbf82..ec2e5e7f5d 100644
          "SystemUISharedLib",
      ],
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index 9cda169ed0..c34addaa81 100644
+index 165c7cd9aa..60660cb65c 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -189,4 +189,7 @@
- 
-     <!-- Location settings screen, setting summary for Assisted GPS switch -->
-     <string name="assisted_gps_summary">Download satellite assistance data from the internet which can greatly improve the GPS startup performance. For emergency calls, assisted GPS is always allowed.</string>
+@@ -227,4 +227,7 @@
+     <string name="e_version_pending_update_summary">/e/OS v<xliff:g id="version" example="6.0">%1$s</xliff:g> - update available</string>
+     <string name="e_version_in_progress_update_summary">/e/OS v<xliff:g id="version" example="6.0">%1$s</xliff:g> - update in progress</string>
+     <string name="e_version_reboot_pending_summary">/e/OS v<xliff:g id="version" example="6.0">%1$s</xliff:g> - installed reboot required</string>
 +    <!-- BatteryLifeExtender feature -->
 +    <string name="battery_life_extender_title">Protect battery</string>
 +    <string name="battery_life_extender_summary">To extend the lifespan of your battery, limit the maximum charge capacity level</string>
