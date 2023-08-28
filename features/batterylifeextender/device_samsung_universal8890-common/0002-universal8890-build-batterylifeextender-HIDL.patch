@@ -1,9 +1,10 @@
-From 734fec5fc16a3626f18dd1f8e56b95f7929b65ee Mon Sep 17 00:00:00 2001
+From 3291d8c2d88cdec348970e92026749270bf02580 Mon Sep 17 00:00:00 2001
 From: Francescodario Cuzzocrea <bosconovic@gmail.com>
 Date: Sat, 31 Jul 2021 10:20:35 +0200
 Subject: [PATCH 2/2] universal8890: build batterylifeextender HIDL
 
 Change-Id: Ia6b711ffc79e261c0fb89d834380fbf1a7bf0f19
+Signed-off-by: Dominggoes Isakh <drjisakh@gmail.com>
 ---
  device-common.mk | 4 ++++
  1 file changed, 4 insertions(+)
