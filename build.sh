@@ -8,6 +8,10 @@ repo init -u https://github.com/LineageOS/android.git -b lineage-20.0 --git-lfs
 cd .repo/manifests
 git checkout origin/lineage-20.0
 cd ../..
+
+repo forall -c git am --abort
+repo forall -c git reset --hard
+
 rm -rf android
 rm -rf .repo/projects/android.git
 
