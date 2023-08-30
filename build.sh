@@ -15,6 +15,9 @@ repo forall -c git reset --hard
 rm -rf android
 rm -rf .repo/projects/android.git
 
+rm -rf frameworks/base
+rm -rf .repo/projects/frameworks/base.git
+
 rm -rf frameworks/libs/net
 rm -rf .repo/projects/frameworks/libs/net.git
 
