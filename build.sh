@@ -30,6 +30,9 @@ rm -rf .repo/projects/packages/apps/Updater.git
 rm -rf packages/modules/DnsResolver
 rm -rf .repo/projects/packages/modules/DnsResolver.git
 
+rm -rf vendor/lineage
+rm -rf .repo/projects/vendor/lineage.git
+
 rm -rf art
 rm -rf android
 rm -rf bionic
