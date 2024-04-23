@@ -58,3 +58,5 @@ cd "$ANDROIDDIR/system/security"
 git checkout $LOSBRANCH
 git am --signoff < "$PATCHESDIR/system_security/0001-keystore-hackup.patch"
 
+cd $PATCHESDIR
+
