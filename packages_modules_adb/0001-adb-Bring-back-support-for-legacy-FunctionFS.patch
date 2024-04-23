@@ -1,4 +1,4 @@
-From 5a76eb4ab2360ddfd8ef37aa89f2db10e40064b7 Mon Sep 17 00:00:00 2001
+From d03f939bb6d5af82bc0758260a0bb1cd165ab4da Mon Sep 17 00:00:00 2001
 From: Arne Coucheron <arco68@gmail.com>
 Date: Thu, 7 Oct 2021 12:59:15 +0100
 Subject: [PATCH] adb: Bring back support for legacy FunctionFS
@@ -11,17 +11,17 @@ Change-Id: Ibaaf031c167d66e1f08957763b5353d71134b4e0
  daemon/usb_dummy.cpp  |  42 ++++++
  daemon/usb_legacy.cpp | 327 ++++++++++++++++++++++++++++++++++++++++++
  daemon/usb_legacy.h   |  68 +++++++++
- transport.cpp         |   2 +
+ transport.cpp         |   6 +-
  transport.h           |   8 +-
  transport_legacy.cpp  | 212 +++++++++++++++++++++++++++
- 8 files changed, 688 insertions(+), 6 deletions(-)
+ 8 files changed, 690 insertions(+), 8 deletions(-)
  create mode 100644 daemon/usb_dummy.cpp
  create mode 100644 daemon/usb_legacy.cpp
  create mode 100644 daemon/usb_legacy.h
  create mode 100644 transport_legacy.cpp
 
 diff --git a/Android.bp b/Android.bp
-index 0a808e9d..c22b5240 100644
+index 2b37c025..b3a9f387 100644
 --- a/Android.bp
 +++ b/Android.bp
 @@ -112,7 +112,7 @@ cc_defaults {
@@ -41,7 +41,7 @@ index 0a808e9d..c22b5240 100644
      "types.cpp",
  ]
  
-@@ -537,9 +538,15 @@ cc_library_static {
+@@ -549,9 +550,15 @@ cc_library_static {
                  "daemon/property_monitor.cpp",
                  "daemon/usb.cpp",
                  "daemon/usb_ffs.cpp",
@@ -58,7 +58,7 @@ index 0a808e9d..c22b5240 100644
              exclude_shared_libs: [
                  "libadb_pairing_auth",
 diff --git a/daemon/usb.cpp b/daemon/usb.cpp
-index 6c3f735e..8dc0d6bd 100644
+index f9e085fb..b94bdab0 100644
 --- a/daemon/usb.cpp
 +++ b/daemon/usb.cpp
 @@ -57,6 +57,9 @@
@@ -71,7 +71,7 @@ index 6c3f735e..8dc0d6bd 100644
  // Not all USB controllers support operations larger than 16k, so don't go above that.
  // Also, each submitted operation does an allocation in the kernel of that size, so we want to
  // minimize our queue depth while still maintaining a deep enough queue to keep the USB stack fed.
-@@ -602,10 +605,16 @@ struct UsbFfsConnection : public Connection {
+@@ -606,10 +609,16 @@ struct UsbFfsConnection : public Connection {
          block->pending = true;
          struct iocb* iocb = &block->control;
          if (io_submit(aio_context_.get(), 1, &iocb) != 1) {
@@ -88,7 +88,7 @@ index 6c3f735e..8dc0d6bd 100644
          return true;
      }
  
-@@ -726,6 +735,8 @@ struct UsbFfsConnection : public Connection {
+@@ -741,6 +750,8 @@ struct UsbFfsConnection : public Connection {
      static constexpr int kInterruptionSignal = SIGUSR1;
  };
  
@@ -97,7 +97,7 @@ index 6c3f735e..8dc0d6bd 100644
  static void usb_ffs_open_thread() {
      adb_thread_setname("usb ffs open");
  
-@@ -744,6 +755,11 @@ static void usb_ffs_open_thread() {
+@@ -759,6 +770,11 @@ static void usb_ffs_open_thread() {
      });
  
      while (true) {
@@ -109,7 +109,7 @@ index 6c3f735e..8dc0d6bd 100644
          unique_fd control;
          unique_fd bulk_out;
          unique_fd bulk_in;
-@@ -771,5 +787,13 @@ static void usb_ffs_open_thread() {
+@@ -786,5 +802,13 @@ static void usb_ffs_open_thread() {
  }
  
  void usb_init() {
@@ -580,24 +580,42 @@ index 00000000..2204246c
 +bool open_functionfs(android::base::unique_fd* control, android::base::unique_fd* bulk_out,
 +                     android::base::unique_fd* bulk_in);
 diff --git a/transport.cpp b/transport.cpp
-index 0dfad0e1..0f08117d 100644
+index 71756d36..d997838d 100644
 --- a/transport.cpp
 +++ b/transport.cpp
-@@ -1539,7 +1539,9 @@ void kick_all_tcp_devices() {
+@@ -1560,8 +1560,9 @@ void kick_all_tcp_devices() {
      }
      reconnect_handler.CheckForKicked();
  }
 +#endif
  
+-#if ADB_HOST
 +#if ADB_HOST || LEGACY_FFS
  void register_usb_transport(std::shared_ptr<Connection> connection, const char* serial,
                              const char* devpath, unsigned writeable) {
      atransport* t = new atransport(writeable ? kCsOffline : kCsNoPerm);
+@@ -1614,6 +1615,7 @@ void unregister_usb_transport(usb_handle* usb) {
+ }
+ #endif
+ 
++#if ADB_HOST
+ // Track reverse:forward commands, so that info can be used to develop
+ // an 'allow-list':
+ //   - adb reverse tcp:<device_port> localhost:<host_port> : responds with the
+@@ -1669,7 +1671,7 @@ bool atransport::IsReverseConfigured(const std::string& local_addr) {
+     }
+     return false;
+ }
+-
++#endif
+ #endif
+ 
+ bool check_header(apacket* p, atransport* t) {
 diff --git a/transport.h b/transport.h
-index 86186936..61797b5b 100644
+index 97391a88..022f0dad 100644
 --- a/transport.h
 +++ b/transport.h
-@@ -243,7 +243,7 @@ enum class ReconnectResult {
+@@ -260,7 +260,7 @@ enum class ReconnectResult {
      Abort,
  };
  
@@ -606,7 +624,7 @@ index 86186936..61797b5b 100644
  struct usb_handle;
  #endif
  
-@@ -293,7 +293,7 @@ class atransport : public enable_weak_from_this<atransport> {
+@@ -310,7 +310,7 @@ class atransport : public enable_weak_from_this<atransport> {
      bool HandleRead(std::unique_ptr<apacket> p);
      void HandleError(const std::string& error);
  
@@ -614,8 +632,8 @@ index 86186936..61797b5b 100644
 +#if ADB_HOST || LEGACY_FFS
      void SetUsbHandle(usb_handle* h) { usb_handle_ = h; }
      usb_handle* GetUsbHandle() { return usb_handle_; }
- #endif
-@@ -409,7 +409,7 @@ class atransport : public enable_weak_from_this<atransport> {
+ 
+@@ -434,7 +434,7 @@ class atransport : public enable_weak_from_this<atransport> {
      // The underlying connection object.
      std::shared_ptr<Connection> connection_ GUARDED_BY(mutex_);
  
@@ -624,7 +642,7 @@ index 86186936..61797b5b 100644
      // USB handle for the connection, if available.
      usb_handle* usb_handle_ = nullptr;
  #endif
-@@ -473,7 +473,7 @@ void kick_all_transports_by_auth_key(std::string_view auth_key);
+@@ -505,7 +505,7 @@ void kick_all_transports_by_auth_key(std::string_view auth_key);
  
  void register_transport(atransport* transport);
  
@@ -852,5 +870,5 @@ index 00000000..777edde0
 +#endif
 +}
 -- 
-2.34.1
+2.39.2
 
