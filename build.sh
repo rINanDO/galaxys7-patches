@@ -1,7 +1,7 @@
 #!/bin/bash
 CURRENTDIR="$PWD"
 REPODIR="$PWD/.."
-BRANCH="lineage-20.0" 
+BRANCH="lineage-21.0" 
 
 # Reset all existing repo's
 cd $REPODIR
@@ -28,7 +28,7 @@ rm -rf .repo/projects/vendor/samsung.git
 cd $REPODIR
 repo init -u https://github.com/LineageOS/android.git -b $BRANCH --git-lfs
 cd .repo/manifests
-git checkout origin/lineage-20.0
+git checkout origin/$BRANCH
 cd $REPODIR
 repo init -u https://github.com/LineageOS/android.git -b $BRANCH --git-lfs
 

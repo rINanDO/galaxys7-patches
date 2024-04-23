@@ -1,6 +1,6 @@
 #!/bin/bash
 CURRENTDIR="$PWD"
-BRANCH="lineage-20.0" 
+BRANCH="lineage-21.0" 
 
 # Reset all existing repo's
 cd ..
@@ -9,10 +9,10 @@ repo forall -c git reset --hard
 
 rm -rf .repo/local_manifests
 
-# (Re)initialize LineageOS 20.0 manifest
+# (Re)initialize LineageOS 21.0 manifest
 repo init -u https://github.com/LineageOS/android.git -b $BRANCH --git-lfs
 cd .repo/manifests
-git checkout origin/lineage-20.0
+git checkout origin/$BRANCH
 cd ../..
 repo init -u https://github.com/LineageOS/android.git -b $BRANCH --git-lfs
 

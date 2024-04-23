@@ -3,21 +3,26 @@
 PATCHESDIR="$PWD"
 ANDROIDDIR="$PWD/.."
 
-AOSPBRANCH="refs/tags/android-13.0.0_r75"
-LOSBRANCH="github/lineage-20.0"
+AOSPBRANCH="refs/tags/android-14.0.0_r31"
+LOSBRANCH="github/lineage-21.0"
 
+git am --signoff < ~/patches/build_make/0001-Ignore-linker-err.patch
 echo
-echo "======= frameworks/native =========="
-cd "$ANDROIDDIR/frameworks/native"
+echo "======= build/make =========="
+cd "$ANDROIDDIR/build/make"
 git checkout $LOSBRANCH
-git am --signoff < "$PATCHESDIR/frameworks_native/0001-Disable-gpu-service.patch"
+git am --signoff < "$PATCHESDIR/build_make/0001-Ignore-linker-err.patch"
 
 echo
-echo "======= frameworks/libs/net =========="
-cd "$ANDROIDDIR/frameworks/libs/net"
-git checkout $AOSPBRANCH
-git am --signoff < "$PATCHESDIR/frameworks_libs_net/0001-Support-no-BPF-usecase.patch"
-
+echo "======= frameworks/base =========="
+cd "$ANDROIDDIR/frameworks/base"
+git checkout $LOSBRANCH
+git am --signoff < "$PATCHESDIR/frameworks_base/0001-Revert-Revert-Treat-process-group-creation-failure-d.patch" 
+git am --signoff < "$PATCHESDIR/frameworks_base/0002-Ignore-cgroup-creation-errors.patch"
+git am --signoff < "$PATCHESDIR/frameworks_base/0003-Revert-CachedAppOptimizer-use-new-cgroup-api-for-fre.patch"
+git am --signoff < "$PATCHESDIR/frameworks_base/0004-Revert-CachedAppOptimizer-remove-native-freezer-enab.patch"
+git am --signoff < "$PATCHESDIR/frameworks_base/0005-Revert-CachedAppOptimizer-don-t-hardcode-freezer-pat.patch"
+git am --signoff < "$PATCHESDIR/frameworks_base/0006-CachedAppOptimizer-revert-freezer-to-cgroups-v1.patch"
 
 echo
 echo "======= packages/modules/adb =========="
@@ -26,71 +31,30 @@ git checkout $LOSBRANCH
 git am --signoff < "$PATCHESDIR/packages_modules_adb/0001-adb-Bring-back-support-for-legacy-FunctionFS.patch"
 
 echo
-echo "======= system/bpf =========="
-cd "$ANDROIDDIR/system/bpf"
-git checkout $AOSPBRANCH
-git am --signoff < "$PATCHESDIR/system_bpf/0001-Support-no-BPF-usecase.patch"
-
-echo
-echo "======= packages/modules/NetworkStack =========="
-cd "$ANDROIDDIR/packages/modules/NetworkStack"
-git checkout $AOSPBRANCH
-git am --signoff < "$PATCHESDIR/packages_modules_NetworkStack/0001-Revert-Enable-parsing-netlink-events-from-kernel-sin.patch"
-
-echo
 echo "======= packages/modules/Connectivity =========="
 cd "$ANDROIDDIR/packages/modules/Connectivity"
 git checkout $LOSBRANCH
-git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0001-Support-no-BPF-usecase.patch"
+git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0001-Allow-failing-to-load-bpf-programs-for-BPF-less-devi.patch"
+git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0002-Dont-delete-UID-from-BpfMap-on-BPF-less-kernel.patch"
+git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0006-Fix-null-pointer-crash-on-bpfless-devicess.patch"
 
 echo
-echo "======= system/netd =========="
-cd "$ANDROIDDIR/system/netd"
+echo "======= system/bpf =========="
+cd "$ANDROIDDIR/system/bpf"
 git checkout $AOSPBRANCH
-git am --signoff < "$PATCHESDIR/system_netd/0001-Add-no-BPF-usecase-support.patch"
-
-echo
-echo "======= system/security =========="
-cd "$ANDROIDDIR/system/security"
-git checkout $LOSBRANCH
-git am --signoff < "$PATCHESDIR/system_security/0001-keystore-hackup.patch" 
+git am --signoff < "$PATCHESDIR/system_bpf/0001-Support-no-bpf-usecase.patch"
 
 echo
 echo "======= system/core =========="
 cd "$ANDROIDDIR/system/core"
 git checkout $LOSBRANCH
-git am --signoff < "$PATCHESDIR/system_core/0001-Add-no-BPF-usecase-support.patch"
-
-cd $PATCHESDIR
-
-echo
-echo "======= APPLY BATTERY LIFE EXTENDER PATCHES =========="
-echo
-echo "======= packages/apps/Settings =========="
-cd "$ANDROIDDIR/packages/apps/Settings"
-git am --signoff < "$PATCHESDIR/features/batterylifeextender/packages_apps_Settings/0001-Settings-add-Protect-battery-toggle.patch"
+git am --signoff < "$PATCHESDIR/system_core/0001-Fix-support-for-devices-without-cgroupv2-support.patch"
+git am --signoff < "$PATCHESDIR/system_core/0002-reboot-must-be-fast-on-legacy-too.patch"
+git am --signoff < "$PATCHESDIR/system_core/0003-Revert-libprocessgroup-switch-freezer-to-cgroup-v2.patch"
 
 echo
-echo "======= hardware/lineage/interfaces =========="
-cd "$ANDROIDDIR/hardware/lineage/interfaces"
+echo "======= system/security =========="
+cd "$ANDROIDDIR/system/security"
 git checkout $LOSBRANCH
-git am --signoff < "$PATCHESDIR/features/batterylifeextender/hardware_lineage_interfaces/0001-lineage-interfaces-add-batterylifeextender-HAL.patch"
-
-echo
-echo "======= hardware/samsung =========="
-cd "$ANDROIDDIR/hardware/samsung"
-git am --signoff < "$PATCHESDIR/features/batterylifeextender/hardware_samsung/0001-hidl-add-batterylifeextender-implementation.patch"
-
-echo
-echo "======= device/lineage/sepolicy =========="
-cd "$ANDROIDDIR/device/lineage/sepolicy"
-git am --signoff < "$PATCHESDIR/features/batterylifeextender/device_lineage_sepolicy/0001-sepolicy-add-hal_lineage_batterylifeextender.patch"
-
-echo
-echo "======= device/samsung/universal8890-common =========="
-cd "$ANDROIDDIR/device/samsung/universal8890-common"
-git am --signoff < "$PATCHESDIR/features/batterylifeextender/device_samsung_universal8890-common/0001-universal8890-sepolicy-add-hal_lineage_batterylifeex.patch"
-git am --signoff < "$PATCHESDIR/features/batterylifeextender/device_samsung_universal8890-common/0002-universal8890-build-batterylifeextender-HIDL.patch"
-
-cd $PATCHESDIR
+git am --signoff < "$PATCHESDIR/system_security/0001-keystore-hackup.patch"
 
