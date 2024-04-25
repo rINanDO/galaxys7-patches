@@ -1,4 +1,4 @@
-From d03f939bb6d5af82bc0758260a0bb1cd165ab4da Mon Sep 17 00:00:00 2001
+From 78a1a4370052c428f0d086f2a218947e207424a8 Mon Sep 17 00:00:00 2001
 From: Arne Coucheron <arco68@gmail.com>
 Date: Thu, 7 Oct 2021 12:59:15 +0100
 Subject: [PATCH] adb: Bring back support for legacy FunctionFS
@@ -11,10 +11,10 @@ Change-Id: Ibaaf031c167d66e1f08957763b5353d71134b4e0
  daemon/usb_dummy.cpp  |  42 ++++++
  daemon/usb_legacy.cpp | 327 ++++++++++++++++++++++++++++++++++++++++++
  daemon/usb_legacy.h   |  68 +++++++++
- transport.cpp         |   6 +-
+ transport.cpp         |   5 +-
  transport.h           |   8 +-
  transport_legacy.cpp  | 212 +++++++++++++++++++++++++++
- 8 files changed, 690 insertions(+), 8 deletions(-)
+ 8 files changed, 688 insertions(+), 9 deletions(-)
  create mode 100644 daemon/usb_dummy.cpp
  create mode 100644 daemon/usb_legacy.cpp
  create mode 100644 daemon/usb_legacy.h
@@ -580,7 +580,7 @@ index 00000000..2204246c
 +bool open_functionfs(android::base::unique_fd* control, android::base::unique_fd* bulk_out,
 +                     android::base::unique_fd* bulk_in);
 diff --git a/transport.cpp b/transport.cpp
-index 71756d36..d997838d 100644
+index 71756d36..4d1d4c9d 100644
 --- a/transport.cpp
 +++ b/transport.cpp
 @@ -1560,8 +1560,9 @@ void kick_all_tcp_devices() {
@@ -594,23 +594,15 @@ index 71756d36..d997838d 100644
  void register_usb_transport(std::shared_ptr<Connection> connection, const char* serial,
                              const char* devpath, unsigned writeable) {
      atransport* t = new atransport(writeable ? kCsOffline : kCsNoPerm);
-@@ -1614,6 +1615,7 @@ void unregister_usb_transport(usb_handle* usb) {
- }
- #endif
- 
-+#if ADB_HOST
- // Track reverse:forward commands, so that info can be used to develop
- // an 'allow-list':
- //   - adb reverse tcp:<device_port> localhost:<host_port> : responds with the
-@@ -1669,7 +1671,7 @@ bool atransport::IsReverseConfigured(const std::string& local_addr) {
-     }
+@@ -1670,8 +1671,6 @@ bool atransport::IsReverseConfigured(const std::string& local_addr) {
      return false;
  }
--
-+#endif
- #endif
  
+-#endif
+-
  bool check_header(apacket* p, atransport* t) {
+     if (p->msg.magic != (p->msg.command ^ 0xffffffff)) {
+         VLOG(RWX) << "check_header(): invalid magic command = " << std::hex << p->msg.command
 diff --git a/transport.h b/transport.h
 index 97391a88..022f0dad 100644
 --- a/transport.h
@@ -653,7 +645,7 @@ index 97391a88..022f0dad 100644
  void register_usb_transport(std::shared_ptr<Connection> connection, const char* serial,
 diff --git a/transport_legacy.cpp b/transport_legacy.cpp
 new file mode 100644
-index 00000000..777edde0
+index 00000000..350d3df5
 --- /dev/null
 +++ b/transport_legacy.cpp
 @@ -0,0 +1,212 @@
@@ -857,7 +849,7 @@ index 00000000..777edde0
 +    t->SetUsbHandle(h);
 +}
 +
-+int is_adb_interface(int usb_class, int usb_subclass, int usb_protocol) {
++bool is_adb_interface(int usb_class, int usb_subclass, int usb_protocol) {
 +    return (usb_class == ADB_CLASS && usb_subclass == ADB_SUBCLASS && usb_protocol == ADB_PROTOCOL);
 +}
 +
