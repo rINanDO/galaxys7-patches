@@ -1,4 +1,4 @@
-From 78a1a4370052c428f0d086f2a218947e207424a8 Mon Sep 17 00:00:00 2001
+From cee4cd1ca13439d4a1598872b517a12607be1556 Mon Sep 17 00:00:00 2001
 From: Arne Coucheron <arco68@gmail.com>
 Date: Thu, 7 Oct 2021 12:59:15 +0100
 Subject: [PATCH] adb: Bring back support for legacy FunctionFS
@@ -12,9 +12,9 @@ Change-Id: Ibaaf031c167d66e1f08957763b5353d71134b4e0
  daemon/usb_legacy.cpp | 327 ++++++++++++++++++++++++++++++++++++++++++
  daemon/usb_legacy.h   |  68 +++++++++
  transport.cpp         |   5 +-
- transport.h           |   8 +-
+ transport.h           |  10 +-
  transport_legacy.cpp  | 212 +++++++++++++++++++++++++++
- 8 files changed, 688 insertions(+), 9 deletions(-)
+ 8 files changed, 689 insertions(+), 10 deletions(-)
  create mode 100644 daemon/usb_dummy.cpp
  create mode 100644 daemon/usb_legacy.cpp
  create mode 100644 daemon/usb_legacy.h
@@ -604,7 +604,7 @@ index 71756d36..4d1d4c9d 100644
      if (p->msg.magic != (p->msg.command ^ 0xffffffff)) {
          VLOG(RWX) << "check_header(): invalid magic command = " << std::hex << p->msg.command
 diff --git a/transport.h b/transport.h
-index 97391a88..022f0dad 100644
+index 97391a88..897efb9b 100644
 --- a/transport.h
 +++ b/transport.h
 @@ -260,7 +260,7 @@ enum class ReconnectResult {
@@ -634,6 +634,15 @@ index 97391a88..022f0dad 100644
      // USB handle for the connection, if available.
      usb_handle* usb_handle_ = nullptr;
  #endif
+@@ -446,7 +446,7 @@ class atransport : public enable_weak_from_this<atransport> {
+ 
+     bool delayed_ack_ = false;
+ 
+-#if ADB_HOST
++#if ADB_HOST || LEGACY_FFS
+     // Track remote addresses against local addresses (configured)
+     // through `adb reverse` commands.
+     // Access constrained to primary thread by virtue of check_main_thread().
 @@ -505,7 +505,7 @@ void kick_all_transports_by_auth_key(std::string_view auth_key);
  
  void register_transport(atransport* transport);
