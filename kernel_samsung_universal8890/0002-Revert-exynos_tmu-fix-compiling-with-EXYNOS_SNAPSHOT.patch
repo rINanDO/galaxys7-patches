@@ -1,0 +1,28 @@
+From 636f0664c9ffced6a4a7fe977d35d7c810dc2ee8 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sat, 25 May 2024 22:41:37 +0200
+Subject: [PATCH 2/4] Revert "exynos_tmu: fix compiling with
+ EXYNOS_SNAPSHOT_THERMAL turned off"
+
+This reverts commit aa1a1a87cd47d648645f4619ca8ccf4cf53a0642.
+---
+ drivers/thermal/samsung/exynos_tmu.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/thermal/samsung/exynos_tmu.c b/drivers/thermal/samsung/exynos_tmu.c
+index ce2dbb1ed02..7e12efd32cd 100644
+--- a/drivers/thermal/samsung/exynos_tmu.c
++++ b/drivers/thermal/samsung/exynos_tmu.c
+@@ -88,7 +88,9 @@ struct exynos_tmu_data {
+ 	struct list_head node;
+ 	int temp;
+ 	int vaild;
++#ifdef CONFIG_EXYNOS_SNAPSHOT_THERMAL
+ 	int cpu_num;
++#endif
+ };
+ 
+ /* list of multiple instance for each thermal sensor */
+-- 
+2.37.2
+

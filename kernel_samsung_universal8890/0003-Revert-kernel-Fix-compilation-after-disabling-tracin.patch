@@ -1,0 +1,83 @@
+From 1f2b4dd99d431e349914c825e374c721079871f4 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sat, 25 May 2024 22:43:33 +0200
+Subject: [PATCH 3/4] Revert "kernel: Fix compilation after disabling tracing"
+
+This reverts commit c3d4364dfdde18fa355bf379ca7f026dcee6514e.
+
+Change-Id: Ib3a3fb3b3ea8535d4763ba1c8d4859bee09c0b03
+---
+ arch/arm64/configs/exynos8890-gracelte_defconfig    | 2 +-
+ arch/arm64/configs/exynos8890-graceltekor_defconfig | 2 +-
+ arch/arm64/configs/exynos8890-hero2lte_defconfig    | 2 +-
+ arch/arm64/configs/exynos8890-herolte_defconfig     | 2 +-
+ drivers/thermal/thermal_core.c                      | 1 -
+ 5 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm64/configs/exynos8890-gracelte_defconfig b/arch/arm64/configs/exynos8890-gracelte_defconfig
+index 60fc35d3b8a..1fdd32d91e2 100644
+--- a/arch/arm64/configs/exynos8890-gracelte_defconfig
++++ b/arch/arm64/configs/exynos8890-gracelte_defconfig
+@@ -4423,7 +4423,7 @@ CONFIG_EXYNOS_SNAPSHOT_PSTORE=y
+ CONFIG_EXYNOS_SNAPSHOT_PANIC_REBOOT=y
+ CONFIG_EXYNOS_SNAPSHOT_WATCHDOG_RESET=y
+ # CONFIG_EXYNOS_SNAPSHOT_CRASH_KEY is not set
+-CONFIG_EXYNOS_SNAPSHOT_MINIMIZED_MODE=y
++# CONFIG_EXYNOS_SNAPSHOT_MINIMIZED_MODE is not set
+ # CONFIG_EXYNOS_SNAPSHOT_LOGGING_SMC_CALL is not set
+ CONFIG_EXYNOS_CORESIGHT=y
+ CONFIG_EXYNOS_CORESIGHT_PC_INFO=y
+diff --git a/arch/arm64/configs/exynos8890-graceltekor_defconfig b/arch/arm64/configs/exynos8890-graceltekor_defconfig
+index 21f684a15ce..68ac0807f4e 100644
+--- a/arch/arm64/configs/exynos8890-graceltekor_defconfig
++++ b/arch/arm64/configs/exynos8890-graceltekor_defconfig
+@@ -4423,7 +4423,7 @@ CONFIG_EXYNOS_SNAPSHOT_PSTORE=y
+ CONFIG_EXYNOS_SNAPSHOT_PANIC_REBOOT=y
+ CONFIG_EXYNOS_SNAPSHOT_WATCHDOG_RESET=y
+ # CONFIG_EXYNOS_SNAPSHOT_CRASH_KEY is not set
+-CONFIG_EXYNOS_SNAPSHOT_MINIMIZED_MODE=y
++# CONFIG_EXYNOS_SNAPSHOT_MINIMIZED_MODE is not set
+ # CONFIG_EXYNOS_SNAPSHOT_LOGGING_SMC_CALL is not set
+ CONFIG_EXYNOS_CORESIGHT=y
+ CONFIG_EXYNOS_CORESIGHT_PC_INFO=y
+diff --git a/arch/arm64/configs/exynos8890-hero2lte_defconfig b/arch/arm64/configs/exynos8890-hero2lte_defconfig
+index 5a7c585fbee..3a808e46b21 100644
+--- a/arch/arm64/configs/exynos8890-hero2lte_defconfig
++++ b/arch/arm64/configs/exynos8890-hero2lte_defconfig
+@@ -4427,7 +4427,7 @@ CONFIG_EXYNOS_SNAPSHOT_PSTORE=y
+ CONFIG_EXYNOS_SNAPSHOT_PANIC_REBOOT=y
+ CONFIG_EXYNOS_SNAPSHOT_WATCHDOG_RESET=y
+ # CONFIG_EXYNOS_SNAPSHOT_CRASH_KEY is not set
+-CONFIG_EXYNOS_SNAPSHOT_MINIMIZED_MODE=y
++# CONFIG_EXYNOS_SNAPSHOT_MINIMIZED_MODE is not set
+ # CONFIG_EXYNOS_SNAPSHOT_LOGGING_SMC_CALL is not set
+ CONFIG_EXYNOS_CORESIGHT=y
+ CONFIG_EXYNOS_CORESIGHT_PC_INFO=y
+diff --git a/arch/arm64/configs/exynos8890-herolte_defconfig b/arch/arm64/configs/exynos8890-herolte_defconfig
+index e7642a7e860..5a2df0b7564 100644
+--- a/arch/arm64/configs/exynos8890-herolte_defconfig
++++ b/arch/arm64/configs/exynos8890-herolte_defconfig
+@@ -4426,7 +4426,7 @@ CONFIG_EXYNOS_SNAPSHOT_PSTORE=y
+ CONFIG_EXYNOS_SNAPSHOT_PANIC_REBOOT=y
+ CONFIG_EXYNOS_SNAPSHOT_WATCHDOG_RESET=y
+ # CONFIG_EXYNOS_SNAPSHOT_CRASH_KEY is not set
+-CONFIG_EXYNOS_SNAPSHOT_MINIMIZED_MODE=y
++# CONFIG_EXYNOS_SNAPSHOT_MINIMIZED_MODE is not set
+ # CONFIG_EXYNOS_SNAPSHOT_LOGGING_SMC_CALL is not set
+ CONFIG_EXYNOS_CORESIGHT=y
+ CONFIG_EXYNOS_CORESIGHT_PC_INFO=y
+diff --git a/drivers/thermal/thermal_core.c b/drivers/thermal/thermal_core.c
+index e207bde7980..18f9e8064cf 100644
+--- a/drivers/thermal/thermal_core.c
++++ b/drivers/thermal/thermal_core.c
+@@ -39,7 +39,6 @@
+ #include <net/netlink.h>
+ #include <net/genetlink.h>
+ #include <linux/suspend.h>
+-#include <linux/cpu.h>
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/thermal.h>
+-- 
+2.37.2
+

@@ -1,0 +1,26 @@
+From 94e64f9d9b348538720c246daf1c66b40c655bc1 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sat, 25 May 2024 22:44:01 +0200
+Subject: [PATCH 4/4] Revert "kernel: Disable tracing"
+
+This reverts commit fa130f8d8b130a46273643887340caab5ed67b1e.
+---
+ kernel/trace/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/trace/Kconfig b/kernel/trace/Kconfig
+index 12aa0f1c636..37e1fb831d9 100644
+--- a/kernel/trace/Kconfig
++++ b/kernel/trace/Kconfig
+@@ -123,7 +123,7 @@ config TRACING_SUPPORT
+ 	# irqflags tracing for your architecture.
+ 	depends on TRACE_IRQFLAGS_SUPPORT || PPC32
+ 	depends on STACKTRACE_SUPPORT
+-	default n
++	default y
+ 
+ if TRACING_SUPPORT
+ 
+-- 
+2.37.2
+

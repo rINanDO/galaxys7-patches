@@ -1,0 +1,109 @@
+From aa6efd285775b36478e6fe21a947ea5f56a62b71 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sat, 25 May 2024 22:38:56 +0200
+Subject: [PATCH 1/4] Revert "drivers/samsung: always save last_kmsg"
+
+This reverts commit 174d91ab8fc8493f89abaff31efcfc02206351e8.
+---
+ drivers/staging/samsung/Kconfig  |  7 +++++++
+ drivers/staging/samsung/Makefile |  2 +-
+ drivers/trace/exynos-ss.c        | 10 +++++++++-
+ include/linux/sec_debug.h        |  4 ++++
+ 4 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/samsung/Kconfig b/drivers/staging/samsung/Kconfig
+index de612333328..9f255b5e9ff 100644
+--- a/drivers/staging/samsung/Kconfig
++++ b/drivers/staging/samsung/Kconfig
+@@ -77,6 +77,13 @@ config SEC_DEBUG_AUTO_SUMMARY
+ 	  This option enables kernel fault auto summary feature
+ 	  This option also requires bootloader change that enables auto summary extraction along with ramdump
+ 
++config SEC_DEBUG_LAST_KMSG
++	bool "Write last_kmsg at /proc/last_kmsg"
++	depends on SEC_DEBUG
++	default y
++	help
++	  This option enables /proc/last_kmsg support.
++
+ config SEC_DEBUG_FILE_LEAK
+ 	bool "Panic when file leak detected"
+ 	depends on !SAMSUNG_PRODUCT_SHIP
+diff --git a/drivers/staging/samsung/Makefile b/drivers/staging/samsung/Makefile
+index d92ebf9b11d..2d96a0a0ee0 100644
+--- a/drivers/staging/samsung/Makefile
++++ b/drivers/staging/samsung/Makefile
+@@ -27,7 +27,7 @@ obj-$(CONFIG_SEC_DEBUG_RESET_REASON)	+= sec_debug_reset_reason.o
+ obj-$(CONFIG_SEC_DEBUG_EXTRA_INFO)	+= sec_debug_extra_info.o
+ obj-$(CONFIG_SEC_DEBUG_HW_PARAM)	+= sec_debug_hw_param.o
+ obj-$(CONFIG_SEC_DEBUG_AUTO_SUMMARY)	+= sec_debug_auto_summary.o
+-obj-y					+= sec_debug_last_kmsg.o
++obj-$(CONFIG_SEC_DEBUG_LAST_KMSG)	+= sec_debug_last_kmsg.o
+ obj-$(CONFIG_SEC_UPLOAD)	+= sec_upload.o
+ 
+ # Samsung TN BSP Options
+diff --git a/drivers/trace/exynos-ss.c b/drivers/trace/exynos-ss.c
+index 8bbe56de4e9..a0ac83c5f8b 100644
+--- a/drivers/trace/exynos-ss.c
++++ b/drivers/trace/exynos-ss.c
+@@ -1407,7 +1407,10 @@ static inline void exynos_ss_hook_logbuf(const char buf)
+ #ifdef CONFIG_SEC_PM_DEBUG
+ 			sec_log_full = true;
+ #endif
++
++#ifdef CONFIG_SEC_DEBUG_LAST_KMSG
+ 			*((unsigned long long *)(item->head_ptr + item->entry.size - (size_t)0x08)) = SEC_LKMSG_MAGICKEY;
++#endif
+ 		}
+ 
+ 		item->curr_ptr[0] = buf;
+@@ -1432,7 +1435,10 @@ static inline void exynos_ss_hook_logbuf(const char *buf, size_t size)
+ #ifdef CONFIG_SEC_PM_DEBUG
+ 			sec_log_full = true;
+ #endif
++
++#ifdef CONFIG_SEC_DEBUG_LAST_KMSG
+ 			*((unsigned long long *)(item->head_ptr + item->entry.size - (size_t)0x08)) = SEC_LKMSG_MAGICKEY;
++#endif
+ 		}
+ 
+ 		memcpy(item->curr_ptr, buf, size);
+@@ -2297,9 +2303,11 @@ static int __init exynos_ss_fixmap(void)
+ 	/* output the information of exynos-snapshot */
+ 	exynos_ss_output();
+ 
++#ifdef CONFIG_SEC_DEBUG
+ 	sec_debug_save_last_kmsg(ess_items[ess_desc.log_kernel_num].head_ptr,
+ 			ess_items[ess_desc.log_kernel_num].curr_ptr,
+ 			ess_items[ess_desc.log_kernel_num].entry.size);
++#endif
+ 
+ 	return 0;
+ }
+@@ -4115,4 +4123,4 @@ void exynos_ss_get_softlockup_info(unsigned int cpu, void *info)
+ 	else
+ 		sl_info->sl_type = SL_UNKNOWN_STUCK;
+ }
+-#endif
++#endif
+\ No newline at end of file
+diff --git a/include/linux/sec_debug.h b/include/linux/sec_debug.h
+index 395e4510a32..69da3aee2fc 100644
+--- a/include/linux/sec_debug.h
++++ b/include/linux/sec_debug.h
+@@ -296,8 +296,12 @@ extern void register_set_auto_comm_buf(void (*func)(int type, const char *buf, s
+ extern void register_set_auto_comm_lastfreq(void (*func)(int type, int old_freq, int new_freq, u64 time));
+ #endif
+ 
++#ifdef CONFIG_SEC_DEBUG_LAST_KMSG
+ #define SEC_LKMSG_MAGICKEY 0x0000000a6c6c7546
+ extern void sec_debug_save_last_kmsg(unsigned char *head_ptr, unsigned char *curr_ptr, size_t buf_size);
++#else
++#define sec_debug_save_last_kmsg(a, b, c)		do { } while (0)
++#endif /* CONFIG_SEC_DEBUG_LAST_KMSG */
+ 
+ /*
+  * Samsung TN Logging Options
+-- 
+2.37.2
+
