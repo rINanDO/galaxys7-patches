@@ -1,4 +1,4 @@
-From cee4cd1ca13439d4a1598872b517a12607be1556 Mon Sep 17 00:00:00 2001
+From 7ed2599f1d1b3a1c99c7266ea2211fca2869aa82 Mon Sep 17 00:00:00 2001
 From: Arne Coucheron <arco68@gmail.com>
 Date: Thu, 7 Oct 2021 12:59:15 +0100
 Subject: [PATCH] adb: Bring back support for legacy FunctionFS
@@ -11,10 +11,10 @@ Change-Id: Ibaaf031c167d66e1f08957763b5353d71134b4e0
  daemon/usb_dummy.cpp  |  42 ++++++
  daemon/usb_legacy.cpp | 327 ++++++++++++++++++++++++++++++++++++++++++
  daemon/usb_legacy.h   |  68 +++++++++
- transport.cpp         |   5 +-
- transport.h           |  10 +-
+ transport.cpp         |   4 +-
+ transport.h           |   8 +-
  transport_legacy.cpp  | 212 +++++++++++++++++++++++++++
- 8 files changed, 689 insertions(+), 10 deletions(-)
+ 8 files changed, 689 insertions(+), 7 deletions(-)
  create mode 100644 daemon/usb_dummy.cpp
  create mode 100644 daemon/usb_legacy.cpp
  create mode 100644 daemon/usb_legacy.h
@@ -580,7 +580,7 @@ index 00000000..2204246c
 +bool open_functionfs(android::base::unique_fd* control, android::base::unique_fd* bulk_out,
 +                     android::base::unique_fd* bulk_in);
 diff --git a/transport.cpp b/transport.cpp
-index 71756d36..4d1d4c9d 100644
+index 71756d36..9aa04d8f 100644
 --- a/transport.cpp
 +++ b/transport.cpp
 @@ -1560,8 +1560,9 @@ void kick_all_tcp_devices() {
@@ -594,17 +594,16 @@ index 71756d36..4d1d4c9d 100644
  void register_usb_transport(std::shared_ptr<Connection> connection, const char* serial,
                              const char* devpath, unsigned writeable) {
      atransport* t = new atransport(writeable ? kCsOffline : kCsNoPerm);
-@@ -1670,8 +1671,6 @@ bool atransport::IsReverseConfigured(const std::string& local_addr) {
-     return false;
+@@ -1614,6 +1615,7 @@ void unregister_usb_transport(usb_handle* usb) {
  }
+ #endif
  
--#endif
--
- bool check_header(apacket* p, atransport* t) {
-     if (p->msg.magic != (p->msg.command ^ 0xffffffff)) {
-         VLOG(RWX) << "check_header(): invalid magic command = " << std::hex << p->msg.command
++#if ADB_HOST
+ // Track reverse:forward commands, so that info can be used to develop
+ // an 'allow-list':
+ //   - adb reverse tcp:<device_port> localhost:<host_port> : responds with the
 diff --git a/transport.h b/transport.h
-index 97391a88..897efb9b 100644
+index 97391a88..022f0dad 100644
 --- a/transport.h
 +++ b/transport.h
 @@ -260,7 +260,7 @@ enum class ReconnectResult {
@@ -634,15 +633,6 @@ index 97391a88..897efb9b 100644
      // USB handle for the connection, if available.
      usb_handle* usb_handle_ = nullptr;
  #endif
-@@ -446,7 +446,7 @@ class atransport : public enable_weak_from_this<atransport> {
- 
-     bool delayed_ack_ = false;
- 
--#if ADB_HOST
-+#if ADB_HOST || LEGACY_FFS
-     // Track remote addresses against local addresses (configured)
-     // through `adb reverse` commands.
-     // Access constrained to primary thread by virtue of check_main_thread().
 @@ -505,7 +505,7 @@ void kick_all_transports_by_auth_key(std::string_view auth_key);
  
  void register_transport(atransport* transport);
@@ -871,5 +861,5 @@ index 00000000..350d3df5
 +#endif
 +}
 -- 
-2.39.2
+2.37.2
 
