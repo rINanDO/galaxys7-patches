@@ -45,14 +45,9 @@ cd "$ANDROIDDIR/packages/modules/Connectivity"
 git checkout $LOSBRANCH
 git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0001-Allow-failing-to-load-bpf-programs-for-BPF-less-devi.patch"
 git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0002-Dont-delete-UID-from-BpfMap-on-BPF-less-kernel.patch"
-git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0006-Fix-null-pointer-crash-on-bpfless-devicess.patch"
-
-git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0001-Allow-failing-to-load-bpf-programs-for-BPF-less-devi.patch"
-git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0002-Dont-delete-UID-from-BpfMap-on-BPF-less-kernel.patch"
 git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0003-Fix-null-pointer-crash-on-bpfless-devicess.patch"
 git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0004-Revert-remove-out-of-process-flag.patch"
 git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0005-Revert-Use-new-soong-support-to-install-privapp-xml.patch"
-git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0006-Fix-null-pointer-crash-on-bpfless-devicess.patch"
 git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0006-Revert-remove-inprocess-tethering.patch"
 git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0007-UL-mdns-disable-SocketNetlinkMonitor.patch"
 git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0008-Make-the-use-of-IBpfMaps-optional.patch"
@@ -69,7 +64,7 @@ git am --signoff < "$PATCHESDIR/packages_modules_Connectivity/0017-UL-libnetwork
 echo
 echo "======= system/bpf =========="
 cd "$ANDROIDDIR/system/bpf"
-git checkout $AOSPBRANCH
+git checkout $LOSBRANCH
 git am --signoff < "$PATCHESDIR/system_bpf/0001-Support-no-bpf-usecase.patch"
 
 echo
