@@ -1,4 +1,4 @@
-From 6eb2ddc3b274f7f7a05e6a4eba68be4b10c1bbf4 Mon Sep 17 00:00:00 2001
+From 6d3a32bd86662a9a41953eef663d4cca0bffa51e Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Tue, 2 Apr 2024 23:57:39 +0300
 Subject: [PATCH 7/8] Revert "[BR13] dump Device Configs to dumpsys"
@@ -9,7 +9,7 @@ This reverts commit 3a666f3bc7df47de78b05906a206fb4b2ac9d078.
  1 file changed, 16 deletions(-)
 
 diff --git a/src/com/android/server/NetworkStackService.java b/src/com/android/server/NetworkStackService.java
-index 40aee283..347200b6 100644
+index 40aee2835..347200b62 100644
 --- a/src/com/android/server/NetworkStackService.java
 +++ b/src/com/android/server/NetworkStackService.java
 @@ -22,8 +22,6 @@ import static android.net.dhcp.IDhcpServer.STATUS_UNKNOWN_ERROR;
@@ -43,5 +43,5 @@ index 40aee283..347200b6 100644
              mLog.dump(fd, pw, args);
  
 -- 
-2.25.1
+2.37.2
 

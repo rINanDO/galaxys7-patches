@@ -1,4 +1,4 @@
-From 3434dccc4046611c067f9b7ac90c55a63fa1fc2b Mon Sep 17 00:00:00 2001
+From 399ea4b4dfb051d73e75a4a17b121952872e9a5e Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Tue, 28 Dec 2021 22:19:28 +0300
 Subject: [PATCH 2/3] Revert "libprocessgroup: switch freezer to cgroup v2"
@@ -138,5 +138,5 @@ index eb67c8cd0..b2f4f6ddc 100644
      chown system system /proc/pressure/memory
      chmod 0664 /proc/pressure/memory
 -- 
-2.25.1
+2.37.2
 

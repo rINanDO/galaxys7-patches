@@ -1,4 +1,4 @@
-From 56d6c3186f7bfcf46dbf50c640d1d0e42aa081b0 Mon Sep 17 00:00:00 2001
+From 2000aa072539b451b22444edacacc4e15ebebb1b Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 26 Oct 2022 17:59:11 -0400
 Subject: [PATCH 3/3] Fix support for devices without cgroupv2 support
@@ -32,5 +32,5 @@ index e7d710baf..010c9cd27 100644
  
          // When the blkio controller is mounted in the v1 hierarchy, NormalIoPriority is
 -- 
-2.25.1
+2.37.2
 

@@ -1,18 +1,78 @@
-From 860557e1c5fc18b29bc6974be11ef6d83ecd540a Mon Sep 17 00:00:00 2001
+From b958a8709a1913db803bfee3bf06f2f251b40d12 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Fri, 6 Oct 2023 09:27:33 -0400
 Subject: [PATCH 03/12] Make the use of IBpfMaps optional
 
 ---
- .../server/net/NetworkStatsService.java       | 28 +++++++++++--------
- .../src/com/android/server/BpfNetMaps.java    |  6 +++-
- 2 files changed, 21 insertions(+), 13 deletions(-)
+ .../server/net/NetworkStatsService.java       | 557 +++++++-----------
+ .../src/com/android/server/BpfNetMaps.java    |   6 +-
+ 2 files changed, 220 insertions(+), 343 deletions(-)
 
 diff --git a/service-t/src/com/android/server/net/NetworkStatsService.java b/service-t/src/com/android/server/net/NetworkStatsService.java
-index 40c214ed96..5471624368 100644
+index 64ef55a603..2df5077f5a 100644
 --- a/service-t/src/com/android/server/net/NetworkStatsService.java
 +++ b/service-t/src/com/android/server/net/NetworkStatsService.java
-@@ -427,12 +427,12 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+@@ -46,7 +46,6 @@ import static android.net.NetworkStats.TAG_NONE;
+ import static android.net.NetworkStats.UID_ALL;
+ import static android.net.NetworkStatsHistory.FIELD_ALL;
+ import static android.net.NetworkTemplate.MATCH_MOBILE;
+-import static android.net.NetworkTemplate.MATCH_TEST;
+ import static android.net.NetworkTemplate.MATCH_WIFI;
+ import static android.net.TrafficStats.KB_IN_BYTES;
+ import static android.net.TrafficStats.MB_IN_BYTES;
+@@ -63,20 +62,8 @@ import static android.text.format.DateUtils.HOUR_IN_MILLIS;
+ import static android.text.format.DateUtils.MINUTE_IN_MILLIS;
+ import static android.text.format.DateUtils.SECOND_IN_MILLIS;
+ 
+-import static com.android.internal.annotations.VisibleForTesting.Visibility.PRIVATE;
+ import static com.android.net.module.util.NetworkCapabilitiesUtils.getDisplayTransport;
+ import static com.android.net.module.util.NetworkStatsUtils.LIMIT_GLOBAL_ALERT;
+-import static com.android.server.net.NetworkStatsEventLogger.POLL_REASON_PERIODIC;
+-import static com.android.server.net.NetworkStatsEventLogger.POLL_REASON_DUMPSYS;
+-import static com.android.server.net.NetworkStatsEventLogger.POLL_REASON_FORCE_UPDATE;
+-import static com.android.server.net.NetworkStatsEventLogger.POLL_REASON_GLOBAL_ALERT;
+-import static com.android.server.net.NetworkStatsEventLogger.POLL_REASON_NETWORK_STATUS_CHANGED;
+-import static com.android.server.net.NetworkStatsEventLogger.POLL_REASON_OPEN_SESSION;
+-import static com.android.server.net.NetworkStatsEventLogger.POLL_REASON_RAT_CHANGED;
+-import static com.android.server.net.NetworkStatsEventLogger.POLL_REASON_REG_CALLBACK;
+-import static com.android.server.net.NetworkStatsEventLogger.POLL_REASON_REMOVE_UIDS;
+-import static com.android.server.net.NetworkStatsEventLogger.POLL_REASON_UPSTREAM_CHANGED;
+-import static com.android.server.net.NetworkStatsEventLogger.PollEvent;
+ 
+ import android.annotation.NonNull;
+ import android.annotation.Nullable;
+@@ -95,6 +82,7 @@ import android.content.pm.ApplicationInfo;
+ import android.content.pm.PackageManager;
+ import android.content.res.Resources;
+ import android.database.ContentObserver;
++import android.net.ConnectivityManager;
+ import android.net.DataUsageRequest;
+ import android.net.INetd;
+ import android.net.INetworkStatsService;
+@@ -291,13 +279,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+     static final String NETSTATS_IMPORT_ATTEMPTS_COUNTER_NAME = "import.attempts";
+     static final String NETSTATS_IMPORT_SUCCESSES_COUNTER_NAME = "import.successes";
+     static final String NETSTATS_IMPORT_FALLBACKS_COUNTER_NAME = "import.fallbacks";
+-    static final String CONFIG_ENABLE_NETWORK_STATS_EVENT_LOGGER =
+-            "enable_network_stats_event_logger";
+-
+-    static final String NETSTATS_FASTDATAINPUT_TARGET_ATTEMPTS =
+-            "netstats_fastdatainput_target_attempts";
+-    static final String NETSTATS_FASTDATAINPUT_SUCCESSES_COUNTER_NAME = "fastdatainput.successes";
+-    static final String NETSTATS_FASTDATAINPUT_FALLBACKS_COUNTER_NAME = "fastdatainput.fallbacks";
+ 
+     private final Context mContext;
+     private final NetworkStatsFactory mStatsFactory;
+@@ -322,8 +303,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+     private PersistentInt mImportLegacyAttemptsCounter = null;
+     private PersistentInt mImportLegacySuccessesCounter = null;
+     private PersistentInt mImportLegacyFallbacksCounter = null;
+-    private PersistentInt mFastDataInputSuccessesCounter = null;
+-    private PersistentInt mFastDataInputFallbacksCounter = null;
+ 
+     @VisibleForTesting
+     public static final String ACTION_NETWORK_STATS_POLL =
+@@ -433,12 +412,12 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
       * mActiveUidCounterSet to avoid accessing kernel too frequently.
       */
      private SparseIntArray mActiveUidCounterSet = new SparseIntArray();
@@ -31,16 +91,89 @@ index 40c214ed96..5471624368 100644
  
      /** Data layer operation counters for splicing into other structures. */
      private NetworkStats mUidOperations = new NetworkStats(0L, 10);
-@@ -621,12 +621,16 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+@@ -460,7 +439,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+      * Map from key {@code OpenSessionKey} to count of opened sessions. This is for recording
+      * the caller of open session and it is only for debugging.
+      */
+-    // TODO: Move to NetworkStatsEventLogger to centralize event logging.
+     @GuardedBy("mOpenSessionCallsLock")
+     private final HashMap<OpenSessionKey, Integer> mOpenSessionCallsPerCaller = new HashMap<>();
+ 
+@@ -476,13 +454,11 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+     private final LocationPermissionChecker mLocationPermissionChecker;
+ 
+     @NonNull
+-    private final BpfInterfaceMapHelper mInterfaceMapHelper;
++    private final BpfInterfaceMapUpdater mInterfaceMapUpdater;
+ 
+     @Nullable
+     private final SkDestroyListener mSkDestroyListener;
+ 
+-    private static final int MAX_SOCKET_DESTROY_LISTENER_LOGS = 20;
+-
+     private static @NonNull Clock getDefaultClock() {
+         return new BestClock(ZoneOffset.UTC, SystemClock.currentNetworkTimeClock(),
+                 Clock.systemUTC());
+@@ -494,10 +470,9 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+      */
+     private static class OpenSessionKey {
+         public final int uid;
+-        @Nullable
+         public final String packageName;
+ 
+-        OpenSessionKey(int uid, @Nullable String packageName) {
++        OpenSessionKey(int uid, @NonNull String packageName) {
+             this.uid = uid;
+             this.packageName = packageName;
+         }
+@@ -536,21 +511,19 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         public void handleMessage(Message msg) {
+             switch (msg.what) {
+                 case MSG_PERFORM_POLL: {
+-                    performPoll(FLAG_PERSIST_ALL, maybeCreatePollEvent((int) msg.obj));
++                    performPoll(FLAG_PERSIST_ALL);
+                     break;
+                 }
+                 case MSG_NOTIFY_NETWORK_STATUS: {
+-                    synchronized (mStatsLock) {
+-                        // If no cached states, ignore.
+-                        if (mLastNetworkStateSnapshots == null) break;
+-                        handleNotifyNetworkStatus(mDefaultNetworks, mLastNetworkStateSnapshots,
+-                                mActiveIface, maybeCreatePollEvent((int) msg.obj));
+-                    }
++                    // If no cached states, ignore.
++                    if (mLastNetworkStateSnapshots == null) break;
++                    // TODO (b/181642673): Protect mDefaultNetworks from concurrent accessing.
++                    handleNotifyNetworkStatus(
++                            mDefaultNetworks, mLastNetworkStateSnapshots, mActiveIface);
+                     break;
+                 }
+                 case MSG_PERFORM_POLL_REGISTER_ALERT: {
+-                    performPoll(FLAG_PERSIST_NETWORK,
+-                            maybeCreatePollEvent(POLL_REASON_GLOBAL_ALERT));
++                    performPoll(FLAG_PERSIST_NETWORK);
+                     registerGlobalAlert();
+                     break;
+                 }
+@@ -628,19 +601,17 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         mContentObserver = mDeps.makeContentObserver(mHandler, mSettings,
+                 mNetworkStatsSubscriptionsMonitor);
          mLocationPermissionChecker = mDeps.makeLocationPermissionChecker(mContext);
-         mInterfaceMapUpdater = mDeps.makeBpfInterfaceMapUpdater(mContext, mHandler);
-         mInterfaceMapUpdater.start();
+-        mInterfaceMapHelper = mDeps.makeBpfInterfaceMapHelper();
 -        mUidCounterSetMap = mDeps.getUidCounterSetMap();
 -        mCookieTagMap = mDeps.getCookieTagMap();
 -        mStatsMapA = mDeps.getStatsMapA();
 -        mStatsMapB = mDeps.getStatsMapB();
 -        mAppUidStatsMap = mDeps.getAppUidStatsMap();
 -        mIfaceStatsMap = mDeps.getIfaceStatsMap();
+-        // To prevent any possible races, the flag is not allowed to change until rebooting.
+-        mSupportEventLogger = mDeps.supportEventLogger(mContext);
+-        if (mSupportEventLogger) {
+-            mEventLogger = new NetworkStatsEventLogger();
+-        } else {
+-            mEventLogger = null;
++        mInterfaceMapUpdater = mDeps.makeBpfInterfaceMapUpdater(mContext, mHandler);
++        mInterfaceMapUpdater.start();
 +        try {
 +            mUidCounterSetMap = mDeps.getUidCounterSetMap();
 +            mCookieTagMap = mDeps.getCookieTagMap();
@@ -50,18 +183,922 @@ index 40c214ed96..5471624368 100644
 +            mIfaceStatsMap = mDeps.getIfaceStatsMap();
 +        } catch(Throwable t) {
 +            android.util.Log.e("PHH", "Failed creating bpf maps", t);
+         }
+ 
+         // TODO: Remove bpfNetMaps creation and always start SkDestroyListener
+@@ -648,8 +619,12 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         // on the experiment flag, BpfNetMaps starts C SkDestroyListener (existing code) or
+         // NetworkStatsService starts Java SkDestroyListener (new code).
+         final BpfNetMaps bpfNetMaps = mDeps.makeBpfNetMaps(mContext);
+-        mSkDestroyListener = mDeps.makeSkDestroyListener(mCookieTagMap, mHandler);
+-        mHandler.post(mSkDestroyListener::start);
++        if (bpfNetMaps.isSkDestroyListenerRunning()) {
++            mSkDestroyListener = null;
++        } else {
++            mSkDestroyListener = mDeps.makeSkDestroyListener(mCookieTagMap, mHandler);
++            mHandler.post(mSkDestroyListener::start);
 +        }
-         // To prevent any possible races, the flag is not allowed to change until rebooting.
-         mSupportEventLogger = mDeps.supportEventLogger(mContext);
-         if (mSupportEventLogger) {
+     }
+ 
+     /**
+@@ -702,24 +677,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+                     DEFAULT_NETSTATS_IMPORT_LEGACY_TARGET_ATTEMPTS);
+         }
+ 
+-        /**
+-         * Get the count of using FastDataInput target attempts.
+-         */
+-        public int getUseFastDataInputTargetAttempts() {
+-            return DeviceConfigUtils.getDeviceConfigPropertyInt(
+-                    DeviceConfig.NAMESPACE_TETHERING,
+-                    NETSTATS_FASTDATAINPUT_TARGET_ATTEMPTS, 0);
+-        }
+-
+-        /**
+-         * Compare two {@link NetworkStatsCollection} instances and returning a human-readable
+-         * string description of difference for debugging purpose.
+-         */
+-        public String compareStats(@NonNull NetworkStatsCollection a,
+-                                   @NonNull NetworkStatsCollection b, boolean allowKeyChange) {
+-            return NetworkStatsCollection.compareStats(a, b, allowKeyChange);
+-        }
+-
+         /**
+          * Create a persistent counter for given directory and name.
+          */
+@@ -797,16 +754,18 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             return new LocationPermissionChecker(context);
+         }
+ 
+-        /** Create BpfInterfaceMapHelper to update bpf interface map. */
++        /** Create BpfInterfaceMapUpdater to update bpf interface map. */
+         @NonNull
+-        public BpfInterfaceMapHelper makeBpfInterfaceMapHelper() {
+-            return new BpfInterfaceMapHelper();
++        public BpfInterfaceMapUpdater makeBpfInterfaceMapUpdater(
++                @NonNull Context ctx, @NonNull Handler handler) {
++            return new BpfInterfaceMapUpdater(ctx, handler);
+         }
+ 
+         /** Get counter sets map for each UID. */
+         public IBpfMap<S32, U8> getUidCounterSetMap() {
+             try {
+-                return new BpfMap<>(UID_COUNTERSET_MAP_PATH, S32.class, U8.class);
++                return new BpfMap<S32, U8>(UID_COUNTERSET_MAP_PATH, BpfMap.BPF_F_RDWR,
++                        S32.class, U8.class);
+             } catch (ErrnoException e) {
+                 Log.wtf(TAG, "Cannot open uid counter set map: " + e);
+                 return null;
+@@ -816,8 +775,8 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         /** Gets the cookie tag map */
+         public IBpfMap<CookieTagMapKey, CookieTagMapValue> getCookieTagMap() {
+             try {
+-                return new BpfMap<>(COOKIE_TAG_MAP_PATH,
+-                        CookieTagMapKey.class, CookieTagMapValue.class);
++                return new BpfMap<CookieTagMapKey, CookieTagMapValue>(COOKIE_TAG_MAP_PATH,
++                        BpfMap.BPF_F_RDWR, CookieTagMapKey.class, CookieTagMapValue.class);
+             } catch (ErrnoException e) {
+                 Log.wtf(TAG, "Cannot open cookie tag map: " + e);
+                 return null;
+@@ -827,7 +786,8 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         /** Gets stats map A */
+         public IBpfMap<StatsMapKey, StatsMapValue> getStatsMapA() {
+             try {
+-                return new BpfMap<>(STATS_MAP_A_PATH, StatsMapKey.class, StatsMapValue.class);
++                return new BpfMap<StatsMapKey, StatsMapValue>(STATS_MAP_A_PATH,
++                        BpfMap.BPF_F_RDWR, StatsMapKey.class, StatsMapValue.class);
+             } catch (ErrnoException e) {
+                 Log.wtf(TAG, "Cannot open stats map A: " + e);
+                 return null;
+@@ -837,7 +797,8 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         /** Gets stats map B */
+         public IBpfMap<StatsMapKey, StatsMapValue> getStatsMapB() {
+             try {
+-                return new BpfMap<>(STATS_MAP_B_PATH, StatsMapKey.class, StatsMapValue.class);
++                return new BpfMap<StatsMapKey, StatsMapValue>(STATS_MAP_B_PATH,
++                        BpfMap.BPF_F_RDWR, StatsMapKey.class, StatsMapValue.class);
+             } catch (ErrnoException e) {
+                 Log.wtf(TAG, "Cannot open stats map B: " + e);
+                 return null;
+@@ -847,8 +808,8 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         /** Gets the uid stats map */
+         public IBpfMap<UidStatsMapKey, StatsMapValue> getAppUidStatsMap() {
+             try {
+-                return new BpfMap<>(APP_UID_STATS_MAP_PATH,
+-                        UidStatsMapKey.class, StatsMapValue.class);
++                return new BpfMap<UidStatsMapKey, StatsMapValue>(APP_UID_STATS_MAP_PATH,
++                        BpfMap.BPF_F_RDWR, UidStatsMapKey.class, StatsMapValue.class);
+             } catch (ErrnoException e) {
+                 Log.wtf(TAG, "Cannot open app uid stats map: " + e);
+                 return null;
+@@ -858,7 +819,8 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         /** Gets interface stats map */
+         public IBpfMap<S32, StatsMapValue> getIfaceStatsMap() {
+             try {
+-                return new BpfMap<>(IFACE_STATS_MAP_PATH, S32.class, StatsMapValue.class);
++                return new BpfMap<S32, StatsMapValue>(IFACE_STATS_MAP_PATH,
++                        BpfMap.BPF_F_RDWR, S32.class, StatsMapValue.class);
+             } catch (ErrnoException e) {
+                 throw new IllegalStateException("Failed to open interface stats map", e);
+             }
+@@ -877,16 +839,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         /** Create a new SkDestroyListener. */
+         public SkDestroyListener makeSkDestroyListener(
+                 IBpfMap<CookieTagMapKey, CookieTagMapValue> cookieTagMap, Handler handler) {
+-            return new SkDestroyListener(
+-                    cookieTagMap, handler, new SharedLog(MAX_SOCKET_DESTROY_LISTENER_LOGS, TAG));
+-        }
+-
+-        /**
+-         * Get whether event logger feature is supported.
+-         */
+-        public boolean supportEventLogger(Context ctx) {
+-            return DeviceConfigUtils.isTetheringFeatureNotChickenedOut(
+-                    ctx, CONFIG_ENABLE_NETWORK_STATS_EVENT_LOGGER);
++            return new SkDestroyListener(cookieTagMap, handler, new SharedLog(TAG));
+         }
+     }
+ 
+@@ -914,7 +867,13 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         synchronized (mStatsLock) {
+             mSystemReady = true;
+ 
+-            makeRecordersLocked();
++            // create data recorders along with historical rotators
++            mXtRecorder = buildRecorder(PREFIX_XT, mSettings.getXtConfig(), false, mStatsDir,
++                    true /* wipeOnError */);
++            mUidRecorder = buildRecorder(PREFIX_UID, mSettings.getUidConfig(), false, mStatsDir,
++                    true /* wipeOnError */);
++            mUidTagRecorder = buildRecorder(PREFIX_UID_TAG, mSettings.getUidTagConfig(), true,
++                    mStatsDir, true /* wipeOnError */);
+ 
+             updatePersistThresholdsLocked();
+ 
+@@ -979,106 +938,13 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+ 
+     private NetworkStatsRecorder buildRecorder(
+             String prefix, NetworkStatsSettings.Config config, boolean includeTags,
+-            File baseDir, boolean wipeOnError, boolean useFastDataInput) {
++            File baseDir, boolean wipeOnError) {
+         final DropBoxManager dropBox = (DropBoxManager) mContext.getSystemService(
+                 Context.DROPBOX_SERVICE);
+         return new NetworkStatsRecorder(new FileRotator(
+                 baseDir, prefix, config.rotateAgeMillis, config.deleteAgeMillis),
+                 mNonMonotonicObserver, dropBox, prefix, config.bucketDuration, includeTags,
+-                wipeOnError, useFastDataInput, baseDir);
+-    }
+-
+-    @GuardedBy("mStatsLock")
+-    private void makeRecordersLocked() {
+-        boolean useFastDataInput = true;
+-        try {
+-            mFastDataInputSuccessesCounter = mDeps.createPersistentCounter(mStatsDir.toPath(),
+-                    NETSTATS_FASTDATAINPUT_SUCCESSES_COUNTER_NAME);
+-            mFastDataInputFallbacksCounter = mDeps.createPersistentCounter(mStatsDir.toPath(),
+-                    NETSTATS_FASTDATAINPUT_FALLBACKS_COUNTER_NAME);
+-        } catch (IOException e) {
+-            Log.wtf(TAG, "Failed to create persistent counters, skip.", e);
+-            useFastDataInput = false;
+-        }
+-
+-        final int targetAttempts = mDeps.getUseFastDataInputTargetAttempts();
+-        int successes = 0;
+-        int fallbacks = 0;
+-        try {
+-            successes = mFastDataInputSuccessesCounter.get();
+-            // Fallbacks counter would be set to non-zero value to indicate the reading was
+-            // not successful.
+-            fallbacks = mFastDataInputFallbacksCounter.get();
+-        } catch (IOException e) {
+-            Log.wtf(TAG, "Failed to read counters, skip.", e);
+-            useFastDataInput = false;
+-        }
+-
+-        final boolean doComparison;
+-        if (useFastDataInput) {
+-            // Use FastDataInput if it needs to be evaluated or at least one success.
+-            doComparison = targetAttempts > successes + fallbacks;
+-            // Set target attempt to -1 as the kill switch to disable the feature.
+-            useFastDataInput = targetAttempts >= 0 && (doComparison || successes > 0);
+-        } else {
+-            // useFastDataInput is false due to previous failures.
+-            doComparison = false;
+-        }
+-
+-        // create data recorders along with historical rotators.
+-        // Don't wipe on error if comparison is needed.
+-        mXtRecorder = buildRecorder(PREFIX_XT, mSettings.getXtConfig(), false, mStatsDir,
+-                !doComparison /* wipeOnError */, useFastDataInput);
+-        mUidRecorder = buildRecorder(PREFIX_UID, mSettings.getUidConfig(), false, mStatsDir,
+-                !doComparison /* wipeOnError */, useFastDataInput);
+-        mUidTagRecorder = buildRecorder(PREFIX_UID_TAG, mSettings.getUidTagConfig(), true,
+-                mStatsDir, !doComparison /* wipeOnError */, useFastDataInput);
+-
+-        if (!doComparison) return;
+-
+-        final MigrationInfo[] migrations = new MigrationInfo[]{
+-                new MigrationInfo(mXtRecorder),
+-                new MigrationInfo(mUidRecorder),
+-                new MigrationInfo(mUidTagRecorder)
+-        };
+-        // Set wipeOnError flag false so the recorder won't damage persistent data if reads
+-        // failed and calling deleteAll.
+-        final NetworkStatsRecorder[] legacyRecorders = new NetworkStatsRecorder[]{
+-                buildRecorder(PREFIX_XT, mSettings.getXtConfig(), false, mStatsDir,
+-                        false /* wipeOnError */, false /* useFastDataInput */),
+-                buildRecorder(PREFIX_UID, mSettings.getUidConfig(), false, mStatsDir,
+-                        false /* wipeOnError */, false /* useFastDataInput */),
+-                buildRecorder(PREFIX_UID_TAG, mSettings.getUidTagConfig(), true, mStatsDir,
+-                        false /* wipeOnError */, false /* useFastDataInput */)};
+-        boolean success = true;
+-        for (int i = 0; i < migrations.length; i++) {
+-            try {
+-                migrations[i].collection = migrations[i].recorder.getOrLoadCompleteLocked();
+-            } catch (Throwable t) {
+-                Log.wtf(TAG, "Failed to load collection, skip.", t);
+-                success = false;
+-                break;
+-            }
+-            if (!compareImportedToLegacyStats(migrations[i], legacyRecorders[i],
+-                    false /* allowKeyChange */)) {
+-                success = false;
+-                break;
+-            }
+-        }
+-
+-        try {
+-            if (success) {
+-                mFastDataInputSuccessesCounter.set(successes + 1);
+-            } else {
+-                // Fallback.
+-                mXtRecorder = legacyRecorders[0];
+-                mUidRecorder = legacyRecorders[1];
+-                mUidTagRecorder = legacyRecorders[2];
+-                mFastDataInputFallbacksCounter.set(fallbacks + 1);
+-            }
+-        } catch (IOException e) {
+-            Log.wtf(TAG, "Failed to update counters. success = " + success, e);
+-        }
++                wipeOnError);
+     }
+ 
+     @GuardedBy("mStatsLock")
+@@ -1177,7 +1043,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+                 new NetworkStatsSettings.Config(HOUR_IN_MILLIS,
+                 15 * DAY_IN_MILLIS, 90 * DAY_IN_MILLIS);
+         final NetworkStatsRecorder devRecorder = buildRecorder(PREFIX_DEV, devConfig,
+-                false, mStatsDir, true /* wipeOnError */, false /* useFastDataInput */);
++                false, mStatsDir, true /* wipeOnError */);
+         final MigrationInfo[] migrations = new MigrationInfo[]{
+                 new MigrationInfo(devRecorder), new MigrationInfo(mXtRecorder),
+                 new MigrationInfo(mUidRecorder), new MigrationInfo(mUidTagRecorder)
+@@ -1194,11 +1060,11 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             legacyRecorders = new NetworkStatsRecorder[]{
+                 null /* dev Recorder */,
+                 buildRecorder(PREFIX_XT, mSettings.getXtConfig(), false, legacyBaseDir,
+-                        false /* wipeOnError */, false /* useFastDataInput */),
++                        false /* wipeOnError */),
+                 buildRecorder(PREFIX_UID, mSettings.getUidConfig(), false, legacyBaseDir,
+-                        false /* wipeOnError */, false /* useFastDataInput */),
++                        false /* wipeOnError */),
+                 buildRecorder(PREFIX_UID_TAG, mSettings.getUidTagConfig(), true, legacyBaseDir,
+-                        false /* wipeOnError */, false /* useFastDataInput */)};
++                        false /* wipeOnError */)};
+         } else {
+             legacyRecorders = null;
+         }
+@@ -1229,8 +1095,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+ 
+                 if (runComparison) {
+                     final boolean success =
+-                            compareImportedToLegacyStats(migration, legacyRecorders[i],
+-                                    true /* allowKeyChange */);
++                            compareImportedToLegacyStats(migration, legacyRecorders[i]);
+                     if (!success && !dryRunImportOnly) {
+                         tryIncrementLegacyFallbacksCounter();
+                     }
+@@ -1353,7 +1218,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+      * does not match or throw with exceptions.
+      */
+     private boolean compareImportedToLegacyStats(@NonNull MigrationInfo migration,
+-            @Nullable NetworkStatsRecorder legacyRecorder, boolean allowKeyChange) {
++            @Nullable NetworkStatsRecorder legacyRecorder) {
+         final NetworkStatsCollection legacyStats;
+         // Skip the recorder that doesn't need to be compared.
+         if (legacyRecorder == null) return true;
+@@ -1368,8 +1233,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+ 
+         // The result of comparison is only for logging.
+         try {
+-            final String error = mDeps.compareStats(migration.collection, legacyStats,
+-                    allowKeyChange);
++            final String error = compareStats(migration.collection, legacyStats);
+             if (error != null) {
+                 Log.wtf(TAG, "Unexpected comparison result for recorder "
+                         + legacyRecorder.getCookie() + ": " + error);
+@@ -1383,6 +1247,93 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         return true;
+     }
+ 
++    private static String str(NetworkStatsCollection.Key key) {
++        StringBuilder sb = new StringBuilder()
++                .append(key.ident.toString())
++                .append(" uid=").append(key.uid);
++        if (key.set != SET_FOREGROUND) {
++            sb.append(" set=").append(key.set);
++        }
++        if (key.tag != 0) {
++            sb.append(" tag=").append(key.tag);
++        }
++        return sb.toString();
++    }
++
++    // The importer will modify some keys when importing them.
++    // In order to keep the comparison code simple, add such special cases here and simply
++    // ignore them. This should not impact fidelity much because the start/end checks and the total
++    // bytes check still need to pass.
++    private static boolean couldKeyChangeOnImport(NetworkStatsCollection.Key key) {
++        if (key.ident.isEmpty()) return false;
++        final NetworkIdentity firstIdent = key.ident.iterator().next();
++
++        // Non-mobile network with non-empty RAT type.
++        // This combination is invalid and the NetworkIdentity.Builder will throw if it is passed
++        // in, but it looks like it was previously possible to persist it to disk. The importer sets
++        // the RAT type to NETWORK_TYPE_ALL.
++        if (firstIdent.getType() != ConnectivityManager.TYPE_MOBILE
++                && firstIdent.getRatType() != NetworkTemplate.NETWORK_TYPE_ALL) {
++            return true;
++        }
++
++        return false;
++    }
++
++    @Nullable
++    private static String compareStats(
++            NetworkStatsCollection migrated, NetworkStatsCollection legacy) {
++        final Map<NetworkStatsCollection.Key, NetworkStatsHistory> migEntries =
++                migrated.getEntries();
++        final Map<NetworkStatsCollection.Key, NetworkStatsHistory> legEntries = legacy.getEntries();
++
++        final ArraySet<NetworkStatsCollection.Key> unmatchedLegKeys =
++                new ArraySet<>(legEntries.keySet());
++
++        for (NetworkStatsCollection.Key legKey : legEntries.keySet()) {
++            final NetworkStatsHistory legHistory = legEntries.get(legKey);
++            final NetworkStatsHistory migHistory = migEntries.get(legKey);
++
++            if (migHistory == null && couldKeyChangeOnImport(legKey)) {
++                unmatchedLegKeys.remove(legKey);
++                continue;
++            }
++
++            if (migHistory == null) {
++                return "Missing migrated history for legacy key " + str(legKey)
++                        + ", legacy history was " + legHistory;
++            }
++            if (!migHistory.isSameAs(legHistory)) {
++                return "Difference in history for key " + legKey + "; legacy history " + legHistory
++                        + ", migrated history " + migHistory;
++            }
++            unmatchedLegKeys.remove(legKey);
++        }
++
++        if (!unmatchedLegKeys.isEmpty()) {
++            final NetworkStatsHistory first = legEntries.get(unmatchedLegKeys.valueAt(0));
++            return "Found unmatched legacy keys: count=" + unmatchedLegKeys.size()
++                    + ", first unmatched collection " + first;
++        }
++
++        if (migrated.getStartMillis() != legacy.getStartMillis()
++                || migrated.getEndMillis() != legacy.getEndMillis()) {
++            return "Start / end of the collections "
++                    + migrated.getStartMillis() + "/" + legacy.getStartMillis() + " and "
++                    + migrated.getEndMillis() + "/" + legacy.getEndMillis()
++                    + " don't match";
++        }
++
++        if (migrated.getTotalBytes() != legacy.getTotalBytes()) {
++            return "Total bytes " + migrated.getTotalBytes() + " and " + legacy.getTotalBytes()
++                    + " don't match for collections with start/end "
++                    + migrated.getStartMillis()
++                    + "/" + legacy.getStartMillis();
++        }
++
++        return null;
++    }
++
+     @GuardedBy("mStatsLock")
+     @NonNull
+     private NetworkStatsCollection readPlatformCollectionForRecorder(
+@@ -1430,11 +1381,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+     }
+ 
+     @Override
+-    public INetworkStatsSession openSessionForUsageStats(
+-            int flags, @NonNull String callingPackage) {
+-        Objects.requireNonNull(callingPackage);
+-        PermissionUtils.enforcePackageNameMatchesUid(
+-                mContext, Binder.getCallingUid(), callingPackage);
++    public INetworkStatsSession openSessionForUsageStats(int flags, String callingPackage) {
+         return openSessionInternal(flags, callingPackage);
+     }
+ 
+@@ -1463,9 +1410,9 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         return now - lastCallTime < POLL_RATE_LIMIT_MS;
+     }
+ 
+-    private int restrictFlagsForCaller(int flags, @Nullable String callingPackage) {
++    private int restrictFlagsForCaller(int flags, @NonNull String callingPackage) {
+         // All non-privileged callers are not allowed to turn off POLL_ON_OPEN.
+-        final boolean isPrivileged = PermissionUtils.hasAnyPermissionOf(mContext,
++        final boolean isPrivileged = PermissionUtils.checkAnyPermissionOf(mContext,
+                 NetworkStack.PERMISSION_MAINLINE_NETWORK_STACK,
+                 android.Manifest.permission.NETWORK_STACK);
+         if (!isPrivileged) {
+@@ -1480,14 +1427,13 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         return flags;
+     }
+ 
+-    private INetworkStatsSession openSessionInternal(
+-            final int flags, @Nullable final String callingPackage) {
++    private INetworkStatsSession openSessionInternal(final int flags, final String callingPackage) {
+         final int restrictedFlags = restrictFlagsForCaller(flags, callingPackage);
+         if ((restrictedFlags & (NetworkStatsManager.FLAG_POLL_ON_OPEN
+                 | NetworkStatsManager.FLAG_POLL_FORCE)) != 0) {
+             final long ident = Binder.clearCallingIdentity();
+             try {
+-                performPoll(FLAG_PERSIST_ALL, maybeCreatePollEvent(POLL_REASON_OPEN_SESSION));
++                performPoll(FLAG_PERSIST_ALL);
+             } finally {
+                 Binder.restoreCallingIdentity(ident);
+             }
+@@ -1498,7 +1444,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+ 
+         return new INetworkStatsSession.Stub() {
+             private final int mCallingUid = Binder.getCallingUid();
+-            @Nullable
+             private final String mCallingPackage = callingPackage;
+             private final @NetworkStatsAccess.Level int mAccessLevel = checkAccessLevel(
+                     callingPackage);
+@@ -1637,13 +1582,11 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+     }
+ 
+     private void enforceTemplatePermissions(@NonNull NetworkTemplate template,
+-            @Nullable String callingPackage) {
++            @NonNull String callingPackage) {
+         // For a template with wifi network keys, it is possible for a malicious
+         // client to track the user locations via querying data usage. Thus, enforce
+         // fine location permission check.
+-        // For a template with MATCH_TEST, since the wifi network key is just a placeholder
+-        // to identify a specific test network, it is not related to track user location.
+-        if (!template.getWifiNetworkKeys().isEmpty() && template.getMatchRule() != MATCH_TEST) {
++        if (!template.getWifiNetworkKeys().isEmpty()) {
+             final boolean canAccessFineLocation = mLocationPermissionChecker
+                     .checkCallersLocationPermission(callingPackage,
+                     null /* featureId */,
+@@ -1658,7 +1601,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         }
+     }
+ 
+-    private @NetworkStatsAccess.Level int checkAccessLevel(@Nullable String callingPackage) {
++    private @NetworkStatsAccess.Level int checkAccessLevel(String callingPackage) {
+         return NetworkStatsAccess.checkAccessLevel(
+                 mContext, Binder.getCallingPid(), Binder.getCallingUid(), callingPackage);
+     }
+@@ -1802,7 +1745,8 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             // information. This is because no caller needs this information for now, and it
+             // makes it easier to change the implementation later by using the histories in the
+             // recorder.
+-            return stats.withoutInterfaces();
++            stats.clearInterfaces();
++            return stats;
+         } catch (RemoteException e) {
+             Log.wtf(TAG, "Error compiling UID stats", e);
+             return new NetworkStats(0L, 0);
+@@ -1884,8 +1828,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+ 
+         final long token = Binder.clearCallingIdentity();
+         try {
+-            handleNotifyNetworkStatus(defaultNetworks, networkStates, activeIface,
+-                    maybeCreatePollEvent(POLL_REASON_NETWORK_STATUS_CHANGED));
++            handleNotifyNetworkStatus(defaultNetworks, networkStates, activeIface);
+         } finally {
+             Binder.restoreCallingIdentity(token);
+         }
+@@ -1902,8 +1845,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+ 
+         final long token = Binder.clearCallingIdentity();
+         try {
+-            // TODO: Log callstack for system server callers.
+-            performPoll(FLAG_PERSIST_ALL, maybeCreatePollEvent(POLL_REASON_FORCE_UPDATE));
++            performPoll(FLAG_PERSIST_ALL);
+         } finally {
+             Binder.restoreCallingIdentity(token);
+         }
+@@ -1949,7 +1891,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+ 
+         final int callingPid = Binder.getCallingPid();
+         final int callingUid = Binder.getCallingUid();
+-        PermissionUtils.enforcePackageNameMatchesUid(mContext, callingUid, callingPackage);
+         @NetworkStatsAccess.Level int accessLevel = checkAccessLevel(callingPackage);
+         DataUsageRequest normalizedRequest;
+         final long token = Binder.clearCallingIdentity();
+@@ -1961,8 +1902,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         }
+ 
+         // Create baseline stats
+-        mHandler.sendMessage(mHandler.obtainMessage(MSG_PERFORM_POLL,
+-                POLL_REASON_REG_CALLBACK));
++        mHandler.sendMessage(mHandler.obtainMessage(MSG_PERFORM_POLL));
+ 
+         return normalizedRequest;
+    }
+@@ -1986,56 +1926,36 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         if (callingUid != android.os.Process.SYSTEM_UID && callingUid != uid) {
+             return UNSUPPORTED;
+         }
+-        return getEntryValueForType(nativeGetUidStat(uid), type);
++        return nativeGetUidStat(uid, type);
+     }
+ 
+     @Override
+     public long getIfaceStats(@NonNull String iface, int type) {
+         Objects.requireNonNull(iface);
+-        final NetworkStats.Entry entry = nativeGetIfaceStat(iface);
+-        final long value = getEntryValueForType(entry, type);
+-        if (value == UNSUPPORTED) {
+-            return UNSUPPORTED;
++        long nativeIfaceStats = nativeGetIfaceStat(iface, type);
++        if (nativeIfaceStats == -1) {
++            return nativeIfaceStats;
+         } else {
+             // When tethering offload is in use, nativeIfaceStats does not contain usage from
+             // offload, add it back here. Note that the included statistics might be stale
+             // since polling newest stats from hardware might impact system health and not
+             // suitable for TrafficStats API use cases.
+-            entry.add(getProviderIfaceStats(iface));
+-            return getEntryValueForType(entry, type);
+-        }
+-    }
+-
+-    private long getEntryValueForType(@Nullable NetworkStats.Entry entry, int type) {
+-        if (entry == null) return UNSUPPORTED;
+-        switch (type) {
+-            case TrafficStats.TYPE_RX_BYTES:
+-                return entry.rxBytes;
+-            case TrafficStats.TYPE_TX_BYTES:
+-                return entry.txBytes;
+-            case TrafficStats.TYPE_RX_PACKETS:
+-                return entry.rxPackets;
+-            case TrafficStats.TYPE_TX_PACKETS:
+-                return entry.txPackets;
+-            default:
+-                return UNSUPPORTED;
++            return nativeIfaceStats + getProviderIfaceStats(iface, type);
+         }
+     }
+ 
+     @Override
+     public long getTotalStats(int type) {
+-        final NetworkStats.Entry entry = nativeGetTotalStat();
+-        final long value = getEntryValueForType(entry, type);
+-        if (value == UNSUPPORTED) {
+-            return UNSUPPORTED;
++        long nativeTotalStats = nativeGetTotalStat(type);
++        if (nativeTotalStats == -1) {
++            return nativeTotalStats;
+         } else {
+             // Refer to comment in getIfaceStats
+-            entry.add(getProviderIfaceStats(IFACE_ALL));
+-            return getEntryValueForType(entry, type);
++            return nativeTotalStats + getProviderIfaceStats(IFACE_ALL, type);
+         }
+     }
+ 
+-    private NetworkStats.Entry getProviderIfaceStats(@Nullable String iface) {
++    private long getProviderIfaceStats(@Nullable String iface, int type) {
+         final NetworkStats providerSnapshot = getNetworkStatsFromProviders(STATS_PER_IFACE);
+         final HashSet<String> limitIfaces;
+         if (iface == IFACE_ALL) {
+@@ -2044,7 +1964,19 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             limitIfaces = new HashSet<>();
+             limitIfaces.add(iface);
+         }
+-        return providerSnapshot.getTotal(null, limitIfaces);
++        final NetworkStats.Entry entry = providerSnapshot.getTotal(null, limitIfaces);
++        switch (type) {
++            case TrafficStats.TYPE_RX_BYTES:
++                return entry.rxBytes;
++            case TrafficStats.TYPE_RX_PACKETS:
++                return entry.rxPackets;
++            case TrafficStats.TYPE_TX_BYTES:
++                return entry.txBytes;
++            case TrafficStats.TYPE_TX_PACKETS:
++                return entry.txPackets;
++            default:
++                return 0;
++        }
+     }
+ 
+     /**
+@@ -2067,8 +1999,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             new TetheringManager.TetheringEventCallback() {
+                 @Override
+                 public void onUpstreamChanged(@Nullable Network network) {
+-                    performPoll(FLAG_PERSIST_NETWORK,
+-                            maybeCreatePollEvent(POLL_REASON_UPSTREAM_CHANGED));
++                    performPoll(FLAG_PERSIST_NETWORK);
+                 }
+             };
+ 
+@@ -2077,7 +2008,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         public void onReceive(Context context, Intent intent) {
+             // on background handler thread, and verified UPDATE_DEVICE_STATS
+             // permission above.
+-            performPoll(FLAG_PERSIST_ALL, maybeCreatePollEvent(POLL_REASON_PERIODIC));
++            performPoll(FLAG_PERSIST_ALL);
+ 
+             // verify that we're watching global alert
+             registerGlobalAlert();
+@@ -2141,20 +2072,19 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+     public void handleOnCollapsedRatTypeChanged() {
+         // Protect service from frequently updating. Remove pending messages if any.
+         mHandler.removeMessages(MSG_NOTIFY_NETWORK_STATUS);
+-        mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_NOTIFY_NETWORK_STATUS,
+-                        POLL_REASON_RAT_CHANGED), mSettings.getPollDelay());
++        mHandler.sendMessageDelayed(
++                mHandler.obtainMessage(MSG_NOTIFY_NETWORK_STATUS), mSettings.getPollDelay());
+     }
+ 
+     private void handleNotifyNetworkStatus(
+             Network[] defaultNetworks,
+             NetworkStateSnapshot[] snapshots,
+-            String activeIface,
+-            @Nullable PollEvent event) {
++            String activeIface) {
+         synchronized (mStatsLock) {
+             mWakeLock.acquire();
+             try {
+                 mActiveIface = activeIface;
+-                handleNotifyNetworkStatusLocked(defaultNetworks, snapshots, event);
++                handleNotifyNetworkStatusLocked(defaultNetworks, snapshots);
+             } finally {
+                 mWakeLock.release();
+             }
+@@ -2168,7 +2098,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+      */
+     @GuardedBy("mStatsLock")
+     private void handleNotifyNetworkStatusLocked(@NonNull Network[] defaultNetworks,
+-            @NonNull NetworkStateSnapshot[] snapshots, @Nullable PollEvent event) {
++            @NonNull NetworkStateSnapshot[] snapshots) {
+         if (!mSystemReady) return;
+         if (LOGV) Log.v(TAG, "handleNotifyNetworkStatusLocked()");
+ 
+@@ -2178,7 +2108,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+ 
+         // poll, but only persist network stats to keep codepath fast. UID stats
+         // will be persisted during next alarm poll event.
+-        performPollLocked(FLAG_PERSIST_NETWORK, event);
++        performPollLocked(FLAG_PERSIST_NETWORK);
+ 
+         // Rebuild active interfaces based on connected networks
+         mActiveIfaces.clear();
+@@ -2214,7 +2144,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             // both total usage and UID details.
+             final String baseIface = snapshot.getLinkProperties().getInterfaceName();
+             if (baseIface != null) {
+-                nativeRegisterIface(baseIface);
+                 findOrCreateNetworkIdentitySet(mActiveIfaces, baseIface).add(ident);
+                 findOrCreateNetworkIdentitySet(mActiveUidIfaces, baseIface).add(ident);
+ 
+@@ -2236,7 +2165,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+                             .setDefaultNetwork(true)
+                             .setOemManaged(ident.getOemManaged())
+                             .setSubId(ident.getSubId()).build();
+-                    final String ifaceVt = IFACE_VT + getSubIdForCellularOrSatellite(snapshot);
++                    final String ifaceVt = IFACE_VT + getSubIdForMobile(snapshot);
+                     findOrCreateNetworkIdentitySet(mActiveIfaces, ifaceVt).add(vtIdent);
+                     findOrCreateNetworkIdentitySet(mActiveUidIfaces, ifaceVt).add(vtIdent);
+                 }
+@@ -2286,7 +2215,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+                 // baseIface has been handled, so ignore it.
+                 if (TextUtils.equals(baseIface, iface)) continue;
+                 if (iface != null) {
+-                    nativeRegisterIface(iface);
+                     findOrCreateNetworkIdentitySet(mActiveIfaces, iface).add(ident);
+                     findOrCreateNetworkIdentitySet(mActiveUidIfaces, iface).add(ident);
+                     if (isMobile) {
+@@ -2305,15 +2233,9 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         mMobileIfaces = mobileIfaces.toArray(new String[0]);
+     }
+ 
+-    private static int getSubIdForCellularOrSatellite(@NonNull NetworkStateSnapshot state) {
+-        if (!state.getNetworkCapabilities().hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+-                // Both cellular and satellite are 2 different network transport at Mobile using
+-                // same telephony network specifier. So adding satellite transport to consider
+-                // for, when satellite network is active at mobile.
+-                && !state.getNetworkCapabilities().hasTransport(
+-                NetworkCapabilities.TRANSPORT_SATELLITE)) {
+-            throw new IllegalArgumentException(
+-                    "Mobile state need capability TRANSPORT_CELLULAR or TRANSPORT_SATELLITE");
++    private static int getSubIdForMobile(@NonNull NetworkStateSnapshot state) {
++        if (!state.getNetworkCapabilities().hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
++            throw new IllegalArgumentException("Mobile state need capability TRANSPORT_CELLULAR");
+         }
+ 
+         final NetworkSpecifier spec = state.getNetworkCapabilities().getNetworkSpecifier();
+@@ -2403,12 +2325,12 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         }
+     }
+ 
+-    private void performPoll(int flags, @Nullable PollEvent event) {
++    private void performPoll(int flags) {
+         synchronized (mStatsLock) {
+             mWakeLock.acquire();
+ 
+             try {
+-                performPollLocked(flags, event);
++                performPollLocked(flags);
+             } finally {
+                 mWakeLock.release();
+             }
+@@ -2420,15 +2342,11 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+      * {@link NetworkStatsHistory}.
+      */
+     @GuardedBy("mStatsLock")
+-    private void performPollLocked(int flags, @Nullable PollEvent event) {
++    private void performPollLocked(int flags) {
+         if (!mSystemReady) return;
+         if (LOGV) Log.v(TAG, "performPollLocked(flags=0x" + Integer.toHexString(flags) + ")");
+         Trace.traceBegin(TRACE_TAG_NETWORK, "performPollLocked");
+ 
+-        if (mSupportEventLogger) {
+-            mEventLogger.logPollEvent(flags, event);
+-        }
+-
+         final boolean persistNetwork = (flags & FLAG_PERSIST_NETWORK) != 0;
+         final boolean persistUid = (flags & FLAG_PERSIST_UID) != 0;
+         final boolean persistForce = (flags & FLAG_PERSIST_FORCE) != 0;
+@@ -2629,7 +2547,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         if (LOGV) Log.v(TAG, "removeUidsLocked() for UIDs " + Arrays.toString(uids));
+ 
+         // Perform one last poll before removing
+-        performPollLocked(FLAG_PERSIST_ALL, maybeCreatePollEvent(POLL_REASON_REMOVE_UIDS));
++        performPollLocked(FLAG_PERSIST_ALL);
+ 
+         mUidRecorder.removeUidsLocked(uids);
+         mUidTagRecorder.removeUidsLocked(uids);
+@@ -2679,7 +2597,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+ 
+     @Override
+     protected void dump(FileDescriptor fd, PrintWriter rawWriter, String[] args) {
+-        if (!PermissionUtils.hasDumpPermission(mContext, TAG, rawWriter)) return;
++        if (!PermissionUtils.checkDumpPermission(mContext, TAG, rawWriter)) return;
+ 
+         long duration = DateUtils.DAY_IN_MILLIS;
+         final HashSet<String> argSet = new HashSet<String>();
+@@ -2712,8 +2630,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             }
+ 
+             if (poll) {
+-                performPollLocked(FLAG_PERSIST_ALL | FLAG_PERSIST_FORCE,
+-                        maybeCreatePollEvent(POLL_REASON_DUMPSYS));
++                performPollLocked(FLAG_PERSIST_ALL | FLAG_PERSIST_FORCE);
+                 pw.println("Forced poll");
+                 return;
+             }
+@@ -2773,18 +2690,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+                     pw.println("(failed to dump platform legacy stats import counters)");
+                 }
+             }
+-            pw.println(CONFIG_ENABLE_NETWORK_STATS_EVENT_LOGGER + ": " + mSupportEventLogger);
+-            pw.print(NETSTATS_FASTDATAINPUT_TARGET_ATTEMPTS,
+-                    mDeps.getUseFastDataInputTargetAttempts());
+-            pw.println();
+-            try {
+-                pw.print("FastDataInput successes", mFastDataInputSuccessesCounter.get());
+-                pw.println();
+-                pw.print("FastDataInput fallbacks", mFastDataInputFallbacksCounter.get());
+-                pw.println();
+-            } catch (IOException e) {
+-                pw.println("(failed to dump FastDataInput counters)");
+-            }
+ 
+             pw.decreaseIndent();
+ 
+@@ -2842,10 +2747,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             pw.decreaseIndent();
+             pw.println();
+ 
+-            if (mSupportEventLogger) {
+-                mEventLogger.dump(pw);
+-            }
+-
+             pw.println("Stats Providers:");
+             pw.increaseIndent();
+             invokeForAllStatsProviderCallbacks((cb) -> {
+@@ -2899,9 +2800,9 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             }
+ 
+             pw.println();
+-            pw.println("InterfaceMapHelper:");
++            pw.println("InterfaceMapUpdater:");
+             pw.increaseIndent();
+-            mInterfaceMapHelper.dump(pw);
++            mInterfaceMapUpdater.dump(pw);
+             pw.decreaseIndent();
+ 
+             pw.println();
+@@ -2923,12 +2824,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             dumpStatsMapLocked(mStatsMapB, pw, "mStatsMapB");
+             dumpIfaceStatsMapLocked(pw);
+             pw.decreaseIndent();
+-
+-            pw.println();
+-            pw.println("SkDestroyListener logs:");
+-            pw.increaseIndent();
+-            mSkDestroyListener.dump(pw);
+-            pw.decreaseIndent();
+         }
+     }
+ 
+@@ -3048,7 +2943,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         BpfDump.dumpMap(statsMap, pw, mapName,
+                 "ifaceIndex ifaceName tag_hex uid_int cnt_set rxBytes rxPackets txBytes txPackets",
+                 (key, value) -> {
+-                    final String ifName = mInterfaceMapHelper.getIfNameByIndex(key.ifaceIndex);
++                    final String ifName = mInterfaceMapUpdater.getIfNameByIndex(key.ifaceIndex);
+                     return key.ifaceIndex + " "
+                             + (ifName != null ? ifName : "unknown") + " "
+                             + "0x" + Long.toHexString(key.tag) + " "
+@@ -3066,7 +2961,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         BpfDump.dumpMap(mIfaceStatsMap, pw, "mIfaceStatsMap",
+                 "ifaceIndex ifaceName rxBytes rxPackets txBytes txPackets",
+                 (key, value) -> {
+-                    final String ifName = mInterfaceMapHelper.getIfNameByIndex(key.val);
++                    final String ifName = mInterfaceMapUpdater.getIfNameByIndex(key.val);
+                     return key.val + " "
+                             + (ifName != null ? ifName : "unknown") + " "
+                             + value.rxBytes + " "
+@@ -3321,22 +3216,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         }
+     }
+ 
+-    private final boolean mSupportEventLogger;
+-    @GuardedBy("mStatsLock")
+-    @Nullable
+-    private final NetworkStatsEventLogger mEventLogger;
+-
+-    /**
+-     * Create a PollEvent instance if the feature is enabled.
+-     */
+-    @Nullable
+-    public PollEvent maybeCreatePollEvent(@NetworkStatsEventLogger.PollReason int reason) {
+-        if (mSupportEventLogger) {
+-            return new PollEvent(reason);
+-        }
+-        return null;
+-    }
+-
+     private class DropBoxNonMonotonicObserver implements NonMonotonicObserver<String> {
+         @Override
+         public void foundNonMonotonic(NetworkStats left, int leftIndex, NetworkStats right,
+@@ -3372,8 +3251,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+      * Default external settings that read from
+      * {@link android.provider.Settings.Global}.
+      */
+-    @VisibleForTesting(visibility = PRIVATE)
+-    static class DefaultNetworkStatsSettings implements NetworkStatsSettings {
++    private static class DefaultNetworkStatsSettings implements NetworkStatsSettings {
+         DefaultNetworkStatsSettings() {}
+ 
+         @Override
+@@ -3426,14 +3304,9 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         }
+     }
+ 
+-    // TODO: Read stats by using BpfNetMapsReader.
+-    private static native void nativeRegisterIface(String iface);
+-    @Nullable
+-    private static native NetworkStats.Entry nativeGetTotalStat();
+-    @Nullable
+-    private static native NetworkStats.Entry nativeGetIfaceStat(String iface);
+-    @Nullable
+-    private static native NetworkStats.Entry nativeGetUidStat(int uid);
++    private static native long nativeGetTotalStat(int type);
++    private static native long nativeGetIfaceStat(String iface, int type);
++    private static native long nativeGetUidStat(int uid, int type);
+ 
+     /** Initializes and registers the Perfetto Network Trace data source */
+     public static native void nativeInitNetworkTracing();
 diff --git a/service/src/com/android/server/BpfNetMaps.java b/service/src/com/android/server/BpfNetMaps.java
-index ad9cfbe10e..029c1e2de1 100644
+index a7fddd08f0..898b09e59d 100644
 --- a/service/src/com/android/server/BpfNetMaps.java
 +++ b/service/src/com/android/server/BpfNetMaps.java
-@@ -358,7 +358,11 @@ public class BpfNetMaps {
+@@ -366,7 +366,11 @@ public class BpfNetMaps {
      @VisibleForTesting
      public BpfNetMaps(final Context context, final INetd netd, final Dependencies deps) {
-         if (!PRE_T) {
+         if (SdkLevel.isAtLeastT()) {
 -            ensureInitialized(context);
 +            try {
 +                ensureInitialized(context);
@@ -72,5 +1109,5 @@ index ad9cfbe10e..029c1e2de1 100644
          mNetd = netd;
          mDeps = deps;
 -- 
-2.25.1
+2.37.2
 
