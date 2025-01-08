@@ -23,7 +23,7 @@ for dir in "${!patches[@]}"; do
     patch_files=($patches_base_path/$patch_dir/*.patch)
 
     for patch_file in "${patch_files[@]}"; do
-        git am --signoff < "$patch_file"
+        git am --3way < "$patch_file"
     done
 
     cd - > /dev/null
