@@ -1,7 +1,7 @@
-From e70d8ad8d9f8fbbd22e687da055b6f21e57f9ffd Mon Sep 17 00:00:00 2001
+From addd21103243028db51b780f7e6e89990db44dec Mon Sep 17 00:00:00 2001
 From: z3DD3r <z3dd3r@gmail.com>
 Date: Tue, 16 Apr 2024 12:36:46 +0300
-Subject: [PATCH 09/12] [UL] dnsresolver: Support no-bpf usecase
+Subject: [PATCH 08/12] dnsresolver: Support no-bpf usecase
 
 ---
  DnsResolver/DnsBpfHelper.cpp | 22 +++++++++++++++++-----
@@ -51,5 +51,5 @@ index de8bef5860..232902dfc9 100644
    auto value = mUidOwnerMap.readValue(uid);
    uint32_t uidRules = value.ok() ? value.value().rule : 0;
 -- 
-2.25.1
+2.37.2
 

@@ -1,0 +1,27 @@
+From 8a24e53a44c7e2ab89b94155b4e59cb9215e0e06 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Wed, 8 Jan 2025 20:28:31 +0100
+Subject: [PATCH 12/12] NetdUpdatable: Ignore bpf initialization failure
+
+Change-Id: Ib62ec44592cd11a628d7e95eef89edda486dbed0
+---
+ netd/NetdUpdatable.cpp | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/netd/NetdUpdatable.cpp b/netd/NetdUpdatable.cpp
+index 3b15916398..f4af63c522 100644
+--- a/netd/NetdUpdatable.cpp
++++ b/netd/NetdUpdatable.cpp
+@@ -31,8 +31,7 @@ int libnetd_updatable_init(const char* cg2_path) {
+ 
+     android::netdutils::Status ret = sBpfHandler.init(cg2_path);
+     if (!android::netdutils::isOk(ret)) {
+-        LOG(ERROR) << __func__ << ": Failed: (" << ret.code() << ") " << ret.msg();
+-        abort();
++        LOG(ERROR) << __func__ << ": Failed. (" << ret.code() << ") " << ret.msg();
+     }
+     return 0;
+ }
+-- 
+2.37.2
+

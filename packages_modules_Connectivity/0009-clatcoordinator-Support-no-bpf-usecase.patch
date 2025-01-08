@@ -1,7 +1,7 @@
-From 95d1a111af11a96524b2e72f877f53ce0a76d3d9 Mon Sep 17 00:00:00 2001
+From 58ce197a03e3af3b0efa4135e1548c5319186c2f Mon Sep 17 00:00:00 2001
 From: z3DD3r <z3dd3r@gmail.com>
 Date: Tue, 16 Apr 2024 22:48:18 +0300
-Subject: [PATCH 10/12] [UL] clatcoordinator: Support no-bpf usecase
+Subject: [PATCH 09/12] clatcoordinator: Support no-bpf usecase
 
 ---
  service/jni/com_android_server_connectivity_ClatCoordinator.cpp | 1 -
@@ -20,5 +20,5 @@ index c125bd6479..5c5a79d9a1 100644
  
  #undef V
 -- 
-2.25.1
+2.37.2
 

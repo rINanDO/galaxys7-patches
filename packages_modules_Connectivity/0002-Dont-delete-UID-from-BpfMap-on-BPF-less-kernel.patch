@@ -1,4 +1,4 @@
-From 89f237a8b62cf790645588be89f17bfbfc1c8df9 Mon Sep 17 00:00:00 2001
+From 89a99cdf8c29ea11d8d766a7a4a901ddbf9891a6 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 26 Oct 2022 18:11:10 -0400
 Subject: [PATCH 02/12] Dont delete UID from BpfMap on BPF-less kernel
@@ -9,10 +9,10 @@ Change-Id: I93b5b8237f6655cb47e0b0584c54cad73a51e7b2
  1 file changed, 1 insertion(+)
 
 diff --git a/service-t/src/com/android/server/net/NetworkStatsService.java b/service-t/src/com/android/server/net/NetworkStatsService.java
-index 2c9f30c8f7..40c214ed96 100644
+index f7f133c5a1..64ef55a603 100644
 --- a/service-t/src/com/android/server/net/NetworkStatsService.java
 +++ b/service-t/src/com/android/server/net/NetworkStatsService.java
-@@ -2450,6 +2450,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+@@ -2584,6 +2584,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
       * @param uid
       */
      private void deleteKernelTagData(int uid) {
@@ -21,5 +21,5 @@ index 2c9f30c8f7..40c214ed96 100644
              mCookieTagMap.forEach((key, value) -> {
                  // If SkDestroyListener deletes the socket tag while this code is running,
 -- 
-2.25.1
+2.37.2
 

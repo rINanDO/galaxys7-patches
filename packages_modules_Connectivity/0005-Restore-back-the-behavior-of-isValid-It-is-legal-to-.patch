@@ -1,7 +1,7 @@
-From fa3bb1a1bfd723f724df5c8b4b26d966ed6b212c Mon Sep 17 00:00:00 2001
+From 147d4f48519d25011c317ffb50bec750c95186a4 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 26 Oct 2022 18:02:18 -0400
-Subject: [PATCH 06/12] Restore back the behavior of isValid(): It is legal to
+Subject: [PATCH 05/12] Restore back the behavior of isValid(): It is legal to
  have non-working BpfMap. Dont abort a whole process (system_server...) just
  because we cant access bpf map. Also add isOk to include the additional
  checks for newer kernel versions
@@ -12,10 +12,10 @@ Change-Id: Ie7815c186400614f0c6b483c04aa8971af348380
  1 file changed, 12 insertions(+), 9 deletions(-)
 
 diff --git a/staticlibs/native/bpf_headers/include/bpf/BpfMap.h b/staticlibs/native/bpf_headers/include/bpf/BpfMap.h
-index 3fede3c0ed..8e6a2ed4ba 100644
+index 1037bebf29..696038c6f6 100644
 --- a/staticlibs/native/bpf_headers/include/bpf/BpfMap.h
 +++ b/staticlibs/native/bpf_headers/include/bpf/BpfMap.h
-@@ -58,21 +58,24 @@ class BpfMapRO {
+@@ -60,21 +60,24 @@ class BpfMapRO {
  
    protected:
      void abortOnMismatch(bool writable) const {
@@ -50,5 +50,5 @@ index 3fede3c0ed..8e6a2ed4ba 100644
  
      Result<Key> getFirstKey() const {
 -- 
-2.25.1
+2.37.2
 

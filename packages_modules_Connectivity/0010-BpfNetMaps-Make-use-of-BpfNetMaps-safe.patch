@@ -1,17 +1,17 @@
-From 846ada11fd29c850e2ed75fedacf0e9e19f7b8e9 Mon Sep 17 00:00:00 2001
+From 9f3416db25a5c562de075f2c643174353f2838ea Mon Sep 17 00:00:00 2001
 From: z3DD3r <z3dd3r@gmail.com>
 Date: Sat, 20 Apr 2024 19:12:46 +0300
-Subject: [PATCH 11/12] [UL] BpfNetMaps: Make use of BpfNetMaps safe
+Subject: [PATCH 10/12] BpfNetMaps: Make use of BpfNetMaps safe
 
 ---
  .../src/com/android/server/BpfNetMaps.java    | 266 ++++++++++--------
  1 file changed, 156 insertions(+), 110 deletions(-)
 
 diff --git a/service/src/com/android/server/BpfNetMaps.java b/service/src/com/android/server/BpfNetMaps.java
-index fae518c739..fa335c4b13 100644
+index 517da91d87..c6ff2682d1 100644
 --- a/service/src/com/android/server/BpfNetMaps.java
 +++ b/service/src/com/android/server/BpfNetMaps.java
-@@ -243,14 +243,16 @@ public class BpfNetMaps {
+@@ -250,14 +250,16 @@ public class BpfNetMaps {
              sConfigurationMap = getConfigurationMap();
          }
          try {
@@ -32,7 +32,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              throw new IllegalStateException("Failed to initialize current stats configuration", e);
          }
-@@ -259,7 +261,8 @@ public class BpfNetMaps {
+@@ -266,7 +268,8 @@ public class BpfNetMaps {
              sUidOwnerMap = getUidOwnerMap();
          }
          try {
@@ -42,7 +42,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              throw new IllegalStateException("Failed to initialize uid owner map", e);
          }
-@@ -276,7 +279,8 @@ public class BpfNetMaps {
+@@ -283,7 +286,8 @@ public class BpfNetMaps {
              sDataSaverEnabledMap = getDataSaverEnabledMap();
          }
          try {
@@ -52,7 +52,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              throw new IllegalStateException("Failed to initialize data saver configuration", e);
          }
-@@ -285,7 +289,8 @@ public class BpfNetMaps {
+@@ -292,7 +296,8 @@ public class BpfNetMaps {
              sIngressDiscardMap = getIngressDiscardMap();
          }
          try {
@@ -62,7 +62,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              throw new IllegalStateException("Failed to initialize ingress discard map", e);
          }
-@@ -382,23 +387,25 @@ public class BpfNetMaps {
+@@ -386,23 +391,25 @@ public class BpfNetMaps {
  
      private void removeRule(final int uid, final long match, final String caller) {
          try {
@@ -102,7 +102,7 @@ index fae518c739..fa335c4b13 100644
                  }
              }
          } catch (ErrnoException e) {
-@@ -414,22 +421,24 @@ public class BpfNetMaps {
+@@ -418,22 +425,24 @@ public class BpfNetMaps {
          }
  
          try {
@@ -142,7 +142,7 @@ index fae518c739..fa335c4b13 100644
              }
          } catch (ErrnoException e) {
              throw new ServiceSpecificException(e.errno,
-@@ -513,9 +522,11 @@ public class BpfNetMaps {
+@@ -517,9 +526,11 @@ public class BpfNetMaps {
          final long match = getMatchByFirewallChain(childChain);
          try {
              synchronized (sUidRulesConfigBpfMapLock) {
@@ -157,7 +157,7 @@ index fae518c739..fa335c4b13 100644
              }
          } catch (ErrnoException e) {
              throw new ServiceSpecificException(e.errno,
-@@ -538,7 +549,9 @@ public class BpfNetMaps {
+@@ -542,7 +553,9 @@ public class BpfNetMaps {
      @Deprecated
      @RequiresApi(Build.VERSION_CODES.TIRAMISU)
      public boolean isChainEnabled(final int childChain) {
@@ -168,7 +168,7 @@ index fae518c739..fa335c4b13 100644
      }
  
      private Set<Integer> asSet(final int[] uids) {
-@@ -573,23 +586,25 @@ public class BpfNetMaps {
+@@ -577,23 +590,25 @@ public class BpfNetMaps {
          final Set<Integer> uidSet = asSet(uids);
          final Set<Integer> uidSetToRemoveRule = new ArraySet<>();
          try {
@@ -210,7 +210,7 @@ index fae518c739..fa335c4b13 100644
                  }
              }
          } catch (ErrnoException | ServiceSpecificException e) {
-@@ -636,22 +651,26 @@ public class BpfNetMaps {
+@@ -640,22 +655,26 @@ public class BpfNetMaps {
       */
      // TODO: Migrate the callers to use {@link BpfNetMapsReader#getUidRule} instead.
      public int getUidRule(final int childChain, final int uid) {
@@ -247,7 +247,7 @@ index fae518c739..fa335c4b13 100644
          }
          return uids;
      }
-@@ -799,13 +818,15 @@ public class BpfNetMaps {
+@@ -803,13 +822,15 @@ public class BpfNetMaps {
          throwIfPreT("swapActiveStatsMap is not available on pre-T devices");
  
          try {
@@ -270,7 +270,7 @@ index fae518c739..fa335c4b13 100644
              }
          } catch (ErrnoException e) {
              throw new ServiceSpecificException(e.errno, "Failed to swap active stats map");
-@@ -842,7 +863,8 @@ public class BpfNetMaps {
+@@ -846,7 +867,8 @@ public class BpfNetMaps {
          if (permissions == PERMISSION_UNINSTALLED || permissions == PERMISSION_INTERNET) {
              for (final int uid : uids) {
                  try {
@@ -280,7 +280,7 @@ index fae518c739..fa335c4b13 100644
                  } catch (ErrnoException e) {
                      Log.e(TAG, "Failed to remove uid " + uid + " from permission map: " + e);
                  }
-@@ -852,7 +874,8 @@ public class BpfNetMaps {
+@@ -856,7 +878,8 @@ public class BpfNetMaps {
  
          for (final int uid : uids) {
              try {
@@ -290,7 +290,7 @@ index fae518c739..fa335c4b13 100644
              } catch (ErrnoException e) {
                  Log.e(TAG, "Failed to set permission "
                          + permissions + " to uid " + uid + ": " + e);
-@@ -873,8 +896,10 @@ public class BpfNetMaps {
+@@ -877,8 +900,10 @@ public class BpfNetMaps {
          throwIfPreT("setDataSaverEnabled is not available on pre-T devices");
  
          try {
@@ -303,7 +303,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              throw new ServiceSpecificException(e.errno, "Unable to set data saver: "
                      + Os.strerror(e.errno));
-@@ -897,8 +922,9 @@ public class BpfNetMaps {
+@@ -901,8 +926,9 @@ public class BpfNetMaps {
              return;
          }
          try {
@@ -315,7 +315,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              Log.e(TAG, "Failed to set ingress discard rule for " + address + "("
                      + iface + "), " + e);
-@@ -914,7 +940,8 @@ public class BpfNetMaps {
+@@ -918,7 +944,8 @@ public class BpfNetMaps {
      public void removeIngressDiscardRule(final InetAddress address) {
          throwIfPreT("removeIngressDiscardRule is not available on pre-T devices");
          try {
@@ -325,7 +325,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              Log.e(TAG, "Failed to remove ingress discard rule for " + address + ", " + e);
          }
-@@ -951,8 +978,12 @@ public class BpfNetMaps {
+@@ -955,8 +982,12 @@ public class BpfNetMaps {
          }
  
          try {
@@ -340,7 +340,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              Log.e(TAG, "Failed to pull NETWORK_BPF_MAP_INFO atom: " + e);
              return StatsManager.PULL_SKIP;
-@@ -986,8 +1017,10 @@ public class BpfNetMaps {
+@@ -990,8 +1021,10 @@ public class BpfNetMaps {
  
      private void dumpOwnerMatchConfig(final IndentingPrintWriter pw) {
          try {
@@ -353,7 +353,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              pw.println("Failed to read ownerMatch configuration: " + e);
          }
-@@ -995,10 +1028,12 @@ public class BpfNetMaps {
+@@ -999,10 +1032,12 @@ public class BpfNetMaps {
  
      private void dumpCurrentStatsMapConfig(final IndentingPrintWriter pw) {
          try {
@@ -370,7 +370,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              pw.println("Falied to read current statsMap configuration: " + e);
          }
-@@ -1006,9 +1041,11 @@ public class BpfNetMaps {
+@@ -1010,9 +1045,11 @@ public class BpfNetMaps {
  
      private void dumpDataSaverConfig(final IndentingPrintWriter pw) {
          try {
@@ -385,7 +385,7 @@ index fae518c739..fa335c4b13 100644
          } catch (ErrnoException e) {
              pw.println("Failed to read data saver configuration: " + e);
          }
-@@ -1047,25 +1084,34 @@ public class BpfNetMaps {
+@@ -1051,25 +1088,34 @@ public class BpfNetMaps {
              // NetworkStatsService also dumps CookieTagMap and NetworkStatsService is a right place
              // to dump CookieTagMap. But the TagSocketTest in CTS depends on this dump so the tests
              // need to be updated before remove the dump from BpfNetMaps.
@@ -440,5 +440,5 @@ index fae518c739..fa335c4b13 100644
              pw.decreaseIndent();
          }
 -- 
-2.25.1
+2.37.2
 

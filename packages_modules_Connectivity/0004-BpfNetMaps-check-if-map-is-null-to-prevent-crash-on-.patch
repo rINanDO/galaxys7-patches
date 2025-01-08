@@ -1,7 +1,7 @@
-From a9ce9f5efe23ef6e5ffe384017695653241e7d12 Mon Sep 17 00:00:00 2001
+From 6726f92095cbfd8aa57352cca5f4b4a753fa336e Mon Sep 17 00:00:00 2001
 From: Alberto Ponces <ponces26@gmail.com>
 Date: Tue, 30 Jan 2024 16:17:43 +0000
-Subject: [PATCH 05/12] BpfNetMaps: check if map is null to prevent crash on
+Subject: [PATCH 04/12] BpfNetMaps: check if map is null to prevent crash on
  BPF-less devices
 
 Change-Id: I46a949a80e7de0c2d75743445289a778a881a27e
@@ -10,10 +10,10 @@ Change-Id: I46a949a80e7de0c2d75743445289a778a881a27e
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/service/src/com/android/server/BpfNetMaps.java b/service/src/com/android/server/BpfNetMaps.java
-index 029c1e2de1..fae518c739 100644
+index a7fddd08f0..517da91d87 100644
 --- a/service/src/com/android/server/BpfNetMaps.java
 +++ b/service/src/com/android/server/BpfNetMaps.java
-@@ -936,7 +936,9 @@ public class BpfNetMaps {
+@@ -940,7 +940,9 @@ public class BpfNetMaps {
          // deletion. netd and skDestroyListener could delete CookieTagMap entry concurrently.
          // So using Set to count the number of entry in the map.
          Set<K> keySet = new ArraySet<>();
@@ -25,5 +25,5 @@ index 029c1e2de1..fae518c739 100644
      }
  
 -- 
-2.25.1
+2.37.2
 
