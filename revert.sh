@@ -25,7 +25,8 @@ for dir in "${!patches[@]}"; do
     num_patches=${#patch_files[@]}
 
     if [ $num_patches -gt 0 ]; then
-        git reset --hard HEAD~$num_patches
+        git am --abort
+	repo sync .
     fi
 
     cd - > /dev/null
