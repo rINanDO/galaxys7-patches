@@ -7,6 +7,7 @@ declare -A patches=(
     ["frameworks/base"]="frameworks_base"
     ["build/make"]="build_make"
     ["frameworks/native"]="frameworks_native"
+    ["packages/modules/adb"]="packages_modules_adb"
     ["packages/modules/Connectivity"]="packages_modules_Connectivity"
     ["packages/modules/DnsResolver"]="packages_modules_DnsResolver"
     ["packages/modules/NetworkStack"]="packages_modules_NetworkStack"
