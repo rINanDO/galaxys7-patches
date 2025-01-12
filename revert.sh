@@ -12,7 +12,6 @@ declare -A patches=(
     ["packages/modules/DnsResolver"]="packages_modules_DnsResolver"
     ["packages/modules/NetworkStack"]="packages_modules_NetworkStack"
     ["system/core"]="system_core"
-    ["system/security"]="system_security"
 )
 
 # Base path for the patches

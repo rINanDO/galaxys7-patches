@@ -1,7 +1,7 @@
 From addd21103243028db51b780f7e6e89990db44dec Mon Sep 17 00:00:00 2001
 From: z3DD3r <z3dd3r@gmail.com>
 Date: Tue, 16 Apr 2024 12:36:46 +0300
-Subject: [PATCH 08/13] dnsresolver: Support no-bpf usecase
+Subject: [PATCH 08/12] dnsresolver: Support no-bpf usecase
 
 ---
  DnsResolver/DnsBpfHelper.cpp | 22 +++++++++++++++++-----

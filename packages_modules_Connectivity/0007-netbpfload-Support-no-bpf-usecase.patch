@@ -1,7 +1,7 @@
 From b397336c7f5be84edcf25664196c64114860e689 Mon Sep 17 00:00:00 2001
 From: z3DD3r <z3dd3r@gmail.com>
 Date: Tue, 16 Apr 2024 01:21:38 +0300
-Subject: [PATCH 07/13] netbpfload: Support no-bpf usecase
+Subject: [PATCH 07/12] netbpfload: Support no-bpf usecase
 
 Based on https://github.com/LineageOS-UL/android_system_bpf/commit/5519c18abea64769e65f6773590195ac5d54af50
 ---
