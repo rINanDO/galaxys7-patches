@@ -1,7 +1,7 @@
 From ed9a6925a96ff5e58ee8dfafaa228850bfe1e044 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Wed, 8 Jan 2025 20:28:31 +0100
-Subject: [PATCH 12/14] NetdUpdatable: Ignore bpf initialization failure
+Subject: [PATCH 12/15] NetdUpdatable: Ignore bpf initialization failure
 
 Change-Id: Ib62ec44592cd11a628d7e95eef89edda486dbed0
 ---

@@ -1,0 +1,26 @@
+From 33b00bf35419a566df66cc3969eabd2b084bb5f0 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Mon, 13 Jan 2025 22:24:50 +0100
+Subject: [PATCH 15/15] BpfNetworkStats: Support non-working BPF maps on old
+ BPF-less kernel
+
+Change-Id: I26c43924e2dcfb86becc54a5f098376e6e442e63
+---
+ service-t/native/libs/libnetworkstats/BpfNetworkStats.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/service-t/native/libs/libnetworkstats/BpfNetworkStats.cpp b/service-t/native/libs/libnetworkstats/BpfNetworkStats.cpp
+index cf10247263..5db9e9a5b3 100644
+--- a/service-t/native/libs/libnetworkstats/BpfNetworkStats.cpp
++++ b/service-t/native/libs/libnetworkstats/BpfNetworkStats.cpp
+@@ -222,6 +222,7 @@ int parseBpfNetworkStatsDetail(std::vector<stats_line>* lines) {
+         return -errno;
+     }
+ 
++    if (!configurationMap.isOk()) return -1;
+     auto configuration = configurationMap.readValue(CURRENT_STATS_MAP_CONFIGURATION_KEY);
+     if (!configuration.ok()) {
+         ALOGE("Cannot read the old configuration from map: %s",
+-- 
+2.37.2
+

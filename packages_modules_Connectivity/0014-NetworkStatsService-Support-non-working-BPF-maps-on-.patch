@@ -1,7 +1,7 @@
 From bb318357d2bdd37a5cd1af0346e4e04a43e8e81a Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Mon, 13 Jan 2025 20:34:00 +0100
-Subject: [PATCH 14/14] NetworkStatsService: Support non-working BPF maps on
+Subject: [PATCH 14/15] NetworkStatsService: Support non-working BPF maps on
  old BPF-less kernel
 
 Change-Id: Ie5a7f082128e3b600abc1839b6595e87bf6d2796
