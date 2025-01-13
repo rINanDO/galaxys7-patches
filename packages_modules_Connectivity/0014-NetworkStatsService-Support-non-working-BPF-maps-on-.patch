@@ -1,0 +1,28 @@
+From bb318357d2bdd37a5cd1af0346e4e04a43e8e81a Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Mon, 13 Jan 2025 20:34:00 +0100
+Subject: [PATCH 14/14] NetworkStatsService: Support non-working BPF maps on
+ old BPF-less kernel
+
+Change-Id: Ie5a7f082128e3b600abc1839b6595e87bf6d2796
+---
+ service-t/src/com/android/server/net/NetworkStatsService.java | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/service-t/src/com/android/server/net/NetworkStatsService.java b/service-t/src/com/android/server/net/NetworkStatsService.java
+index 64ef55a603..859d6d23ce 100644
+--- a/service-t/src/com/android/server/net/NetworkStatsService.java
++++ b/service-t/src/com/android/server/net/NetworkStatsService.java
+@@ -860,7 +860,8 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+             try {
+                 return new BpfMap<>(IFACE_STATS_MAP_PATH, S32.class, StatsMapValue.class);
+             } catch (ErrnoException e) {
+-                throw new IllegalStateException("Failed to open interface stats map", e);
++		Log.wtf(TAG, "Failed to open interface stats map: " + e);
++                return null;
+             }
+         }
+ 
+-- 
+2.37.2
+
