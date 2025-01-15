@@ -1,0 +1,247 @@
+From 6f357bfa8450ca42170d6905a96966ed71b7a80c Mon Sep 17 00:00:00 2001
+From: Yaroslav Zviezda <acroreiser@gmail.com>
+Date: Wed, 29 Nov 2023 23:44:38 +0300
+Subject: [PATCH 02/14] Revert "remove inprocess tethering"
+
+This reverts commit 8bcaa2926d5b28c28b86fab51fcad20d578eee0b.
+
+Change-Id: Ide4540c02d070abb8254cfd8a3e821dcc880f80c
+---
+ Tethering/Android.bp                    | 19 ++++++++++++++
+ Tethering/AndroidManifest_InProcess.xml | 34 +++++++++++++++++++++++++
+ Tethering/apex/Android.bp               | 31 ++++++++++++++++++++++
+ Tethering/apex/in-process               |  0
+ bpf_progs/Android.bp                    | 24 +++++++++++++++++
+ bpf_progs/offload.c                     |  6 +++++
+ bpf_progs/offload@inprocess.c           |  1 +
+ bpf_progs/test.c                        |  6 +++++
+ bpf_progs/test@inprocess.c              |  1 +
+ 9 files changed, 122 insertions(+)
+ create mode 100644 Tethering/AndroidManifest_InProcess.xml
+ create mode 100644 Tethering/apex/in-process
+ create mode 120000 bpf_progs/offload@inprocess.c
+ create mode 120000 bpf_progs/test@inprocess.c
+
+diff --git a/Tethering/Android.bp b/Tethering/Android.bp
+index 394234c917..1555e2c35e 100644
+--- a/Tethering/Android.bp
++++ b/Tethering/Android.bp
+@@ -129,6 +129,7 @@ cc_library {
+     name: "libcom_android_networkstack_tethering_util_jni",
+     sdk_version: "30",
+     apex_available: [
++        "//apex_available:platform", // Used by InProcessTethering
+         "com.android.tethering",
+     ],
+     min_sdk_version: "30",
+@@ -196,6 +197,24 @@ java_defaults {
+     },
+ }
+ 
++// Non-updatable tethering running in the system server process for devices not using the module
++android_app {
++    name: "InProcessTethering",
++    defaults: [
++        "TetheringAppDefaults",
++        "TetheringApiLevel",
++        "ConnectivityNextEnableDefaults",
++        "TetheringReleaseTargetSdk"
++    ],
++    static_libs: ["TetheringApiCurrentLib"],
++    certificate: "platform",
++    manifest: "AndroidManifest_InProcess.xml",
++    // InProcessTethering is a replacement for Tethering
++    overrides: ["Tethering"],
++    apex_available: ["com.android.tethering"],
++    lint: { strict_updatability_linting: true },
++}
++
+ // Updatable tethering packaged for finalized API
+ android_app {
+     name: "Tethering",
+diff --git a/Tethering/AndroidManifest_InProcess.xml b/Tethering/AndroidManifest_InProcess.xml
+new file mode 100644
+index 0000000000..b1f124097c
+--- /dev/null
++++ b/Tethering/AndroidManifest_InProcess.xml
+@@ -0,0 +1,34 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++/*
++ * Copyright (C) 2019 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++-->
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++          package="com.android.networkstack.tethering.inprocess"
++          android:sharedUserId="android.uid.system"
++          android:process="system">
++    <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="29" />
++    <application>
++        <service android:name="com.android.networkstack.tethering.TetheringService"
++                 android:process="system"
++                 android:permission="android.permission.MAINLINE_NETWORK_STACK"
++                 android:exported="true">
++            <intent-filter>
++                <action android:name="android.net.ITetheringConnector.InProcess"/>
++            </intent-filter>
++        </service>
++    </application>
++</manifest>
+diff --git a/Tethering/apex/Android.bp b/Tethering/apex/Android.bp
+index 432fcbe608..c3fae0ea37 100644
+--- a/Tethering/apex/Android.bp
++++ b/Tethering/apex/Android.bp
+@@ -19,6 +19,13 @@ package {
+     default_applicable_licenses: ["Android-Apache-2.0"],
+ }
+ 
++prebuilt_etc {
++    name: "TetheringInProcessFlag",
++    src: "in-process",
++    filename_from_src: true,
++    sub_dir: "flag",
++}
++
+ prebuilt_etc {
+     name: "TetheringOutOfProcessFlag",
+     src: "out-of-process",
+@@ -231,3 +238,27 @@ systemserverclasspath_fragment {
+     standalone_contents: ["service-connectivity"],
+     apex_available: ["com.android.tethering"],
+ }
++
++override_apex {
++    name: "com.android.tethering.inprocess",
++    base: "com.android.tethering",
++    package_name: "com.android.tethering.inprocess",
++    enabled: enable_tethering_next_apex,
++    bpfs: [
++        "block.o",
++        "clatd.o",
++        "dscpPolicy.o",
++        "netd.o",
++        "offload@inprocess.o",
++        "test@inprocess.o",
++    ],
++    apps: [
++        "ServiceConnectivityResources",
++        "InProcessTethering",
++    ],
++    prebuilts: [
++        "current_sdkinfo",
++        "privapp_allowlist_com.android.tethering",
++        "TetheringInProcessFlag",
++    ],
++}
+diff --git a/Tethering/apex/in-process b/Tethering/apex/in-process
+new file mode 100644
+index 0000000000..e69de29bb2
+diff --git a/bpf_progs/Android.bp b/bpf_progs/Android.bp
+index 674cd98535..81eec6ed0a 100644
+--- a/bpf_progs/Android.bp
++++ b/bpf_progs/Android.bp
+@@ -104,6 +104,18 @@ bpf {
+     ],
+ }
+ 
++bpf {
++    name: "offload@inprocess.o",
++    srcs: ["offload@inprocess.c"],
++    btf: true,
++    cflags: [
++        "-Wall",
++        "-Werror",
++        "-DBTF",
++        "-DINPROCESS",
++    ],
++}
++
+ bpf {
+     name: "test.o",
+     srcs: ["test.c"],
+@@ -124,6 +136,18 @@ bpf {
+     ],
+ }
+ 
++bpf {
++    name: "test@inprocess.o",
++    srcs: ["test@inprocess.c"],
++    btf: true,
++    cflags: [
++        "-Wall",
++        "-Werror",
++        "-DBTF",
++        "-DINPROCESS",
++    ],
++}
++
+ bpf {
+     name: "clatd.o",
+     srcs: ["clatd.c"],
+diff --git a/bpf_progs/offload.c b/bpf_progs/offload.c
+index 90f96a14c8..d5e4dbd79d 100644
+--- a/bpf_progs/offload.c
++++ b/bpf_progs/offload.c
+@@ -38,7 +38,13 @@
+ // Warning: values other than AID_ROOT don't work for map uid on BpfLoader < v0.21
+ #define TETHERING_UID AID_ROOT
+ 
++#ifdef INPROCESS
++#define DEFAULT_BPF_MAP_SELINUX_CONTEXT "fs_bpf_net_shared"
++#define DEFAULT_BPF_PROG_SELINUX_CONTEXT "fs_bpf_net_shared"
++#define TETHERING_GID AID_SYSTEM
++#else
+ #define TETHERING_GID AID_NETWORK_STACK
++#endif
+ 
+ #include "bpf_helpers.h"
+ #include "bpf_net_helpers.h"
+diff --git a/bpf_progs/offload@inprocess.c b/bpf_progs/offload@inprocess.c
+new file mode 120000
+index 0000000000..4092e0da16
+--- /dev/null
++++ b/bpf_progs/offload@inprocess.c
+@@ -0,0 +1 @@
++offload.c
+\ No newline at end of file
+diff --git a/bpf_progs/test.c b/bpf_progs/test.c
+index 70b08b795f..9501c8247e 100644
+--- a/bpf_progs/test.c
++++ b/bpf_progs/test.c
+@@ -32,7 +32,13 @@
+ // Warning: values other than AID_ROOT don't work for map uid on BpfLoader < v0.21
+ #define TETHERING_UID AID_ROOT
+ 
++#ifdef INPROCESS
++#define DEFAULT_BPF_MAP_SELINUX_CONTEXT "fs_bpf_net_shared"
++#define DEFAULT_BPF_PROG_SELINUX_CONTEXT "fs_bpf_net_shared"
++#define TETHERING_GID AID_SYSTEM
++#else
+ #define TETHERING_GID AID_NETWORK_STACK
++#endif
+ 
+ // This is non production code, only used for testing
+ // Needed because the bitmap array definition is non-kosher for pre-T OS devices.
+diff --git a/bpf_progs/test@inprocess.c b/bpf_progs/test@inprocess.c
+new file mode 120000
+index 0000000000..aeebb2626a
+--- /dev/null
++++ b/bpf_progs/test@inprocess.c
+@@ -0,0 +1 @@
++test.c
+\ No newline at end of file
+-- 
+2.37.2
+

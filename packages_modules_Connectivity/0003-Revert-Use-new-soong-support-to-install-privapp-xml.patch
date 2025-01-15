@@ -1,0 +1,73 @@
+From db9b50585edd4bce158eb095a5de17263edc7fdb Mon Sep 17 00:00:00 2001
+From: Yaroslav Zviezda <acroreiser@gmail.com>
+Date: Mon, 1 Apr 2024 22:49:41 +0300
+Subject: [PATCH 03/14] Revert "Use new soong support to install privapp xml"
+
+This reverts commit 1397a101accae6318eb8d01ed2a22ecc2c136cdb.
+
+Change-Id: If10ecaac944d67a3cc154d1363a71c74928509c4
+---
+ Tethering/Android.bp                  | 4 ++--
+ Tethering/apex/Android.bp             | 4 ++--
+ Tethering/apex/permissions/Android.bp | 7 +++++--
+ 3 files changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/Tethering/Android.bp b/Tethering/Android.bp
+index 1555e2c35e..ae7c5d5036 100644
+--- a/Tethering/Android.bp
++++ b/Tethering/Android.bp
+@@ -226,7 +226,7 @@ android_app {
+     certificate: "networkstack",
+     manifest: "AndroidManifest.xml",
+     use_embedded_native_libs: true,
+-    privapp_allowlist: ":privapp_allowlist_com.android.tethering",
++    required: ["privapp_allowlist_com.android.tethering"],
+     apex_available: ["com.android.tethering"],
+ }
+ 
+@@ -241,7 +241,7 @@ android_app {
+     certificate: "networkstack",
+     manifest: "AndroidManifest.xml",
+     use_embedded_native_libs: true,
+-    privapp_allowlist: ":privapp_allowlist_com.android.tethering",
++    required: ["privapp_allowlist_com.android.tethering"],
+     apex_available: ["com.android.tethering"],
+     lint: {
+         error_checks: ["NewApi"],
+diff --git a/Tethering/apex/Android.bp b/Tethering/apex/Android.bp
+index c3fae0ea37..e35374aa3e 100644
+--- a/Tethering/apex/Android.bp
++++ b/Tethering/apex/Android.bp
+@@ -125,10 +125,10 @@ apex {
+         "ServiceConnectivityResources",
+     ],
+     prebuilts: [
+-        "current_sdkinfo",
+-        "netbpfload.mainline.rc",
+         "ot-daemon.init.34rc",
+         "TetheringOutOfProcessFlag",
++        "current_sdkinfo",
++        "privapp_allowlist_com.android.tethering",
+     ],
+     manifest: "manifest.json",
+     key: "com.android.tethering.key",
+diff --git a/Tethering/apex/permissions/Android.bp b/Tethering/apex/permissions/Android.bp
+index 20772a8e09..e025b71f92 100644
+--- a/Tethering/apex/permissions/Android.bp
++++ b/Tethering/apex/permissions/Android.bp
+@@ -20,7 +20,10 @@ package {
+     default_visibility: ["//packages/modules/Connectivity/Tethering:__subpackages__"],
+ }
+ 
+-filegroup {
++prebuilt_etc {
+     name: "privapp_allowlist_com.android.tethering",
+-    srcs: ["permissions.xml"],
++    sub_dir: "permissions",
++    filename: "permissions.xml",
++    src: "permissions.xml",
++    installable: false,
+ }
+-- 
+2.37.2
+
