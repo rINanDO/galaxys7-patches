@@ -1,4 +1,4 @@
-From c30e19f666216e7f72956ea6c9974ad7612a112b Mon Sep 17 00:00:00 2001
+From e66a820bec1543a74fd023541552437d46b68307 Mon Sep 17 00:00:00 2001
 From: ivanmeler <i_ivan@windowslive.com>
 Date: Wed, 19 Jun 2024 18:43:42 +0000
 Subject: [PATCH 1/2] Disable gpuservice
@@ -18,5 +18,5 @@ index 0da8bd3812..b5b271402d 100644
      group graphics readtracefs
 +    disabled
 -- 
-2.25.1
+2.45.2
 
