@@ -1,4 +1,4 @@
-From db9b50585edd4bce158eb095a5de17263edc7fdb Mon Sep 17 00:00:00 2001
+From e389a4cec34948f2106c637239c6826b8e900564 Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Mon, 1 Apr 2024 22:49:41 +0300
 Subject: [PATCH 03/14] Revert "Use new soong support to install privapp xml"
@@ -8,15 +8,15 @@ This reverts commit 1397a101accae6318eb8d01ed2a22ecc2c136cdb.
 Change-Id: If10ecaac944d67a3cc154d1363a71c74928509c4
 ---
  Tethering/Android.bp                  | 4 ++--
- Tethering/apex/Android.bp             | 4 ++--
+ Tethering/apex/Android.bp             | 2 ++
  Tethering/apex/permissions/Android.bp | 7 +++++--
- 3 files changed, 9 insertions(+), 6 deletions(-)
+ 3 files changed, 9 insertions(+), 4 deletions(-)
 
 diff --git a/Tethering/Android.bp b/Tethering/Android.bp
-index 1555e2c35e..ae7c5d5036 100644
+index a975a3f865..e539695aeb 100644
 --- a/Tethering/Android.bp
 +++ b/Tethering/Android.bp
-@@ -226,7 +226,7 @@ android_app {
+@@ -220,7 +220,7 @@ android_app {
      certificate: "networkstack",
      manifest: "AndroidManifest.xml",
      use_embedded_native_libs: true,
@@ -25,7 +25,7 @@ index 1555e2c35e..ae7c5d5036 100644
      apex_available: ["com.android.tethering"],
  }
  
-@@ -241,7 +241,7 @@ android_app {
+@@ -234,7 +234,7 @@ android_app {
      certificate: "networkstack",
      manifest: "AndroidManifest.xml",
      use_embedded_native_libs: true,
@@ -35,16 +35,12 @@ index 1555e2c35e..ae7c5d5036 100644
      lint: {
          error_checks: ["NewApi"],
 diff --git a/Tethering/apex/Android.bp b/Tethering/apex/Android.bp
-index c3fae0ea37..e35374aa3e 100644
+index 3946cd0405..cac397784a 100644
 --- a/Tethering/apex/Android.bp
 +++ b/Tethering/apex/Android.bp
-@@ -125,10 +125,10 @@ apex {
-         "ServiceConnectivityResources",
-     ],
-     prebuilts: [
--        "current_sdkinfo",
--        "netbpfload.mainline.rc",
-         "ot-daemon.init.34rc",
+@@ -129,6 +129,8 @@ apex {
+         "netbpfload.35rc",
+         "ot-daemon.34rc",
          "TetheringOutOfProcessFlag",
 +        "current_sdkinfo",
 +        "privapp_allowlist_com.android.tethering",
@@ -69,5 +65,5 @@ index 20772a8e09..e025b71f92 100644
 +    installable: false,
  }
 -- 
-2.37.2
+2.45.2
 

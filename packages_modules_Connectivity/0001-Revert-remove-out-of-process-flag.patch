@@ -1,4 +1,4 @@
-From 8f6ac44a690b58a2715556e7bb3c20b71bc6588e Mon Sep 17 00:00:00 2001
+From d6ba01c2a69567609f425ec03d4b54f088db5759 Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Sun, 31 Mar 2024 20:55:35 +0300
 Subject: [PATCH 01/14] Revert "remove out-of-process flag"
@@ -13,7 +13,7 @@ Change-Id: I614b1d0a2c7c235d4cb8596fc4db242d5d7e9e61
  create mode 100644 Tethering/apex/out-of-process
 
 diff --git a/Tethering/apex/Android.bp b/Tethering/apex/Android.bp
-index 30bdf37317..432fcbe608 100644
+index 0c053548b6..1db0f51353 100644
 --- a/Tethering/apex/Android.bp
 +++ b/Tethering/apex/Android.bp
 @@ -19,6 +19,13 @@ package {
@@ -31,9 +31,9 @@ index 30bdf37317..432fcbe608 100644
  // different value depending on the branch.
  java_defaults {
 @@ -114,6 +121,7 @@ apex {
-         "current_sdkinfo",
-         "netbpfload.mainline.rc",
-         "ot-daemon.init.34rc",
+         "netbpfload.33rc",
+         "netbpfload.35rc",
+         "ot-daemon.34rc",
 +        "TetheringOutOfProcessFlag",
      ],
      manifest: "manifest.json",
@@ -42,5 +42,5 @@ diff --git a/Tethering/apex/out-of-process b/Tethering/apex/out-of-process
 new file mode 100644
 index 0000000000..e69de29bb2
 -- 
-2.37.2
+2.45.2
 

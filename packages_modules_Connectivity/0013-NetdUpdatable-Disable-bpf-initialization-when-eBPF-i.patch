@@ -1,4 +1,4 @@
-From 319000bbcbbf29a2b55af3f8a66a094645eca4a9 Mon Sep 17 00:00:00 2001
+From 48b5bd1f005d84f13e160fb577e2bca0da975848 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Wed, 12 Oct 2022 15:27:37 +0200
 Subject: [PATCH 13/14] NetdUpdatable: Disable bpf initialization when eBPF is
@@ -6,13 +6,13 @@ Subject: [PATCH 13/14] NetdUpdatable: Disable bpf initialization when eBPF is
 
 Change-Id: I9d2b933311797af6386c89faa73f2e1e1d2ef8d5
 ---
- netd/NetdUpdatable.cpp | 13 +++++++++----
+ bpf/netd/NetdUpdatable.cpp | 13 +++++++++----
  1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/netd/NetdUpdatable.cpp b/netd/NetdUpdatable.cpp
+diff --git a/bpf/netd/NetdUpdatable.cpp b/bpf/netd/NetdUpdatable.cpp
 index 8b9e5a759c..e3e59268ee 100644
---- a/netd/NetdUpdatable.cpp
-+++ b/netd/NetdUpdatable.cpp
+--- a/bpf/netd/NetdUpdatable.cpp
++++ b/bpf/netd/NetdUpdatable.cpp
 @@ -19,6 +19,7 @@
  #include "BpfHandler.h"
  
@@ -41,5 +41,5 @@ index 8b9e5a759c..e3e59268ee 100644
      return 0;
  }
 -- 
-2.37.2
+2.45.2
 

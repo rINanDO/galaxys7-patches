@@ -1,4 +1,4 @@
-From 46f516541fcf6f9a4fef2a5555b9794553e42094 Mon Sep 17 00:00:00 2001
+From b1ad63a22c50c844d5c76d2dc7bd7b55ad726e4f Mon Sep 17 00:00:00 2001
 From: koron393 <koron393@gmail.com>
 Date: Fri, 20 Jan 2023 05:41:13 +0900
 Subject: [PATCH 07/14] Bring back traffic indicators for legacy devices
@@ -138,5 +138,5 @@ index c99939864d..741f13c7ed 100644
  }
  
 -- 
-2.37.2
+2.45.2
 

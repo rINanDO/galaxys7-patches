@@ -1,4 +1,4 @@
-From 6f357bfa8450ca42170d6905a96966ed71b7a80c Mon Sep 17 00:00:00 2001
+From bab56c549d08f8098418df4ad877a3c2379f86a6 Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Wed, 29 Nov 2023 23:44:38 +0300
 Subject: [PATCH 02/14] Revert "remove inprocess tethering"
@@ -11,30 +11,30 @@ Change-Id: Ide4540c02d070abb8254cfd8a3e821dcc880f80c
  Tethering/AndroidManifest_InProcess.xml | 34 +++++++++++++++++++++++++
  Tethering/apex/Android.bp               | 31 ++++++++++++++++++++++
  Tethering/apex/in-process               |  0
- bpf_progs/Android.bp                    | 24 +++++++++++++++++
- bpf_progs/offload.c                     |  6 +++++
- bpf_progs/offload@inprocess.c           |  1 +
- bpf_progs/test.c                        |  6 +++++
- bpf_progs/test@inprocess.c              |  1 +
+ bpf/progs/Android.bp                    | 24 +++++++++++++++++
+ bpf/progs/offload.c                     |  6 +++++
+ bpf/progs/offload@inprocess.c           |  1 +
+ bpf/progs/test.c                        |  6 +++++
+ bpf/progs/test@inprocess.c              |  1 +
  9 files changed, 122 insertions(+)
  create mode 100644 Tethering/AndroidManifest_InProcess.xml
  create mode 100644 Tethering/apex/in-process
- create mode 120000 bpf_progs/offload@inprocess.c
- create mode 120000 bpf_progs/test@inprocess.c
+ create mode 120000 bpf/progs/offload@inprocess.c
+ create mode 120000 bpf/progs/test@inprocess.c
 
 diff --git a/Tethering/Android.bp b/Tethering/Android.bp
-index 394234c917..1555e2c35e 100644
+index 70b38a44fa..a975a3f865 100644
 --- a/Tethering/Android.bp
 +++ b/Tethering/Android.bp
-@@ -129,6 +129,7 @@ cc_library {
+@@ -124,6 +124,7 @@ cc_library {
      name: "libcom_android_networkstack_tethering_util_jni",
-     sdk_version: "30",
+     sdk_version: "current",
      apex_available: [
 +        "//apex_available:platform", // Used by InProcessTethering
          "com.android.tethering",
      ],
      min_sdk_version: "30",
-@@ -196,6 +197,24 @@ java_defaults {
+@@ -191,6 +192,24 @@ java_defaults {
      },
  }
  
@@ -100,7 +100,7 @@ index 0000000000..b1f124097c
 +    </application>
 +</manifest>
 diff --git a/Tethering/apex/Android.bp b/Tethering/apex/Android.bp
-index 432fcbe608..c3fae0ea37 100644
+index 1db0f51353..3946cd0405 100644
 --- a/Tethering/apex/Android.bp
 +++ b/Tethering/apex/Android.bp
 @@ -19,6 +19,13 @@ package {
@@ -117,7 +117,7 @@ index 432fcbe608..c3fae0ea37 100644
  prebuilt_etc {
      name: "TetheringOutOfProcessFlag",
      src: "out-of-process",
-@@ -231,3 +238,27 @@ systemserverclasspath_fragment {
+@@ -232,3 +239,27 @@ systemserverclasspath_fragment {
      standalone_contents: ["service-connectivity"],
      apex_available: ["com.android.tethering"],
  }
@@ -148,14 +148,14 @@ index 432fcbe608..c3fae0ea37 100644
 diff --git a/Tethering/apex/in-process b/Tethering/apex/in-process
 new file mode 100644
 index 0000000000..e69de29bb2
-diff --git a/bpf_progs/Android.bp b/bpf_progs/Android.bp
-index 674cd98535..81eec6ed0a 100644
---- a/bpf_progs/Android.bp
-+++ b/bpf_progs/Android.bp
-@@ -104,6 +104,18 @@ bpf {
-     ],
+diff --git a/bpf/progs/Android.bp b/bpf/progs/Android.bp
+index 52eb1b3ef5..37a8184f3b 100644
+--- a/bpf/progs/Android.bp
++++ b/bpf/progs/Android.bp
+@@ -84,6 +84,18 @@ bpf {
  }
  
+ // Ships to Android S, the bpfloader of which fails to parse BTF enabled .o's.
 +bpf {
 +    name: "offload@inprocess.o",
 +    srcs: ["offload@inprocess.c"],
@@ -171,8 +171,8 @@ index 674cd98535..81eec6ed0a 100644
  bpf {
      name: "test.o",
      srcs: ["test.c"],
-@@ -124,6 +136,18 @@ bpf {
-     ],
+@@ -97,6 +109,18 @@ bpf {
+     cflags: ["-DMAINLINE"],
  }
  
 +bpf {
@@ -190,58 +190,56 @@ index 674cd98535..81eec6ed0a 100644
  bpf {
      name: "clatd.o",
      srcs: ["clatd.c"],
-diff --git a/bpf_progs/offload.c b/bpf_progs/offload.c
-index 90f96a14c8..d5e4dbd79d 100644
---- a/bpf_progs/offload.c
-+++ b/bpf_progs/offload.c
-@@ -38,7 +38,13 @@
- // Warning: values other than AID_ROOT don't work for map uid on BpfLoader < v0.21
- #define TETHERING_UID AID_ROOT
+diff --git a/bpf/progs/offload.c b/bpf/progs/offload.c
+index 7e1184d817..62acaeff56 100644
+--- a/bpf/progs/offload.c
++++ b/bpf/progs/offload.c
+@@ -25,6 +25,12 @@
+ #define BPFLOADER_MAX_VER BPFLOADER_T_VERSION
+ #endif /* MAINLINE */
  
 +#ifdef INPROCESS
 +#define DEFAULT_BPF_MAP_SELINUX_CONTEXT "fs_bpf_net_shared"
 +#define DEFAULT_BPF_PROG_SELINUX_CONTEXT "fs_bpf_net_shared"
-+#define TETHERING_GID AID_SYSTEM
-+#else
- #define TETHERING_GID AID_NETWORK_STACK
++#define AID_NETWORK_STACK AID_SYSTEM
 +#endif
- 
- #include "bpf_helpers.h"
++
  #include "bpf_net_helpers.h"
-diff --git a/bpf_progs/offload@inprocess.c b/bpf_progs/offload@inprocess.c
+ #include "offload.h"
+ 
+diff --git a/bpf/progs/offload@inprocess.c b/bpf/progs/offload@inprocess.c
 new file mode 120000
 index 0000000000..4092e0da16
 --- /dev/null
-+++ b/bpf_progs/offload@inprocess.c
++++ b/bpf/progs/offload@inprocess.c
 @@ -0,0 +1 @@
 +offload.c
 \ No newline at end of file
-diff --git a/bpf_progs/test.c b/bpf_progs/test.c
-index 70b08b795f..9501c8247e 100644
---- a/bpf_progs/test.c
-+++ b/bpf_progs/test.c
-@@ -32,7 +32,13 @@
- // Warning: values other than AID_ROOT don't work for map uid on BpfLoader < v0.21
- #define TETHERING_UID AID_ROOT
+diff --git a/bpf/progs/test.c b/bpf/progs/test.c
+index 8585118bca..e01aceb2a2 100644
+--- a/bpf/progs/test.c
++++ b/bpf/progs/test.c
+@@ -25,6 +25,12 @@
+ #define BPFLOADER_MAX_VER BPFLOADER_T_VERSION
+ #endif /* MAINLINE */
  
 +#ifdef INPROCESS
 +#define DEFAULT_BPF_MAP_SELINUX_CONTEXT "fs_bpf_net_shared"
 +#define DEFAULT_BPF_PROG_SELINUX_CONTEXT "fs_bpf_net_shared"
-+#define TETHERING_GID AID_SYSTEM
-+#else
- #define TETHERING_GID AID_NETWORK_STACK
++#define AID_NETWORK_STACK AID_SYSTEM
 +#endif
- 
++
  // This is non production code, only used for testing
  // Needed because the bitmap array definition is non-kosher for pre-T OS devices.
-diff --git a/bpf_progs/test@inprocess.c b/bpf_progs/test@inprocess.c
+ #define THIS_BPF_PROGRAM_IS_FOR_TEST_PURPOSES_ONLY
+diff --git a/bpf/progs/test@inprocess.c b/bpf/progs/test@inprocess.c
 new file mode 120000
 index 0000000000..aeebb2626a
 --- /dev/null
-+++ b/bpf_progs/test@inprocess.c
++++ b/bpf/progs/test@inprocess.c
 @@ -0,0 +1 @@
 +test.c
 \ No newline at end of file
 -- 
-2.37.2
+2.45.2
 

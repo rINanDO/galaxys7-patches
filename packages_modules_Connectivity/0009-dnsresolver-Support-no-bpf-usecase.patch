@@ -1,4 +1,4 @@
-From a251d4a0ebc8473d5ef926d7620e32edc0a3515e Mon Sep 17 00:00:00 2001
+From ce9ddcda598a1fcb52a9216cc965eb4a80548386 Mon Sep 17 00:00:00 2001
 From: z3DD3r <z3dd3r@gmail.com>
 Date: Tue, 16 Apr 2024 12:36:46 +0300
 Subject: [PATCH 09/14] dnsresolver: Support no-bpf usecase
@@ -8,7 +8,7 @@ Subject: [PATCH 09/14] dnsresolver: Support no-bpf usecase
  1 file changed, 17 insertions(+), 5 deletions(-)
 
 diff --git a/DnsResolver/DnsBpfHelper.cpp b/DnsResolver/DnsBpfHelper.cpp
-index de8bef5860..232902dfc9 100644
+index 0719ade395..34eb272d5c 100644
 --- a/DnsResolver/DnsBpfHelper.cpp
 +++ b/DnsResolver/DnsBpfHelper.cpp
 @@ -38,9 +38,19 @@ base::Result<void> DnsBpfHelper::init() {
@@ -51,5 +51,5 @@ index de8bef5860..232902dfc9 100644
    auto value = mUidOwnerMap.readValue(uid);
    uint32_t uidRules = value.ok() ? value.value().rule : 0;
 -- 
-2.37.2
+2.45.2
 

@@ -1,17 +1,17 @@
-From c6d7b74ceb072929ed7c1809d386907ed89c2a72 Mon Sep 17 00:00:00 2001
+From 1cf5a02cfe84da675adace5e943ecbc59796f18b Mon Sep 17 00:00:00 2001
 From: z3DD3r <z3dd3r@gmail.com>
 Date: Tue, 16 Apr 2024 22:48:18 +0300
-Subject: [PATCH 10/14] [UL] clatcoordinator: Support no-bpf usecase
+Subject: [PATCH 10/14] clatcoordinator: Support no-bpf usecase
 
 ---
  service/jni/com_android_server_connectivity_ClatCoordinator.cpp | 1 -
  1 file changed, 1 deletion(-)
 
 diff --git a/service/jni/com_android_server_connectivity_ClatCoordinator.cpp b/service/jni/com_android_server_connectivity_ClatCoordinator.cpp
-index c125bd6479..5c5a79d9a1 100644
+index c0082bbe3a..ae7f6360ea 100644
 --- a/service/jni/com_android_server_connectivity_ClatCoordinator.cpp
 +++ b/service/jni/com_android_server_connectivity_ClatCoordinator.cpp
-@@ -130,7 +130,6 @@ static void verifyClatPerms() {
+@@ -132,7 +132,6 @@ static void verifyClatPerms() {
  
  #undef V2
  
@@ -20,5 +20,5 @@ index c125bd6479..5c5a79d9a1 100644
  
  #undef V
 -- 
-2.37.2
+2.45.2
 
