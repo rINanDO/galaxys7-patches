@@ -1,0 +1,64 @@
+From 90f93e0354aa146b22faaaa67413f3dd0f523782 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sun, 9 Feb 2025 12:02:46 -0500
+Subject: [PATCH 11/13] BpfNetMaps: Ignore missing configuration map for
+ BPF-less devices
+
+Change-Id: Ia1919b99e233d93113ff7ccecb884942f75d6abe
+---
+ service/src/com/android/server/BpfNetMaps.java | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/service/src/com/android/server/BpfNetMaps.java b/service/src/com/android/server/BpfNetMaps.java
+index 1834abdb48..ccc5bef9f0 100644
+--- a/service/src/com/android/server/BpfNetMaps.java
++++ b/service/src/com/android/server/BpfNetMaps.java
+@@ -252,6 +252,9 @@ public class BpfNetMaps {
+         if (sConfigurationMap == null) {
+             sConfigurationMap = getConfigurationMap();
+         }
++
++        if (sConfigurationMap == null) return;
++
+         try {
+             sConfigurationMap.updateEntry(UID_RULES_CONFIGURATION_KEY,
+                     new U32(UID_RULES_DEFAULT_CONFIGURATION));
+@@ -496,6 +499,8 @@ public class BpfNetMaps {
+     @Deprecated
+     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+     public boolean isChainEnabled(final int childChain) {
++        if (sConfigurationMap == null) return false;
++
+         return BpfNetMapsUtils.isChainEnabled(sConfigurationMap, childChain);
+     }
+ 
+@@ -838,6 +843,8 @@ public class BpfNetMaps {
+      */
+     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+     public int getNetPermForUid(final int uid) {
++        if (sUidPermissionMap == null) return PERMISSION_INTERNET;
++
+         final int appId = UserHandle.getAppId(uid);
+         try {
+             // Key of uid permission map is appId
+@@ -926,6 +933,8 @@ public class BpfNetMaps {
+      */
+     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+     public int getUidNetworkingBlockedReasons(final int uid) {
++        if (sConfigurationMap == null) return 0;
++
+         return BpfNetMapsUtils.getUidNetworkingBlockedReasons(uid,
+                 sConfigurationMap, sUidOwnerMap, sDataSaverEnabledMap);
+     }
+@@ -957,6 +966,8 @@ public class BpfNetMaps {
+      */
+     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+     public boolean isUidNetworkingBlocked(final int uid, boolean isNetworkMetered) {
++        if (sConfigurationMap == null) return false;
++
+         return BpfNetMapsUtils.isUidNetworkingBlocked(uid, isNetworkMetered,
+                 sConfigurationMap, sUidOwnerMap, sDataSaverEnabledMap);
+     }
+-- 
+2.45.2
+

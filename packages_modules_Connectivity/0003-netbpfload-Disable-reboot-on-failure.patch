@@ -1,7 +1,7 @@
-From 3a9bfbc2b49ad5740c7f346284623a265f6df730 Mon Sep 17 00:00:00 2001
+From a980dd42f230b578f67f2c5fe0d2bf91819a3f53 Mon Sep 17 00:00:00 2001
 From: Dmitry Gruzd <z3dd3r@gmail.com>
 Date: Sun, 14 Apr 2024 01:25:15 +0300
-Subject: [PATCH 08/14] netbpfload: Disable reboot on failure
+Subject: [PATCH 03/13] netbpfload: Disable reboot on failure
 
 This allows to see the boot animation
 

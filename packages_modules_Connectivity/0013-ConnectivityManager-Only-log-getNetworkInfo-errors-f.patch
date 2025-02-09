@@ -1,0 +1,28 @@
+From 159ba18d7e4abc64a045312d7de6a78a3ca86770 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sun, 9 Feb 2025 12:05:53 -0500
+Subject: [PATCH 13/13] ConnectivityManager: Only log getNetworkInfo errors for
+ BPF-less devices
+
+Change-Id: I581038e831fd7344888bd52a8f66960a5ecbb1f4
+---
+ framework/src/android/net/ConnectivityManager.java | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/framework/src/android/net/ConnectivityManager.java b/framework/src/android/net/ConnectivityManager.java
+index 1ebc4a3d52..8bb188690d 100644
+--- a/framework/src/android/net/ConnectivityManager.java
++++ b/framework/src/android/net/ConnectivityManager.java
+@@ -1752,6 +1752,9 @@ public class ConnectivityManager {
+             return mService.getNetworkInfo(networkType);
+         } catch (RemoteException e) {
+             throw e.rethrowFromSystemServer();
++        } catch (Throwable e) {
++            Log.e(TAG, "Unexpected error while calling getNeworkInfo", e);
++            return null;
+         }
+     }
+ 
+-- 
+2.45.2
+

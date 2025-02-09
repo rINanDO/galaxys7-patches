@@ -1,7 +1,7 @@
-From 3e6fadffcf0ba40b8fdec9fd254797d5287eb619 Mon Sep 17 00:00:00 2001
+From ea860484e3bd0b766e8b81bf81c30ab687f3cb95 Mon Sep 17 00:00:00 2001
 From: z3DD3r <z3dd3r@gmail.com>
 Date: Sat, 20 Apr 2024 20:31:37 +0300
-Subject: [PATCH 14/14] libnetworkstats: Make use of BpfMap safe
+Subject: [PATCH 09/13] libnetworkstats: Make use of BpfMap safe
 
 ---
  .../libs/libnetworkstats/BpfNetworkStats.cpp  | 31 +++++++++++++++++++

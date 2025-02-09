@@ -1,16 +1,16 @@
-From 1dc3c4c4c5608406e4193d87315b0c3f06c12297 Mon Sep 17 00:00:00 2001
+From 67c1951b80d5f551b52c30cf66e4c44f8dee6b3e Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 26 Oct 2022 18:11:10 -0400
-Subject: [PATCH 06/14] Support non-working BPF maps on old BPF-less kernel
+Subject: [PATCH 02/13] Support non-working BPF maps on old BPF-less kernel
 
 Change-Id: I70a9404a11de87577a70270918c8cd3992ff9c10
 ---
- bpf/headers/include/bpf/BpfMap.h              | 21 +++++-----
- bpf/loader/NetBpfLoad.cpp                     |  5 +--
+ bpf/headers/include/bpf/BpfMap.h              | 21 ++++----
+ bpf/loader/NetBpfLoad.cpp                     |  5 +-
  .../libs/libnetworkstats/BpfNetworkStats.cpp  |  1 +
- .../server/net/NetworkStatsService.java       | 29 ++++++++------
- .../src/com/android/server/BpfNetMaps.java    | 39 ++++++++++++++++++-
- 5 files changed, 68 insertions(+), 27 deletions(-)
+ .../server/net/NetworkStatsService.java       | 29 ++++++-----
+ .../src/com/android/server/BpfNetMaps.java    | 51 ++++++++++++++++---
+ 5 files changed, 74 insertions(+), 33 deletions(-)
 
 diff --git a/bpf/headers/include/bpf/BpfMap.h b/bpf/headers/include/bpf/BpfMap.h
 index 1037bebf29..b8e8991c57 100644
@@ -143,9 +143,63 @@ index 294a85a8db..88f9b74fd4 100644
              mCookieTagMap.forEach((key, value) -> {
                  // If SkDestroyListener deletes the socket tag while this code is running,
 diff --git a/service/src/com/android/server/BpfNetMaps.java b/service/src/com/android/server/BpfNetMaps.java
-index 44868b2db7..8c11e115cc 100644
+index 44868b2db7..1834abdb48 100644
 --- a/service/src/com/android/server/BpfNetMaps.java
 +++ b/service/src/com/android/server/BpfNetMaps.java
+@@ -192,7 +192,7 @@ public class BpfNetMaps {
+             return SingleWriterBpfMap.getSingleton(
+                     CONFIGURATION_MAP_PATH, S32.class, U32.class);
+         } catch (ErrnoException e) {
+-            throw new IllegalStateException("Cannot open netd configuration map", e);
++            return null;
+         }
+     }
+ 
+@@ -202,7 +202,7 @@ public class BpfNetMaps {
+             return SingleWriterBpfMap.getSingleton(
+                     UID_OWNER_MAP_PATH, S32.class, UidOwnerValue.class);
+         } catch (ErrnoException e) {
+-            throw new IllegalStateException("Cannot open uid owner map", e);
++            return null;
+         }
+     }
+ 
+@@ -212,7 +212,7 @@ public class BpfNetMaps {
+             return SingleWriterBpfMap.getSingleton(
+                     UID_PERMISSION_MAP_PATH, S32.class, U8.class);
+         } catch (ErrnoException e) {
+-            throw new IllegalStateException("Cannot open uid permission map", e);
++            return null;
+         }
+     }
+ 
+@@ -223,7 +223,7 @@ public class BpfNetMaps {
+             return new BpfMap<>(COOKIE_TAG_MAP_PATH,
+                     CookieTagMapKey.class, CookieTagMapValue.class);
+         } catch (ErrnoException e) {
+-            throw new IllegalStateException("Cannot open cookie tag map", e);
++            return null;
+         }
+     }
+ 
+@@ -233,7 +233,7 @@ public class BpfNetMaps {
+             return SingleWriterBpfMap.getSingleton(
+                     DATA_SAVER_ENABLED_MAP_PATH, S32.class, U8.class);
+         } catch (ErrnoException e) {
+-            throw new IllegalStateException("Cannot open data saver enabled map", e);
++            return null;
+         }
+     }
+ 
+@@ -243,7 +243,7 @@ public class BpfNetMaps {
+             return SingleWriterBpfMap.getSingleton(INGRESS_DISCARD_MAP_PATH,
+                     IngressDiscardKey.class, IngressDiscardValue.class);
+         } catch (ErrnoException e) {
+-            throw new IllegalStateException("Cannot open ingress discard map", e);
++            return null;
+         }
+     }
+ 
 @@ -369,7 +369,11 @@ public class BpfNetMaps {
      @VisibleForTesting
      public BpfNetMaps(final Context context, final INetd netd, final Dependencies deps) {

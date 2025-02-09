@@ -1,7 +1,7 @@
-From f016e4f6433e512fa7f3106ed7458ba751c2c455 Mon Sep 17 00:00:00 2001
+From ebf22aa01b9bd18b88f8ab4d9e5ca417693d8b1d Mon Sep 17 00:00:00 2001
 From: khalvat-M <mmba313@gmail.com>
 Date: Thu, 27 Jun 2024 02:17:11 +0330
-Subject: [PATCH 12/14] netbpfload: Support no-bpf usecase
+Subject: [PATCH 07/13] netbpfload: Support no-bpf usecase
 
 Based on https://github.com/LineageOS-UL/android_system_bpf/commit/5519c18abea64769e65f6773590195ac5d54af50
 
@@ -11,7 +11,7 @@ Change-Id: Id551d8d9c932c42c153fb40df03c539187f2d0f1
  1 file changed, 5 insertions(+), 8 deletions(-)
 
 diff --git a/bpf/loader/NetBpfLoad.cpp b/bpf/loader/NetBpfLoad.cpp
-index b0dba0ec25..b76b48d581 100644
+index b0dba0ec25..9c0117eee0 100644
 --- a/bpf/loader/NetBpfLoad.cpp
 +++ b/bpf/loader/NetBpfLoad.cpp
 @@ -1575,8 +1575,7 @@ static int doLoad(char** argv, char * const envp[]) {
@@ -46,7 +46,7 @@ index b0dba0ec25..b76b48d581 100644
      //  due to ordering issues)
      for (const auto& location : locations) {
 -        if (createSysFsBpfSubDir(location.prefix)) return 1;
-+        createSysFsBpfSubDir(location.prefix));
++        createSysFsBpfSubDir(location.prefix);
      }
  
      // Note: there's no actual src dir for fs_bpf_loader .o's,
@@ -55,7 +55,7 @@ index b0dba0ec25..b76b48d581 100644
      // and as such this will likely always be the case.
      // Thus we need to manually create the /sys/fs/bpf/loader subdirectory.
 -    if (createSysFsBpfSubDir("loader")) return 1;
-+    createSysFsBpfSubDir("loader"));
++    createSysFsBpfSubDir("loader");
  
      // Load all ELF objects, create programs and maps, and pin them
      for (const auto& location : locations) {
