@@ -2,16 +2,17 @@
 
 # Array of directories and corresponding patches
 declare -A patches=(
-    ["system/netd"]="system_netd"
-    ["system/bpf"]="system_bpf"
-    ["frameworks/base"]="frameworks_base"
     ["build/make"]="build_make"
+    ["frameworks/base"]="frameworks_base"
     ["frameworks/native"]="frameworks_native"
+    ["hardware/interfaces"]="hardware_interfaces"
     ["packages/modules/adb"]="packages_modules_adb"
     ["packages/modules/Connectivity"]="packages_modules_Connectivity"
     ["packages/modules/DnsResolver"]="packages_modules_DnsResolver"
     ["packages/modules/NetworkStack"]="packages_modules_NetworkStack"
+    ["system/bpf"]="system_bpf"
     ["system/core"]="system_core"
+    ["system/netd"]="system_netd"
     ["system/security"]="system_security"
 )
 
