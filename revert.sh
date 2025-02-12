@@ -2,6 +2,7 @@
 
 # Array of directories and corresponding patches
 declare -A patches=(
+    ["bionic"]="bionic"
     ["build/make"]="build_make"
     ["frameworks/base"]="frameworks_base"
     ["frameworks/native"]="frameworks_native"
@@ -14,6 +15,7 @@ declare -A patches=(
     ["system/core"]="system_core"
     ["system/netd"]="system_netd"
     ["system/security"]="system_security"
+    ["vendor/lineage"]="vendor_lineage"
 )
 
 # Base path for the patches

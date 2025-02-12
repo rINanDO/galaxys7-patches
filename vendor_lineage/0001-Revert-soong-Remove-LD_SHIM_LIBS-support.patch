@@ -1,0 +1,62 @@
+From 18bacf8f4f2ee6642f16c169aed2f8b3f83c06ae Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Thu, 13 Feb 2025 02:55:37 -0500
+Subject: [PATCH 1/1] Revert "soong: Remove LD_SHIM_LIBS support"
+
+This reverts commit 426aa2d8628833f52007cc52cf1374456f2d6893.
+---
+ build/soong/Android.bp     | 17 +++++++++++++++++
+ config/BoardConfigSoong.mk |  2 ++
+ 2 files changed, 19 insertions(+)
+
+diff --git a/build/soong/Android.bp b/build/soong/Android.bp
+index 0f5078b9..12105fa0 100644
+--- a/build/soong/Android.bp
++++ b/build/soong/Android.bp
+@@ -146,6 +146,23 @@ gralloc_handle_ubwcp_format {
+     },
+ }
+ 
++soong_config_module_type {
++    name: "target_shim_libs",
++    module_type: "cc_defaults",
++    config_namespace: "lineageGlobalVars",
++    value_variables: ["target_ld_shim_libs"],
++    properties: ["cppflags"],
++}
++
++target_shim_libs {
++    name: "shim_libs_defaults",
++    soong_config_variables: {
++        target_ld_shim_libs: {
++            cppflags: ["-DLD_SHIM_LIBS=\"%s\""],
++        },
++    },
++}
++
+ soong_config_module_type {
+     name: "vendor_init",
+     module_type: "cc_defaults",
+diff --git a/config/BoardConfigSoong.mk b/config/BoardConfigSoong.mk
+index 4adaa1db..2d3f4159 100644
+--- a/config/BoardConfigSoong.mk
++++ b/config/BoardConfigSoong.mk
+@@ -41,6 +41,7 @@ SOONG_CONFIG_lineageGlobalVars += \
+     target_health_charging_control_supports_deadline \
+     target_health_charging_control_supports_toggle \
+     target_init_vendor_lib \
++    target_ld_shim_libs \
+     target_power_libperfmgr_mode_extension_lib \
+     target_powershare_path \
+     target_powershare_enabled \
+@@ -121,6 +122,7 @@ SOONG_CONFIG_lineageGlobalVars_target_health_charging_control_supports_bypass :=
+ SOONG_CONFIG_lineageGlobalVars_target_health_charging_control_supports_deadline := $(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_DEADLINE)
+ SOONG_CONFIG_lineageGlobalVars_target_health_charging_control_supports_toggle := $(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_TOGGLE)
+ SOONG_CONFIG_lineageGlobalVars_target_init_vendor_lib := $(TARGET_INIT_VENDOR_LIB)
++SOONG_CONFIG_lineageGlobalVars_target_ld_shim_libs := $(subst $(space),:,$(TARGET_LD_SHIM_LIBS))
+ SOONG_CONFIG_lineageGlobalVars_target_power_libperfmgr_mode_extension_lib := $(TARGET_POWER_LIBPERFMGR_MODE_EXTENSION_LIB)
+ SOONG_CONFIG_lineageGlobalVars_target_powershare_path := $(TARGET_POWERSHARE_PATH)
+ SOONG_CONFIG_lineageGlobalVars_target_powershare_enabled := $(TARGET_POWERSHARE_ENABLED)
+-- 
+2.45.2
+
