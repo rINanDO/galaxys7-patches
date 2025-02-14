@@ -1,7 +1,7 @@
 From c35913d4e8881a7faef6850c3d4f88a0f0d55e26 Mon Sep 17 00:00:00 2001
 From: z3DD3r <z3dd3r@gmail.com>
 Date: Tue, 16 Apr 2024 22:48:18 +0300
-Subject: [PATCH 05/13] clatcoordinator: Support no-bpf usecase
+Subject: [PATCH 05/14] clatcoordinator: Support no-bpf usecase
 
 ---
  service/jni/com_android_server_connectivity_ClatCoordinator.cpp | 1 -

@@ -1,7 +1,7 @@
 From 67c1951b80d5f551b52c30cf66e4c44f8dee6b3e Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 26 Oct 2022 18:11:10 -0400
-Subject: [PATCH 02/13] Support non-working BPF maps on old BPF-less kernel
+Subject: [PATCH 02/14] Support non-working BPF maps on old BPF-less kernel
 
 Change-Id: I70a9404a11de87577a70270918c8cd3992ff9c10
 ---
