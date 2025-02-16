@@ -1,4 +1,4 @@
-From 9a6e5d867147ee4c1798f7073d69d609951ed538 Mon Sep 17 00:00:00 2001
+From 52a96a19b278a92018050e4dbaa32eb17fa2e297 Mon Sep 17 00:00:00 2001
 From: Francescodario Cuzzocrea <bosconovic@gmail.com>
 Date: Sat, 31 Jul 2021 10:18:02 +0200
 Subject: [PATCH 1/1] Settings: add Protect battery toggle
@@ -38,14 +38,14 @@ index f6e4e274926..85ce7db43b5 100644
 +    <string name="battery_life_extender_summary">To extend the lifespan of your battery, limit the maximum charge capacity level</string>
  </resources>
 diff --git a/res/xml/power_usage_summary.xml b/res/xml/power_usage_summary.xml
-index 89914a66975..5672c064d05 100644
+index 89914a66975..559f368bf6d 100644
 --- a/res/xml/power_usage_summary.xml
 +++ b/res/xml/power_usage_summary.xml
 @@ -81,6 +81,12 @@
          android:summary="@string/fast_charging_summary"
          settings:controller="com.android.settings.fuelgauge.FastChargingPreferenceController"/>
  
-+    <SwitchPreferenceCompat
++    <SwitchPreference
 +        android:key="battery_life_extender"
 +        android:title="@string/battery_life_extender_title"
 +        android:summary="@string/battery_life_extender_summary"
