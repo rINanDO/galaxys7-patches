@@ -4,6 +4,7 @@
 declare -A patches=(
     ["bionic"]="bionic"
     ["build/make"]="build_make"
+    ["frameworks/av"]="frameworks_av"
     ["frameworks/base"]="frameworks_base"
     ["frameworks/native"]="frameworks_native"
     ["hardware/interfaces"]="hardware_interfaces"
