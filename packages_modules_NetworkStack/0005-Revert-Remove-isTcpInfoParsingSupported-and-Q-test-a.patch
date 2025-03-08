@@ -1,4 +1,4 @@
-From b8d0b7f3567832ba718d2075f31608e17a9ebc5f Mon Sep 17 00:00:00 2001
+From 92786bc3939079b7a75ff59011393e87689e5883 Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Tue, 2 Apr 2024 23:49:13 +0300
 Subject: [PATCH 5/8] Revert "Remove isTcpInfoParsingSupported and Q test
@@ -9,12 +9,12 @@ This reverts commit d2f699c4608939e2f5a7589f6385b56d27243dfe.
 Change-Id: Iab1753134d0c2566f77436b18fa31dbadf0bc7f5
 ---
  .../netlink/TcpSocketTracker.java             | 23 ++++++++
- .../netlink/TcpSocketTrackerTest.java         | 59 +++++++++++++++++--
+ .../netlink/TcpSocketTrackerTest.java         | 57 ++++++++++++++++++-
  .../connectivity/NetworkMonitorTest.java      |  9 +++
- 3 files changed, 87 insertions(+), 4 deletions(-)
+ 3 files changed, 86 insertions(+), 3 deletions(-)
 
 diff --git a/src/com/android/networkstack/netlink/TcpSocketTracker.java b/src/com/android/networkstack/netlink/TcpSocketTracker.java
-index 4b66c0ae3..dd849324b 100644
+index 4b66c0ae..dd849324 100644
 --- a/src/com/android/networkstack/netlink/TcpSocketTracker.java
 +++ b/src/com/android/networkstack/netlink/TcpSocketTracker.java
 @@ -73,6 +73,7 @@ import com.android.net.module.util.netlink.StructInetDiagMsg;
@@ -102,16 +102,10 @@ index 4b66c0ae3..dd849324b 100644
           * Receive the request message from kernel via given fd.
           */
 diff --git a/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java b/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java
-index ab9816cfb..c3ed328c3 100644
+index e4081a36..68342032 100644
 --- a/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java
 +++ b/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java
-@@ -27,14 +27,17 @@ import static com.android.net.module.util.NetworkStackConstants.DNS_OVER_TLS_POR
- import static junit.framework.Assert.assertEquals;
- import static junit.framework.Assert.assertFalse;
- import static junit.framework.Assert.assertTrue;
--
-+import static org.junit.Assume.assumeTrue;
- import static org.mockito.ArgumentMatchers.anyBoolean;
+@@ -33,9 +33,12 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
  import static org.mockito.ArgumentMatchers.anyInt;
  import static org.mockito.ArgumentMatchers.eq;
  import static org.mockito.Mockito.any;
@@ -124,8 +118,8 @@ index ab9816cfb..c3ed328c3 100644
  import static org.mockito.Mockito.when;
  
  import android.content.BroadcastReceiver;
-@@ -56,7 +59,9 @@ import androidx.test.runner.AndroidJUnit4;
- import com.android.modules.utils.build.SdkLevel;
+@@ -60,7 +63,9 @@ import com.android.net.module.util.DeviceConfigUtils;
+ import com.android.net.module.util.FeatureVersions;
  import com.android.net.module.util.netlink.NetlinkUtils;
  import com.android.net.module.util.netlink.StructNlMsgHdr;
 +import com.android.networkstack.apishim.ConstantsShim;
@@ -134,7 +128,7 @@ index ab9816cfb..c3ed328c3 100644
  import com.android.testutils.DevSdkIgnoreRule.IgnoreUpTo;
  
  import libcore.util.HexEncoding;
-@@ -141,6 +146,7 @@ public class TcpSocketTrackerTest {
+@@ -146,6 +151,7 @@ public class TcpSocketTrackerTest {
          mOldWtfHandler =
                  Log.setWtfHandler((tag, what, system) -> Log.e(tag, what.getMessage(), what));
          when(mDependencies.getNetd()).thenReturn(mNetd);
@@ -142,7 +136,7 @@ index ab9816cfb..c3ed328c3 100644
          when(mDependencies.connectToKernel()).thenReturn(new FileDescriptor());
          when(mDependencies.getDeviceConfigPropertyInt(
                  eq(NAMESPACE_CONNECTIVITY),
-@@ -208,10 +214,15 @@ public class TcpSocketTrackerTest {
+@@ -213,10 +219,15 @@ public class TcpSocketTrackerTest {
          assertFalse(NetlinkUtils.enoughBytesRemainForValidNlMsg(buffer));
      }
  
@@ -159,7 +153,7 @@ index ab9816cfb..c3ed328c3 100644
          // No enough bytes remain for a valid NlMsg.
          final ByteBuffer invalidBuffer = ByteBuffer.allocate(1);
          invalidBuffer.order(ByteOrder.nativeOrder());
-@@ -307,6 +318,29 @@ public class TcpSocketTrackerTest {
+@@ -312,6 +323,29 @@ public class TcpSocketTrackerTest {
      }
  
      @Test
@@ -189,7 +183,7 @@ index ab9816cfb..c3ed328c3 100644
      public void testTcpInfoParsingWithMultipleMsgs() throws Exception {
          final TcpSocketTracker tst = new TcpSocketTracker(mDependencies, mNetwork);
  
-@@ -553,8 +587,11 @@ public class TcpSocketTrackerTest {
+@@ -558,8 +592,11 @@ public class TcpSocketTrackerTest {
                  + "0000000000000000"; // deliverRate = 0
      }
  
@@ -202,7 +196,7 @@ index ab9816cfb..c3ed328c3 100644
          final TcpSocketTracker tst = new TcpSocketTracker(mDependencies, mNetwork);
          final ArgumentCaptor<BroadcastReceiver> receiverCaptor =
                  ArgumentCaptor.forClass(BroadcastReceiver.class);
-@@ -642,6 +679,18 @@ public class TcpSocketTrackerTest {
+@@ -647,6 +684,18 @@ public class TcpSocketTrackerTest {
          doReturn(tcpBufferV6, tcpBufferV4).when(mDependencies).recvMessage(any());
      }
  
@@ -221,7 +215,7 @@ index ab9816cfb..c3ed328c3 100644
      private static final String BAD_DIAG_MSG_HEX =
          // struct nlmsghdr.
              "00000058"      // length = 1476395008
-@@ -669,8 +718,10 @@ public class TcpSocketTrackerTest {
+@@ -674,8 +723,10 @@ public class TcpSocketTrackerTest {
      private static final byte[] BAD_SOCK_DIAG_MSG_BYTES =
          HexEncoding.decode(BAD_DIAG_MSG_HEX.toCharArray(), false);
  
@@ -234,10 +228,10 @@ index ab9816cfb..c3ed328c3 100644
          setupNormalTestTcpInfo();
          assertTrue(tst.pollSocketsInfo());
 diff --git a/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java b/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java
-index e0e41c817..4267189d9 100644
+index 859c2b17..67c5d5e3 100644
 --- a/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java
 +++ b/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java
-@@ -767,6 +767,10 @@ public class NetworkMonitorTest {
+@@ -556,6 +556,10 @@ public class NetworkMonitorTest {
          quitExecutorServices();
          // Clear mocks to prevent from stubs holding instances and cause memory leaks.
          Mockito.framework().clearInlineMocks();
@@ -248,7 +242,7 @@ index e0e41c817..4267189d9 100644
      }
  
      private void initHttpConnection(HttpURLConnection connection) {
-@@ -869,6 +873,7 @@ public class NetworkMonitorTest {
+@@ -658,6 +662,7 @@ public class NetworkMonitorTest {
          setNetworkCapabilities(nm, nc);
          HandlerUtils.waitForIdle(nm.getHandler(), HANDLER_TIMEOUT_MS);
          mCreatedNetworkMonitors.add(nm);
@@ -256,7 +250,7 @@ index e0e41c817..4267189d9 100644
  
          return nm;
      }
-@@ -2020,6 +2025,7 @@ public class NetworkMonitorTest {
+@@ -1794,6 +1799,7 @@ public class NetworkMonitorTest {
      public void testIsDataStall_SkipEvaluateOnValidationNotRequiredNetwork() {
          // Make DNS and TCP stall condition satisfied.
          setDataStallEvaluationType(DATA_STALL_EVALUATION_TYPE_DNS | DATA_STALL_EVALUATION_TYPE_TCP);
@@ -264,7 +258,7 @@ index e0e41c817..4267189d9 100644
          doReturn(0).when(mTst).getLatestReceivedCount();
          doReturn(true).when(mTst).isDataStallSuspected();
          final WrappedNetworkMonitor nm = makeMonitor(CELL_NO_INTERNET_CAPABILITIES);
-@@ -2054,6 +2060,7 @@ public class NetworkMonitorTest {
+@@ -1828,6 +1834,7 @@ public class NetworkMonitorTest {
  
      @Test
      public void testIsDataStall_EvaluationTcp() throws Exception {
@@ -272,7 +266,7 @@ index e0e41c817..4267189d9 100644
          // Evaluate TCP only. Expect ignoring DNS signal.
          setDataStallEvaluationType(DATA_STALL_EVALUATION_TYPE_TCP);
          WrappedNetworkMonitor wrappedMonitor = makeMonitor(CELL_METERED_CAPABILITIES);
-@@ -2715,6 +2722,7 @@ public class NetworkMonitorTest {
+@@ -2670,6 +2677,7 @@ public class NetworkMonitorTest {
      @Test
      public void testDataStall_setOpportunisticMode() {
          setDataStallEvaluationType(DATA_STALL_EVALUATION_TYPE_TCP);
@@ -280,7 +274,7 @@ index e0e41c817..4267189d9 100644
          WrappedNetworkMonitor wnm = makeCellNotMeteredNetworkMonitor();
          InOrder inOrder = inOrder(mTst);
          // Initialized with default value.
-@@ -2819,6 +2827,7 @@ public class NetworkMonitorTest {
+@@ -2774,6 +2782,7 @@ public class NetworkMonitorTest {
      }
  
      private void setupTcpDataStall() {
@@ -289,5 +283,5 @@ index e0e41c817..4267189d9 100644
          doReturn(TEST_TCP_FAIL_RATE).when(mTst).getLatestPacketFailPercentage();
          doReturn(TEST_TCP_PACKET_COUNT).when(mTst).getSentSinceLastRecv();
 -- 
-2.37.2
+2.45.2
 

@@ -1,4 +1,4 @@
-From 0745e34ea5ff19fdb4f69ea5e2776902e20c1d23 Mon Sep 17 00:00:00 2001
+From 7c42de62ac8d05092a8456e0c1bb0a75db0e8e0f Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Tue, 2 Apr 2024 23:47:42 +0300
 Subject: [PATCH 3/8] Revert "[BR04] Skip traffic of networking-blocked uid in
@@ -8,11 +8,11 @@ This reverts commit db9c872f04ac44fff310262ad4961512ea8cbc6a.
 ---
  .../netlink/TcpSocketTracker.java             |  37 ------
  .../networkstack/util/NetworkStackUtils.java  |   7 --
- .../netlink/TcpSocketTrackerTest.java         | 112 +++---------------
- 3 files changed, 16 insertions(+), 140 deletions(-)
+ .../netlink/TcpSocketTrackerTest.java         | 118 +++---------------
+ 3 files changed, 16 insertions(+), 146 deletions(-)
 
 diff --git a/src/com/android/networkstack/netlink/TcpSocketTracker.java b/src/com/android/networkstack/netlink/TcpSocketTracker.java
-index 0a8e2aedb..4b66c0ae3 100644
+index 0a8e2aed..4b66c0ae 100644
 --- a/src/com/android/networkstack/netlink/TcpSocketTracker.java
 +++ b/src/com/android/networkstack/netlink/TcpSocketTracker.java
 @@ -27,14 +27,12 @@ import static android.system.OsConstants.AF_INET6;
@@ -126,10 +126,10 @@ index 0a8e2aedb..4b66c0ae3 100644
      }
  }
 diff --git a/src/com/android/networkstack/util/NetworkStackUtils.java b/src/com/android/networkstack/util/NetworkStackUtils.java
-index 0cb31fea1..6d8e0a815 100755
+index fce06e49..dca83676 100755
 --- a/src/com/android/networkstack/util/NetworkStackUtils.java
 +++ b/src/com/android/networkstack/util/NetworkStackUtils.java
-@@ -302,13 +302,6 @@ public class NetworkStackUtils {
+@@ -299,13 +299,6 @@ public class NetworkStackUtils {
       */
      public static final String REEVALUATE_WHEN_RESUME = "reevaluate_when_resume";
  
@@ -140,14 +140,14 @@ index 0cb31fea1..6d8e0a815 100755
 -    public static final String IGNORE_TCP_INFO_FOR_BLOCKED_UIDS =
 -            "ignore_tcp_info_for_blocked_uids";
 -
-     static {
-         System.loadLibrary("networkstackutilsjni");
-     }
+     /**
+      * Kill switch flag to disable the feature of handle arp offload in Apf.
+      * Warning: the following flag String is incorrect. The feature that is not chickened out is
 diff --git a/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java b/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java
-index 197b7d918..ab9816cfb 100644
+index d9bde661..e4081a36 100644
 --- a/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java
 +++ b/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java
-@@ -33,7 +33,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
+@@ -34,7 +34,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
  import static org.mockito.ArgumentMatchers.eq;
  import static org.mockito.Mockito.any;
  import static org.mockito.Mockito.doReturn;
@@ -155,7 +155,7 @@ index 197b7d918..ab9816cfb 100644
  import static org.mockito.Mockito.times;
  import static org.mockito.Mockito.verify;
  import static org.mockito.Mockito.when;
-@@ -41,7 +40,6 @@ import static org.mockito.Mockito.when;
+@@ -42,7 +41,6 @@ import static org.mockito.Mockito.when;
  import android.content.BroadcastReceiver;
  import android.content.Context;
  import android.content.Intent;
@@ -163,7 +163,7 @@ index 197b7d918..ab9816cfb 100644
  import android.net.INetd;
  import android.net.InetAddresses;
  import android.net.LinkProperties;
-@@ -59,7 +57,6 @@ import com.android.modules.utils.build.SdkLevel;
+@@ -63,7 +61,6 @@ import com.android.net.module.util.FeatureVersions;
  import com.android.net.module.util.netlink.NetlinkUtils;
  import com.android.net.module.util.netlink.StructNlMsgHdr;
  import com.android.testutils.DevSdkIgnoreRule;
@@ -171,7 +171,7 @@ index 197b7d918..ab9816cfb 100644
  import com.android.testutils.DevSdkIgnoreRule.IgnoreUpTo;
  
  import libcore.util.HexEncoding;
-@@ -121,7 +118,6 @@ public class TcpSocketTrackerTest {
+@@ -125,7 +122,6 @@ public class TcpSocketTrackerTest {
      private static final int TEST_NETID2_FWMARK = 0x1A85;
      private static final int NETID_MASK = 0xffff;
      private static final int TEST_UID1 = 1234;
@@ -179,15 +179,15 @@ index 197b7d918..ab9816cfb 100644
      private static final short TEST_DST_PORT = 29113;
      private static final long TEST_COOKIE1 = 43387759684916L;
      private static final long TEST_COOKIE2 = TEST_COOKIE1 + 1;
-@@ -133,7 +129,6 @@ public class TcpSocketTrackerTest {
-     private TerribleFailureHandler mOldWtfHandler;
+@@ -138,7 +134,6 @@ public class TcpSocketTrackerTest {
      @Mock private Context mContext;
+     private final Context mRealContext = InstrumentationRegistry.getInstrumentation().getContext();
      @Mock private PowerManager mPowerManager;
 -    @Mock private ConnectivityManager mCm;
  
      @Rule
      public final DevSdkIgnoreRule mIgnoreRule = new DevSdkIgnoreRule();
-@@ -155,9 +150,7 @@ public class TcpSocketTrackerTest {
+@@ -160,9 +155,7 @@ public class TcpSocketTrackerTest {
  
          when(mNetd.getFwmarkForNetwork(eq(TEST_NETID1)))
                  .thenReturn(makeMarkMaskParcel(NETID_MASK, TEST_NETID1_FWMARK));
@@ -197,7 +197,7 @@ index 197b7d918..ab9816cfb 100644
      }
  
      @After
-@@ -271,7 +264,7 @@ public class TcpSocketTrackerTest {
+@@ -276,7 +269,7 @@ public class TcpSocketTrackerTest {
          testLp.addDnsServer(TEST_DNS1);
          tst.setLinkProperties(testLp);
          doReturn(getByteBufferFromHexString(composeSockDiagTcpHex(9, 10)
@@ -206,7 +206,7 @@ index 197b7d918..ab9816cfb 100644
                  + NLMSG_DONE_HEX))
                  .when(mDependencies).recvMessage(any());
          assertTrue(tst.pollSocketsInfo());
-@@ -289,7 +282,7 @@ public class TcpSocketTrackerTest {
+@@ -294,7 +287,7 @@ public class TcpSocketTrackerTest {
          testLp.addValidatedPrivateDnsServer(TEST_DNS1);
          tst.setLinkProperties(testLp);
          doReturn(getByteBufferFromHexString(composeSockDiagTcpHex(10, 12)
@@ -215,7 +215,7 @@ index 197b7d918..ab9816cfb 100644
                  + NLMSG_DONE_HEX))
                  .when(mDependencies).recvMessage(any());
          assertTrue(tst.pollSocketsInfo());
-@@ -303,7 +296,7 @@ public class TcpSocketTrackerTest {
+@@ -308,7 +301,7 @@ public class TcpSocketTrackerTest {
          // polling cycle.
          tst.setOpportunisticMode(false);
          doReturn(getByteBufferFromHexString(composeSockDiagTcpHex(11, 14)
@@ -224,7 +224,7 @@ index 197b7d918..ab9816cfb 100644
                  + NLMSG_DONE_HEX))
                  .when(mDependencies).recvMessage(any());
          assertTrue(tst.pollSocketsInfo());
-@@ -313,78 +306,6 @@ public class TcpSocketTrackerTest {
+@@ -318,84 +311,6 @@ public class TcpSocketTrackerTest {
          assertFalse(tst.isDataStallSuspected());
      }
  
@@ -239,6 +239,9 @@ index 197b7d918..ab9816cfb 100644
 -    @IgnoreUpTo(Build.VERSION_CODES.TIRAMISU)
 -    @Test
 -    public void testPollSocketsInfo_ignoreBlockedUid_featureDisabled_UOrAbove() throws Exception {
+-        // Test only if the Tethering module is new enough to support the API.
+-        assumeTrue(DeviceConfigUtils.isFeatureSupported(mRealContext,
+-                FeatureVersions.FEATURE_IS_UID_NETWORKING_BLOCKED));
 -        doTestPollSocketsInfo_ignoreBlockedUid_featureDisabled();
 -        verify(mCm, never()).isUidNetworkingBlocked(anyInt(), anyBoolean());
 -    }
@@ -273,6 +276,9 @@ index 197b7d918..ab9816cfb 100644
 -    @IgnoreUpTo(Build.VERSION_CODES.TIRAMISU)
 -    @Test
 -    public void testPollSocketsInfo_ignoreBlockedUid_featureEnabled() throws Exception {
+-        // Test only if the Tethering module is new enough to support the API.
+-        assumeTrue(DeviceConfigUtils.isFeatureSupported(mRealContext,
+-                FeatureVersions.FEATURE_IS_UID_NETWORKING_BLOCKED));
 -        doReturn(true).when(mDependencies).shouldIgnoreTcpInfoForBlockedUids();
 -        final TcpSocketTracker tst = new TcpSocketTracker(mDependencies, mNetwork);
 -        doReturn(true).when(mCm).isUidNetworkingBlocked(TEST_UID2, false /* metered */);
@@ -303,7 +309,7 @@ index 197b7d918..ab9816cfb 100644
      @Test
      public void testTcpInfoParsingWithMultipleMsgs() throws Exception {
          final TcpSocketTracker tst = new TcpSocketTracker(mDependencies, mNetwork);
-@@ -549,11 +470,10 @@ public class TcpSocketTrackerTest {
+@@ -560,11 +475,10 @@ public class TcpSocketTrackerTest {
      }
  
      private static String composeSockDiagTcpHex(int retrans, int sent) {
@@ -317,7 +323,7 @@ index 197b7d918..ab9816cfb 100644
          return // struct nlmsghdr.
                  "14010000"          // length = 276
                  + "1400"            // type = SOCK_DIAG_BY_FAMILY
-@@ -567,17 +487,17 @@ public class TcpSocketTrackerTest {
+@@ -578,17 +492,17 @@ public class TcpSocketTrackerTest {
                  + "00"              // retrans
                  // inet_diag_sockid: ports and addresses are always in big endian,
                  // see StructInetDiagSockId.
@@ -347,5 +353,5 @@ index 197b7d918..ab9816cfb 100644
                  + "0500"            // len = 5
                  + "0800"            // type = 8
 -- 
-2.37.2
+2.45.2
 

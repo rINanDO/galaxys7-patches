@@ -1,4 +1,4 @@
-From 12f10ee921958d2ee111a068298ef7be395185e4 Mon Sep 17 00:00:00 2001
+From a9323f2fccb6422c131f3bb71a706e67c53ad140 Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Tue, 2 Apr 2024 23:47:20 +0300
 Subject: [PATCH 1/8] Revert "[BR05] Disable doze mode workaround when ignore
@@ -7,11 +7,11 @@ Subject: [PATCH 1/8] Revert "[BR05] Disable doze mode workaround when ignore
 This reverts commit b578a0dedfcae14759edcbec8677093d8c166c0f.
 ---
  .../netlink/TcpSocketTracker.java             |  47 ++-----
- .../netlink/TcpSocketTrackerTest.java         | 123 ++++++++----------
- 2 files changed, 66 insertions(+), 104 deletions(-)
+ .../netlink/TcpSocketTrackerTest.java         | 126 ++++++++----------
+ 2 files changed, 66 insertions(+), 107 deletions(-)
 
 diff --git a/src/com/android/networkstack/netlink/TcpSocketTracker.java b/src/com/android/networkstack/netlink/TcpSocketTracker.java
-index 0d77dcab3..d01847d7a 100644
+index 0d77dcab..d01847d7 100644
 --- a/src/com/android/networkstack/netlink/TcpSocketTracker.java
 +++ b/src/com/android/networkstack/netlink/TcpSocketTracker.java
 @@ -148,7 +148,6 @@ public class TcpSocketTracker {
@@ -128,7 +128,7 @@ index 0d77dcab3..d01847d7a 100644
          }
  
 diff --git a/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java b/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java
-index 494481244..d407fb005 100644
+index ed423e46..065441e1 100644
 --- a/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java
 +++ b/tests/unit/src/com/android/networkstack/netlink/TcpSocketTrackerTest.java
 @@ -21,7 +21,6 @@ import static android.net.NetworkCapabilities.NET_CAPABILITY_NOT_METERED;
@@ -139,7 +139,7 @@ index 494481244..d407fb005 100644
  import static android.os.PowerManager.ACTION_DEVICE_LIGHT_IDLE_MODE_CHANGED;
  import static android.provider.DeviceConfig.NAMESPACE_CONNECTIVITY;
  import static android.system.OsConstants.AF_INET;
-@@ -42,7 +41,6 @@ import static org.mockito.Mockito.times;
+@@ -43,7 +42,6 @@ import static org.mockito.Mockito.times;
  import static org.mockito.Mockito.verify;
  import static org.mockito.Mockito.when;
  
@@ -147,7 +147,7 @@ index 494481244..d407fb005 100644
  import android.content.BroadcastReceiver;
  import android.content.Context;
  import android.content.Intent;
-@@ -80,8 +78,6 @@ import org.mockito.Mock;
+@@ -84,8 +82,6 @@ import org.mockito.Mock;
  import org.mockito.MockitoAnnotations;
  
  import java.io.FileDescriptor;
@@ -156,7 +156,7 @@ index 494481244..d407fb005 100644
  import java.net.InetAddress;
  import java.nio.ByteBuffer;
  import java.nio.ByteOrder;
-@@ -170,7 +166,7 @@ public class TcpSocketTrackerTest {
+@@ -175,7 +171,7 @@ public class TcpSocketTrackerTest {
                  eq(NAMESPACE_CONNECTIVITY),
                  eq(CONFIG_TCP_PACKETS_FAIL_PERCENTAGE),
                  anyInt())).thenReturn(DEFAULT_TCP_PACKETS_FAIL_PERCENTAGE);
@@ -165,7 +165,7 @@ index 494481244..d407fb005 100644
  
          when(mNetd.getFwmarkForNetwork(eq(TEST_NETID1)))
                  .thenReturn(makeMarkMaskParcel(NETID_MASK, TEST_NETID1_FWMARK));
-@@ -677,76 +673,50 @@ public class TcpSocketTrackerTest {
+@@ -691,79 +687,50 @@ public class TcpSocketTrackerTest {
                  + "0000000000000000"; // deliverRate = 0
      }
  
@@ -197,11 +197,14 @@ index 494481244..d407fb005 100644
 +        when(mDependencies.getDeviceConfigPropertyInt(any(), eq(CONFIG_TCP_PACKETS_FAIL_PERCENTAGE),
 +                anyInt())).thenReturn(40);
  
--    // Ignore blocked uids is supported on T. Thus, for pre-T device this feature is always
+-    // Ignore blocked uids is supported on U. Thus, for pre-U device this feature is always
 -    // needed since there is no replacement.
--    @IgnoreUpTo(Build.VERSION_CODES.S_V2)
+-    @IgnoreUpTo(Build.VERSION_CODES.TIRAMISU)
 -    @Test
 -    public void testTcpInfoParsingWithDozeMode_disabled() throws Exception {
+-        // Test only if the Tethering module is new enough to support the API.
+-        assumeTrue(DeviceConfigUtils.isFeatureSupported(mRealContext,
+-                FeatureVersions.FEATURE_IS_UID_NETWORKING_BLOCKED));
 -        doReturn(true).when(mDependencies).shouldIgnoreTcpInfoForBlockedUids();
 -        doReturn(false).when(mDependencies).shouldDisableInLightDoze(anyBoolean());
 -        doTestTcpInfoDisableParsingWithDozeMode(DEEP_DOZE, false /* featureEnabled */);
@@ -271,7 +274,7 @@ index 494481244..d407fb005 100644
          // Verify counters are not updated.
          assertFalse(tst.pollSocketsInfo());
          assertEquals(0, tst.getSentSinceLastRecv());
-@@ -754,14 +724,9 @@ public class TcpSocketTrackerTest {
+@@ -771,14 +738,9 @@ public class TcpSocketTrackerTest {
          assertEquals(-1, tst.getLatestPacketFailPercentage());
          assertFalse(tst.isDataStallSuspected());
  
@@ -289,7 +292,7 @@ index 494481244..d407fb005 100644
          assertTrue(tst.pollSocketsInfo());
          assertEquals(10, tst.getSentSinceLastRecv());
          // Lost 4 + default 5 retrans / 10 sent.
-@@ -769,6 +734,28 @@ public class TcpSocketTrackerTest {
+@@ -786,6 +748,28 @@ public class TcpSocketTrackerTest {
          assertTrue(tst.isDataStallSuspected());
      }
  
@@ -319,5 +322,5 @@ index 494481244..d407fb005 100644
          final ByteBuffer tcpBufferV6 = getByteBuffer(TEST_RESPONSE_BYTES);
          final ByteBuffer tcpBufferV4 = getByteBuffer(TEST_RESPONSE_BYTES);
 -- 
-2.37.2
+2.45.2
 

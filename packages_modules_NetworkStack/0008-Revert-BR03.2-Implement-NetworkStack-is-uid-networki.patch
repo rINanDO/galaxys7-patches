@@ -1,4 +1,4 @@
-From dacbded34ebd3b494da7c46f6bf645642b9c5d93 Mon Sep 17 00:00:00 2001
+From f6881947981d58e06ff9b989314025d8ca0dc529 Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Tue, 2 Apr 2024 23:57:53 +0300
 Subject: [PATCH 8/8] Revert "[BR03.2] Implement NetworkStack
@@ -6,24 +6,15 @@ Subject: [PATCH 8/8] Revert "[BR03.2] Implement NetworkStack
 
 This reverts commit a75c5a64375630929178ce933d552cc6a1257db7.
 ---
- Android.bp                                    |  3 +-
- .../android/server/NetworkStackService.java   | 68 -------------------
- 2 files changed, 1 insertion(+), 70 deletions(-)
+ Android.bp                                    |   1 -
+ .../android/server/NetworkStackService.java   | 138 ------------------
+ 2 files changed, 139 deletions(-)
 
 diff --git a/Android.bp b/Android.bp
-index 8d61344c1..83d4ea35d 100644
+index 8f4997c6..13c5b65b 100644
 --- a/Android.bp
 +++ b/Android.bp
-@@ -91,7 +91,7 @@ java_defaults {
-     sdk_version: module_34_version,
-     libs: [
-         "framework-configinfrastructure",
--        "framework-connectivity.stubs.module_lib",
-+        "framework-connectivity",
-         "framework-connectivity-t",
-         "framework-statsd",
-         "framework-wifi",
-@@ -320,7 +320,6 @@ java_defaults {
+@@ -281,7 +281,6 @@ java_defaults {
          "androidx.annotation_annotation",
          "modules-utils-build_system",
          "modules-utils-preconditions",
@@ -32,11 +23,11 @@ index 8d61344c1..83d4ea35d 100644
          "netd_aidl_interface-lateststable-java",
          "networkstack-client",
 diff --git a/src/com/android/server/NetworkStackService.java b/src/com/android/server/NetworkStackService.java
-index 347200b62..368a6d4ea 100644
+index 700c411e..c145bfe1 100644
 --- a/src/com/android/server/NetworkStackService.java
 +++ b/src/com/android/server/NetworkStackService.java
-@@ -21,13 +21,11 @@ import static android.net.dhcp.IDhcpServer.STATUS_SUCCESS;
- import static android.net.dhcp.IDhcpServer.STATUS_UNKNOWN_ERROR;
+@@ -22,13 +22,11 @@ import static android.net.dhcp.IDhcpServer.STATUS_UNKNOWN_ERROR;
+ import static android.net.util.RawSocketUtils.sendRawPacketDownStream;
  
  import static com.android.net.module.util.DeviceConfigUtils.getResBooleanConfig;
 -import static com.android.net.module.util.FeatureVersions.FEATURE_IS_UID_NETWORKING_BLOCKED;
@@ -49,7 +40,7 @@ index 347200b62..368a6d4ea 100644
  import android.net.IIpMemoryStore;
  import android.net.IIpMemoryStoreCallbacks;
  import android.net.INetd;
-@@ -51,7 +49,6 @@ import android.os.Build;
+@@ -52,7 +50,6 @@ import android.os.Build;
  import android.os.HandlerThread;
  import android.os.IBinder;
  import android.os.Looper;
@@ -57,7 +48,7 @@ index 347200b62..368a6d4ea 100644
  import android.os.RemoteException;
  import android.text.TextUtils;
  import android.util.ArraySet;
-@@ -62,8 +59,6 @@ import androidx.annotation.VisibleForTesting;
+@@ -63,8 +60,6 @@ import androidx.annotation.VisibleForTesting;
  
  import com.android.internal.annotations.GuardedBy;
  import com.android.internal.util.IndentingPrintWriter;
@@ -66,7 +57,7 @@ index 347200b62..368a6d4ea 100644
  import com.android.net.module.util.SharedLog;
  import com.android.networkstack.NetworkStackNotifier;
  import com.android.networkstack.R;
-@@ -487,69 +482,6 @@ public class NetworkStackService extends Service {
+@@ -481,139 +476,6 @@ public class NetworkStackService extends Service {
                      R.bool.config_no_sim_card_uses_neighbor_mcc, false));
          }
  
@@ -78,6 +69,23 @@ index 347200b62..368a6d4ea 100644
 -                    err.getFileDescriptor(), args);
 -        }
 -
+-        private String apfShellCommand(String iface, String cmd, @Nullable String optarg) {
+-            synchronized (mIpClients) {
+-                // HACK: An old IpClient serving the given interface name might not have been
+-                // garbage collected. Since new IpClients are always appended to the list, iterate
+-                // through it in reverse order to get the most up-to-date IpClient instance.
+-                // Create a ListIterator at the end of the list.
+-                final ListIterator it = mIpClients.listIterator(mIpClients.size());
+-                while (it.hasPrevious()) {
+-                    final IpClient ipClient = ((WeakReference<IpClient>) it.previous()).get();
+-                    if (ipClient != null && ipClient.getInterfaceName().equals(iface)) {
+-                        return ipClient.apfShellCommand(cmd, optarg);
+-                    }
+-                }
+-            }
+-            throw new IllegalArgumentException("No active IpClient found for interface " + iface);
+-        }
+-
 -        private class ShellCmd extends BasicShellCommandHandler {
 -            @Override
 -            public int onCommand(String cmd) {
@@ -85,39 +93,68 @@ index 347200b62..368a6d4ea 100644
 -                    return handleDefaultCommands(cmd);
 -                }
 -                final PrintWriter pw = getOutPrintWriter();
--                try {
--                    switch (cmd) {
--                        case "is-uid-networking-blocked":
--                            if (!DeviceConfigUtils.isFeatureSupported(mContext,
--                                    FEATURE_IS_UID_NETWORKING_BLOCKED)) {
--                                pw.println("API is unsupported");
--                                return -1;
--                            }
+-                switch (cmd) {
+-                    case "is-uid-networking-blocked":
+-                        if (!DeviceConfigUtils.isFeatureSupported(mContext,
+-                                FEATURE_IS_UID_NETWORKING_BLOCKED)) {
+-                            throw new IllegalStateException("API is unsupported");
+-                        }
 -
--                            // Usage : cmd network_stack is-uid-networking-blocked <uid> <metered>
--                            // If no argument, get and display the usage help.
--                            if (getRemainingArgsCount() != 2) {
--                                onHelp();
--                                return -1;
--                            }
--                            final int uid;
--                            final boolean metered;
--                            // If any fail, throws and output to the stdout.
--                            // Let the caller handle it.
--                            uid = Integer.parseInt(getNextArg());
--                            metered = Boolean.parseBoolean(getNextArg());
--                            final ConnectivityManager cm =
--                                    mContext.getSystemService(ConnectivityManager.class);
--                            pw.println(cm.isUidNetworkingBlocked(
--                                    uid, metered /* isNetworkMetered */));
--                            return 0;
--                        default:
--                            return handleDefaultCommands(cmd);
+-                        // Usage : cmd network_stack is-uid-networking-blocked <uid> <metered>
+-                        // If no argument, get and display the usage help.
+-                        if (getRemainingArgsCount() != 2) {
+-                            onHelp();
+-                            throw new IllegalArgumentException("Incorrect number of arguments");
+-                        }
+-                        final int uid;
+-                        final boolean metered;
+-                        uid = Integer.parseInt(getNextArg());
+-                        metered = Boolean.parseBoolean(getNextArg());
+-                        final ConnectivityManager cm =
+-                                mContext.getSystemService(ConnectivityManager.class);
+-                        pw.println(cm.isUidNetworkingBlocked(uid, metered /* isNetworkMetered */));
+-                        return 0;
+-                    case "send-raw-packet-downstream": {
+-                        // Usage : cmd network_stack send-raw-packet-downstream
+-                        //         <interface> <packet-in-hex>
+-                        // If no argument, get and display the usage help.
+-                        if (getRemainingArgsCount() != 2) {
+-                            onHelp();
+-                            throw new IllegalArgumentException("Incorrect number of arguments");
+-                        }
+-                        final String iface = getNextArg();
+-                        final String packetInHex = getNextArg();
+-                        try {
+-                            sendRawPacketDownStream(mContext, iface, packetInHex);
+-                        } catch (Exception e) {
+-                            throw new RuntimeException(e);
+-                        }
+-                        return 0;
 -                    }
--                } catch (Exception e) {
--                    pw.println(e);
+-                    case "apf":
+-                        // Usage: cmd network_stack apf <iface> <cmd>
+-                        final String iface = getNextArg();
+-                        if (iface == null) {
+-                            throw new IllegalArgumentException("No <iface> specified");
+-                        }
+-
+-                        final String subcmd = getNextArg();
+-                        if (subcmd == null) {
+-                            throw new IllegalArgumentException("No <cmd> specified");
+-                        }
+-
+-                        final String optarg = getNextArg();
+-                        if (getRemainingArgsCount() != 0) {
+-                            throw new IllegalArgumentException("Too many arguments passed");
+-                        }
+-
+-                        final String result = apfShellCommand(iface, subcmd, optarg);
+-                        pw.println(result);
+-                        return 0;
+-
+-                    default:
+-                        return handleDefaultCommands(cmd);
 -                }
--                return -1;
 -            }
 -
 -            @Override
@@ -130,6 +167,30 @@ index 347200b62..368a6d4ea 100644
 -                pw.println("    Get whether the networking is blocked for given uid and metered.");
 -                pw.println("    <uid>: The target uid.");
 -                pw.println("    <metered>: [true|false], Whether the target network is metered.");
+-                pw.println("  send-raw-packet-downstream <interface> <packet-in-hex>");
+-                pw.println("    Send raw packet for testing purpose.");
+-                pw.println("    <interface>: Target interface name, note that this is limited");
+-                pw.println("      to tethering downstream for security considerations.");
+-                pw.println("    <packet_in_hex>: A valid hexadecimal representation of ");
+-                pw.println("      a packet starting from L2 header.");
+-                pw.println("  apf <iface> <cmd>");
+-                pw.println("    APF utility commands for integration tests.");
+-                pw.println("    <iface>: the network interface the provided command operates on.");
+-                pw.println("    <cmd>: [status]");
+-                pw.println("      status");
+-                pw.println("        returns whether the APF filter is \"running\" or \"paused\".");
+-                pw.println("      pause");
+-                pw.println("        pause APF filter generation.");
+-                pw.println("      resume");
+-                pw.println("        resume APF filter generation.");
+-                pw.println("      install <program-hex-string>");
+-                pw.println("        install the APF program contained in <program-hex-string>.");
+-                pw.println("        The filter must be paused before installing a new program.");
+-                pw.println("      capabilities");
+-                pw.println("        return the reported APF capabilities.");
+-                pw.println("        Format: <apfVersion>,<maxProgramSize>,<packetFormat>");
+-                pw.println("      read");
+-                pw.println("        reads and returns the current state of APF memory.");
 -            }
 -        }
 -
@@ -137,5 +198,5 @@ index 347200b62..368a6d4ea 100644
           * Dump version information of the module and detected system version.
           */
 -- 
-2.37.2
+2.45.2
 
