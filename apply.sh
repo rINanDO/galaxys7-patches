@@ -8,7 +8,6 @@ declare -A patches=(
     ["frameworks/base"]="frameworks_base"
     ["frameworks/native"]="frameworks_native"
     ["hardware/interfaces"]="hardware_interfaces"
-    ["packages/modules/adb"]="packages_modules_adb"
     ["packages/modules/Connectivity"]="packages_modules_Connectivity"
     ["packages/modules/DnsResolver"]="packages_modules_DnsResolver"
     ["packages/modules/NetworkStack"]="packages_modules_NetworkStack"
