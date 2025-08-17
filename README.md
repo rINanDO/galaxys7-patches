@@ -1,7 +1,62 @@
-# LineageOS 21/Android 14 patches for Exynos 8890 support
-Just copy them to coresponding folder and git apply them (or git am --signoff < path/to/file.patch)
+# LineageOS 22.1/Android 15 patches for Galaxy S7 (HeroLTE) support
 
-Patches here are used to make device without bpf boot and work properly (As of now there is no 3.18 eBPF port)
+These instructions assumes that:
 
-Simplest way to apply patches is to clone this repo to ~/patches
-copy apply.sh script to root of your android source dir and run apply.sh
+- you have installed LineageOS 22.1 sources installed in ```~/android/system```
+  (See <https://github.com/LineageOS/android/tree/lineage-22.1>)
+
+  ```#!/bin/bash
+  repo init -u <https://github.com/LineageOS/android.git> -b lineage-22.1 --git-lfs
+  repo sync
+  ```
+
+- you have installed these patches to ```~/patches```
+
+## 1. Apply device specific repo's
+
+```#!/bin/bash
+mkdir ~/android/system/.repo/local_manifests
+cd ~/patches
+cp roomservice.xml to ~/android/system/.repo/local_manifests
+cd ~/android/system
+repo sync
+```  
+
+## 2. Apply the patches
+
+```#!/bin/bash
+cd ~/android/system
+. ~/patches/apply.sh
+```
+
+## 3. Optional, apply the "Battery Life Extender"-feature patches
+
+```#!/bin/bash
+cd ~/android/system
+. ~/patches/features/batterylifeextender/apply.sh
+```
+
+## 4. Build the ROM
+
+```#!/bin/bash
+cd ~/android/system
+. build/envsetup.sh
+brunch herolte
+```
+
+Your build will be put (after many hours) in:
+
+```~/android/system/out/target/product/herolte```
+
+## How to revert the patches
+
+```#!/bin/bash
+cd ~/android/system
+. ~/patches/features/batterylifeextender/revert.sh
+. ~/patches/revert.sh
+```
+
+Have fun!
+
+These patches were last tested on:
+17 aug 2025.
