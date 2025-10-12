@@ -20,7 +20,7 @@ declare -A patches=(
 )
 
 # Base path for the patches
-patches_base_path=~/patches
+patches_base_path=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 for dir in "${!patches[@]}"; do
     cd $dir || { echo "Directory $dir not found"; exit 1; }
