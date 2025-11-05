@@ -1,0 +1,42 @@
+From b65a497ca15a6f863570e26f872864071e0ce52c Mon Sep 17 00:00:00 2001
+From: Pig <pig.priv@gmail.com>
+Date: Thu, 15 Oct 2020 08:44:20 +0800
+Subject: [PATCH] camera: Allow devices to load custom CameraParameter code
+
+* Some devices need additional code to load their cameras. Add a hook
+  for extra classes and symbols to be included.
+
+Originally implemented in Android.mk at 38b27bf2e5079441358288402b38865ba7c1d9d6
+Credit to Ethan Chen for original Android.mk implementation
+Originally implemented via lineage product variable at 7398f91e051086bdd210a8bae0533f15fac1a37f
+Credit to Rashed Abdel-Tawab for original product variable implementation
+
+Change-Id: Iec667af2f0bfdb41f14df342cb128908244d7af0
+---
+ camera/Android.bp | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/camera/Android.bp b/camera/Android.bp
+index d91fcb21e5..2408993bd9 100644
+--- a/camera/Android.bp
++++ b/camera/Android.bp
+@@ -167,6 +167,16 @@ cc_library_host_static {
+     ],
+ }
+ 
++cc_library_static {
++    name: "libcamera_parameters",
++
++    export_include_dirs: [
++        "include",
++    ],
++    srcs: ["CameraParameters.cpp"],
++
++}
++
+ // AIDL interface between camera clients and the camera service.
+ filegroup {
+     name: "libcamera_client_aidl",
+-- 
+2.45.2
+

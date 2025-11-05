@@ -1,0 +1,65 @@
+From 42717eeb8d17e783a9e84abea433b1187ba74250 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Tue, 21 Jan 2025 14:52:01 -0500
+Subject: [PATCH] loader: Support no bpf usecase
+
+Change-Id: I5b99fb83001debd08d910569387e08970b78e8d3
+---
+ loader/Loader.cpp               | 13 +++++++------
+ loader/include/libbpf_android.h |  2 +-
+ 2 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/loader/Loader.cpp b/loader/Loader.cpp
+index 2a0cf42..7750e67 100644
+--- a/loader/Loader.cpp
++++ b/loader/Loader.cpp
+@@ -1008,7 +1008,8 @@ void initLogging() {
+ void createBpfFsSubDirectories() {
+     for (const auto& location : android::bpf::locations) {
+         if (android::bpf::createSysFsBpfSubDir(location.prefix)) {
+-            exit(120);
++    ALOGE("BPF Ignored 120: createSysFsBpfSubDir(%s)", location.prefix);
++//          exit(120);
+         }
+     }
+ }
+@@ -1021,9 +1022,9 @@ void legacyBpfLoader() {
+             ALOGE("If this triggers reliably, you're probably missing kernel options or patches.");
+             ALOGE("If this triggers randomly, you might be hitting some memory allocation "
+                   "problems or startup script race.");
+-            ALOGE("--- DO NOT EXPECT SYSTEM TO BOOT SUCCESSFULLY ---");
+-            sleep(20);
+-            exit(121);
++            ALOGE("BPF Ignored 122: CONTINUE SYSTEM TO BOOT ---");
++//            sleep(20);
++//            exit(121);
+         }
+     }
+ }
+@@ -1031,8 +1032,8 @@ void legacyBpfLoader() {
+ void execNetBpfLoadDone() {
+     const char* args[] = {"/apex/com.android.tethering/bin/netbpfload", "done", NULL};
+     execve(args[0], (char**)args, environ);
+-    ALOGE("FATAL: execve(): %d[%s]", errno, strerror(errno));
+-    exit(122);
++    ALOGE("BPF Ignored 122: execve(): %d[%s]", errno, strerror(errno));
++//     exit(122);
+ }
+ 
+ void logVerbose(const char* msg) {
+diff --git a/loader/include/libbpf_android.h b/loader/include/libbpf_android.h
+index 8e5a887..ce9c3f6 100644
+--- a/loader/include/libbpf_android.h
++++ b/loader/include/libbpf_android.h
+@@ -51,7 +51,7 @@ extern "C" {
+ void initLogging();
+ void createBpfFsSubDirectories();
+ void legacyBpfLoader();
+-__noreturn void execNetBpfLoadDone();
++void execNetBpfLoadDone();
+ 
+ // For logging from rust
+ void logVerbose(const char* msg);
+-- 
+2.45.2
+

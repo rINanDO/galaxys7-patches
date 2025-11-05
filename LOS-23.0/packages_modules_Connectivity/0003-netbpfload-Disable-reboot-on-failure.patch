@@ -1,0 +1,26 @@
+From 88f9dbe2acd4de2e3c204c38c969834efc00e1ac Mon Sep 17 00:00:00 2001
+From: Dmitry Gruzd <z3dd3r@gmail.com>
+Date: Sun, 14 Apr 2024 01:25:15 +0300
+Subject: [PATCH 03/14] netbpfload: Disable reboot on failure
+
+This allows to see the boot animation
+
+Change-Id: I97f0d73259a1cb41f43c86279f36084af3e4cb7c
+---
+ bpf/loader/netbpfload.rc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bpf/loader/netbpfload.rc b/bpf/loader/netbpfload.rc
+index 4cc6284cfc..3ae0615a47 100644
+--- a/bpf/loader/netbpfload.rc
++++ b/bpf/loader/netbpfload.rc
+@@ -67,5 +67,5 @@ service bpfloader /system/bin/false
+     #    'cannot prove return value is 0 or 1' or 'unsupported / unknown operation / helper',
+     #    'invalid bpf_context access', etc.
+     #
+-    reboot_on_failure reboot,netbpfload-missing
++    # reboot_on_failure reboot,netbpfload-missing
+     updatable
+-- 
+2.51.0
+

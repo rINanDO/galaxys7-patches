@@ -1,0 +1,26 @@
+From 8228ed3a5fdc71053c3e7bbb078b149635d0d16e Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Tue, 21 Oct 2025 22:39:29 +0200
+Subject: [PATCH] soong: Add LD_SHIM_LIBS support
+
+Change-Id: I295184b88107ff4a254d21f05291bb8ce6c0ceaf
+---
+ config/BoardConfigSoong.mk | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/config/BoardConfigSoong.mk b/config/BoardConfigSoong.mk
+index cd65d4b2..c75a2eb3 100644
+--- a/config/BoardConfigSoong.mk
++++ b/config/BoardConfigSoong.mk
+@@ -90,3 +90,8 @@ endif
+ ifneq ($(TARGET_INIT_VENDOR_LIB),)
+     $(error TARGET_INIT_VENDOR_LIB is deprecated, please migrate to soong_config_set,libinit,vendor_init_lib)
+ endif
++
++# Shim libs
++ifneq ($(TARGET_LD_SHIM_LIBS),)
++    $(call soong_config_set,linker,ld_shim_libs,$(TARGET_LD_SHIM_LIBS))
++endif
+-- 
+2.51.0
+

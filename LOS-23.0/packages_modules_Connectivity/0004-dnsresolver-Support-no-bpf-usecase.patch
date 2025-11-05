@@ -1,0 +1,92 @@
+From 1af2cde6ce97116b4d40a54953fd47336a07c26c Mon Sep 17 00:00:00 2001
+From: z3DD3r <z3dd3r@gmail.com>
+Date: Tue, 16 Apr 2024 12:36:46 +0300
+Subject: [PATCH 04/14] dnsresolver: Support no-bpf usecase
+
+Change-Id: I5659e4f37e0187dc0361ceaf7ca4137e673fe416
+---
+ bpf/dns_helper/DnsBpfHelper.cpp | 49 ++++++++++-----------------------
+ 1 file changed, 15 insertions(+), 34 deletions(-)
+
+diff --git a/bpf/dns_helper/DnsBpfHelper.cpp b/bpf/dns_helper/DnsBpfHelper.cpp
+index cf2fa2b736..dd18d6cd59 100644
+--- a/bpf/dns_helper/DnsBpfHelper.cpp
++++ b/bpf/dns_helper/DnsBpfHelper.cpp
+@@ -32,21 +32,6 @@ namespace net {
+     }                                                                                              \
+   } while (0)
+ 
+-// copied from BpfHandler.cpp
+-static bool mainlineNetBpfLoadDone() {
+-  return !access("/sys/fs/bpf/netd_shared/mainline_done", F_OK);
+-}
+-
+-// copied from BpfHandler.cpp
+-static inline void waitForNetProgsLoaded() {
+-  // infinite loop until success with 5/10/20/40/60/60/60... delay
+-  for (int delay = 5;; delay *= 2) {
+-    if (delay > 60) delay = 60;
+-    if (base::WaitForProperty("init.svc.mdnsd_netbpfload", "stopped", std::chrono::seconds(delay))
+-      && mainlineNetBpfLoadDone()) return;
+-    LOG(WARNING) << "Waited " << delay << "s for init.svc.mdnsd_netbpfload=stopped, still waiting.";
+-  }
+-}
+ 
+ base::Result<void> DnsBpfHelper::init() {
+   if (!android::modules::sdklevel::IsAtLeastS()) {
+@@ -54,25 +39,19 @@ base::Result<void> DnsBpfHelper::init() {
+     return base::Error(EOPNOTSUPP);
+   }
+ 
+-  if (!android::modules::sdklevel::IsAtLeastT()) {
+-    LOG(INFO) << "performing Android S mainline NetBpfload magic!";
+-    if (!mainlineNetBpfLoadDone()) {
+-      // We're on S/Sv2 & it's the first time netd is starting up (unless crashlooping)
+-      if (!base::SetProperty("ctl.start", "mdnsd_netbpfload")) {
+-        LOG(ERROR) << "Failed to set property ctl.start=mdnsd_netbpfload, see dmesg for reason.";
+-        return base::Error(ENOEXEC);
+-      }
+-
+-      LOG(INFO) << "Waiting for Networking BPF programs";
+-      waitForNetProgsLoaded();
+-      LOG(INFO) << "Networking BPF programs are loaded";
+-    }
+-    return {};
++  auto ret1 = mConfigurationMap.init(CONFIGURATION_MAP_PATH);
++  if (!ret1.ok()) {
++    LOG(ERROR) << __func__ << ": Failed mConfigurationMap.init";
++  }
++  auto ret2 = mUidOwnerMap.init(UID_OWNER_MAP_PATH);
++  if (!ret2.ok()) {
++    LOG(ERROR) << __func__ << ": Failed mConfigurationMap.init";
++  }
++  auto ret3 = mDataSaverEnabledMap.init(DATA_SAVER_ENABLED_MAP_PATH);
++  if (!ret3.ok()) {
++    LOG(ERROR) << __func__ << ":  Failed mConfigurationMap.init";
+   }
+ 
+-  RETURN_IF_RESULT_NOT_OK(mConfigurationMap.init(CONFIGURATION_MAP_PATH));
+-  RETURN_IF_RESULT_NOT_OK(mUidOwnerMap.init(UID_OWNER_MAP_PATH));
+-  RETURN_IF_RESULT_NOT_OK(mDataSaverEnabledMap.init(DATA_SAVER_ENABLED_MAP_PATH));
+   return {};
+ }
+ 
+@@ -81,11 +60,13 @@ base::Result<bool> DnsBpfHelper::isUidNetworkingBlocked(uid_t uid, bool metered)
+   if (!mConfigurationMap.isValid() || !mUidOwnerMap.isValid()) {
+     LOG(ERROR) << __func__
+                << ": BPF maps are not ready. Forgot to call ADnsHelper_init?";
+-    return base::Error(EUNATCH);
++    return false;
+   }
+ 
+   auto enabledRules = mConfigurationMap.readValue(UID_RULES_CONFIGURATION_KEY);
+-  RETURN_IF_RESULT_NOT_OK(enabledRules);
++  if (!enabledRules.ok()) {
++    return false;
++  }
+ 
+   auto value = mUidOwnerMap.readValue(uid);
+   uint32_t uidRules = value.ok() ? value.value().rule : 0;
+-- 
+2.51.0
+

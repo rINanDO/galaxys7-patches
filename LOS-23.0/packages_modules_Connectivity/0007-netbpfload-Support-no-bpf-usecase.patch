@@ -1,0 +1,62 @@
+From e4322f8733fd1a39e91d43119e0cab9a731da334 Mon Sep 17 00:00:00 2001
+From: khalvat-M <mmba313@gmail.com>
+Date: Thu, 27 Jun 2024 02:17:11 +0330
+Subject: [PATCH 07/14] netbpfload: Support no-bpf usecase
+
+Based on https://github.com/LineageOS-UL/android_system_bpf/commit/5519c18abea64769e65f6773590195ac5d54af50
+
+Change-Id: Id551d8d9c932c42c153fb40df03c539187f2d0f1
+---
+ bpf/loader/NetBpfLoad.cpp | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/bpf/loader/NetBpfLoad.cpp b/bpf/loader/NetBpfLoad.cpp
+index 6517bec66e..dea5b5e6e4 100644
+--- a/bpf/loader/NetBpfLoad.cpp
++++ b/bpf/loader/NetBpfLoad.cpp
+@@ -1849,8 +1849,7 @@ static int doLoad(char** argv, char * const envp[]) {
+         // but we need 0 (enabled)
+         // (this writeFile is known to fail on at least 4.19, but always defaults to 0 on
+         // pre-5.13, on 5.13+ it depends on CONFIG_BPF_UNPRIV_DEFAULT_OFF)
+-        if (writeProcSysFile("/proc/sys/kernel/unprivileged_bpf_disabled", "0\n") &&
+-            isAtLeastKernelVersion(5, 13, 0)) return 1;
++        writeProcSysFile("/proc/sys/kernel/unprivileged_bpf_disabled", "0\n");
+     }
+ 
+     if (isAtLeastU) {
+@@ -1865,12 +1864,12 @@ static int doLoad(char** argv, char * const envp[]) {
+         //  kernel does not have CONFIG_BPF_JIT=y)
+         // BPF_JIT is required by R VINTF (which means 4.14/4.19/5.4 kernels),
+         // but 4.14/4.19 were released with P & Q, and only 5.4 is new in R+.
+-        if (writeProcSysFile("/proc/sys/net/core/bpf_jit_enable", "1\n")) return 1;
++        writeProcSysFile("/proc/sys/net/core/bpf_jit_enable", "1\n");
+ 
+         // Enable JIT kallsyms export for privileged users only
+         // (Note: this (open) will fail with ENOENT 'No such file or directory' if
+         //  kernel does not have CONFIG_HAVE_EBPF_JIT=y)
+-        if (writeProcSysFile("/proc/sys/net/core/bpf_jit_kallsyms", "1\n")) return 1;
++        writeProcSysFile("/proc/sys/net/core/bpf_jit_kallsyms", "1\n");
+     }
+ 
+     // Create all the pin subdirectories
+@@ -1879,7 +1878,7 @@ static int doLoad(char** argv, char * const envp[]) {
+     //  due to ordering issues)
+     for (const auto& location : locations) {
+         if (location.t_plus && !isAtLeastT) continue;
+-        if (createSysFsBpfSubDir(location.prefix)) return 1;
++        createSysFsBpfSubDir(location.prefix);
+     }
+ 
+     if (isAtLeastT) {
+@@ -1888,7 +1887,7 @@ static int doLoad(char** argv, char * const envp[]) {
+         // This is because this is primarily meant for triggering genfscon rules,
+         // and as such this will likely always be the case.
+         // Thus we need to manually create the /sys/fs/bpf/loader subdirectory.
+-        if (createSysFsBpfSubDir("loader")) return 1;
++        createSysFsBpfSubDir("loader");
+     }
+ 
+     // Load all ELF objects, create programs and maps, and pin them
+-- 
+2.51.0
+
