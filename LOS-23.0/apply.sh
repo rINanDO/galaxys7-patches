@@ -2,21 +2,21 @@
 
 # Array of directories and corresponding patches
 declare -A patches=(
-    ["bionic"]="bionic" # OK Fixed LD_SHIM_LIBS 
-    ["build/make"]="build_make" #OK
-    ["frameworks/av"]="frameworks_av" #OK
-    ["frameworks/base"]="frameworks_base" #OK
-    ["frameworks/native"]="frameworks_native" #OK
-    ["hardware/interfaces"]="hardware_interfaces" #OK
-    ["packages/modules/Connectivity"]="packages_modules_Connectivity" # fixed
-    ["packages/modules/DnsResolver"]="packages_modules_DnsResolver" #OK
-    ["packages/modules/NetworkStack"]="packages_modules_NetworkStack" # Fixed
-    ["system/bpf"]="system_bpf" #OK
-    ["system/core"]="system_core" #Fixed
-    ["system/netd"]="system_netd" #OK
-    ["system/security"]="system_security" #OK
-    ["vendor/lineage"]="vendor_lineage" # OK Fixed LD_SHIM_LIBS 
-
+    ["bionic"]="bionic"
+    ["build/make"]="build_make"
+    ["frameworks/av"]="frameworks_av"
+    ["frameworks/base"]="frameworks_base"
+    ["frameworks/native"]="frameworks_native"
+    ["hardware/interfaces"]="hardware_interfaces"
+    ["packages/modules/Connectivity"]="packages_modules_Connectivity"
+    ["packages/modules/DnsResolver"]="packages_modules_DnsResolver"
+    ["packages/modules/NetworkStack"]="packages_modules_NetworkStack"
+    ["system/bpf"]="system_bpf"
+    ["system/core"]="system_core"
+    ["system/mkbootimg"]="system_core"
+    ["system/netd"]="system_netd"
+    ["system/security"]="system_security"
+    ["vendor/lineage"]="vendor_lineage"
 )
 
 # Base path for the patches
