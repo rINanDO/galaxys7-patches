@@ -1,0 +1,27 @@
+From 7f7266be95607df59406035d6678152d05f611d6 Mon Sep 17 00:00:00 2001
+From: ivanmeler <i_ivan@windowslive.com>
+Date: Wed, 19 Jun 2024 18:38:54 +0000
+Subject: [PATCH] Hack
+
+Change-Id: I1067a380149c72c611af03bd9a08c3bfb3af7507
+---
+ core/main.mk | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/core/main.mk b/core/main.mk
+index 137f68a578..9b49e24431 100644
+--- a/core/main.mk
++++ b/core/main.mk
+@@ -880,8 +880,7 @@ endef
+ # $(1): the prefix of the module doing the linking
+ # $(2): the prefix of the linked module
+ define link-type-error
+-$(shell $(call echo-error,$($(1).MAKEFILE),"$(call link-type-name,$(1)) ($($(1).TYPE)) can not link against $(call link-type-name,$(2)) ($(3))"))\
+-$(eval link_type_error := true)
++$(shell $(call echo-warning,$($(1).MAKEFILE),"$(call link-type-name,$(1)) ($($(1).TYPE)) can not link against $(call link-type-name,$(2)) ($(3))"))
+ endef
+ 
+ link-type-missing :=
+-- 
+2.51.0
+

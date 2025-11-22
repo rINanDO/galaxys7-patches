@@ -1,0 +1,27 @@
+From a684e3091678dbd56b1cba5310efe6c03c0744f5 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sun, 9 Feb 2025 12:04:21 -0500
+Subject: [PATCH 12/14] BpfNetMapsUtils: Ignore configuration map for BPF-less
+ devices
+
+Change-Id: I4ef4da9503eb4ac8e49e9351bce5462fe7d8a7ce
+---
+ framework/src/android/net/BpfNetMapsUtils.java | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/framework/src/android/net/BpfNetMapsUtils.java b/framework/src/android/net/BpfNetMapsUtils.java
+index 1760fa7ec2..27c230641d 100644
+--- a/framework/src/android/net/BpfNetMapsUtils.java
++++ b/framework/src/android/net/BpfNetMapsUtils.java
+@@ -261,6 +261,8 @@ public class BpfNetMapsUtils {
+             IBpfMap<S32, UidOwnerValue> uidOwnerMap,
+             IBpfMap<S32, U8> dataSaverEnabledMap
+     ) {
++        if (configurationMap == null) return BLOCKED_REASON_NONE;
++
+         // System uids are not blocked by firewall chains, see bpf_progs/netd.c
+         // TODO: b/348513058 - use UserHandle.isCore() once it is accessible
+         if (UserHandle.getAppId(uid) < Process.FIRST_APPLICATION_UID) {
+-- 
+2.51.0
+

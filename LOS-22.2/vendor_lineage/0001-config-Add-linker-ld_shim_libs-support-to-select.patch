@@ -1,0 +1,27 @@
+From 0cc8dfe72c9bd21f41413a379c2e9a6e3b5da911 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Fri, 30 May 2025 13:16:02 -0400
+Subject: [PATCH] config: Add linker ld_shim_libs support to select()
+
+Change-Id: I2339796335c6527990d00a4885e9a5725d38fc6b
+---
+ config/BoardConfigSoong.mk | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/config/BoardConfigSoong.mk b/config/BoardConfigSoong.mk
+index ee0764a3..df5c6e45 100644
+--- a/config/BoardConfigSoong.mk
++++ b/config/BoardConfigSoong.mk
+@@ -99,3 +99,9 @@ ifneq ($(TARGET_INIT_VENDOR_LIB),)
+     $(warning TARGET_INIT_VENDOR_LIB is deprecated, please migrate to soong_config_set,libinit,vendor_init_lib)
+     $(call soong_config_set,libinit,vendor_init_lib,$(TARGET_INIT_VENDOR_LIB))
+ endif
++
++# LD shim libs
++ifneq ($(TARGET_LD_SHIM_LIBS),)
++    $(warning TARGET_LD_SHIM_LIBS is deprecated, please migrate to soong_config_set,shim,ld_shim_libs)
++    $(call soong_config_set,shim,ld_shim_libs,$(TARGET_LD_SHIM_LIBS))
++endif
+-- 
+2.51.0
+
