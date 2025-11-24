@@ -1,7 +1,7 @@
-From 27940a52c6d56bd7eacc997c457d4fe0acd00346 Mon Sep 17 00:00:00 2001
+From 5f51d4390b337bc6d04bd6b81f3f7520e830643f Mon Sep 17 00:00:00 2001
 From: "Christopher R. Palmer" <crpalmer@gmail.com>
 Date: Sat, 8 Apr 2017 22:40:01 +0200
-Subject: [PATCH] linker: Add support for dynamic SHIM libraries
+Subject: [PATCH 1/2] linker: Add support for dynamic SHIM libraries
 
 Author: Christopher R. Palmer <crpalmer@gmail.com>
 Date:   Tue Nov 3 16:44:44 2015 -0500
@@ -246,30 +246,28 @@ Date:   Fri Jan 25 18:18:01 2019 +0900
 Change-Id: Ic3ad7095ddae7ea1039cb6a18603d5cde8a16152
 Signed-off-by: Wang Han <416810799@qq.com>
 ---
- linker/Android.bp      |  5 +++
+ linker/Android.bp      |  3 ++
  linker/linker.cpp      | 71 ++++++++++++++++++++++++++++++++++++++++++
  linker/linker.h        | 18 +++++++++++
  linker/linker_main.cpp | 11 +++++++
- 4 files changed, 105 insertions(+)
+ 4 files changed, 103 insertions(+)
 
 diff --git a/linker/Android.bp b/linker/Android.bp
-index ea4e69965..5c922df90 100644
+index 4863b9207..88fc09c90 100644
 --- a/linker/Android.bp
 +++ b/linker/Android.bp
-@@ -80,6 +80,11 @@ cc_defaults {
-     cflags: linker_common_flags,
-     asflags: linker_common_flags,
- 
-+    cppflags: select(soong_config_variable("linker", "ld_shim_libs"), {
-+                any @ flag_val: ["-DLD_SHIM_LIBS=\"" + flag_val + "\""   ],
-+                default: [],
-+            }),
-+
-     product_variables: {
-         debuggable: {
-             cppflags: ["-DUSE_LD_CONFIG_FILE"],
+@@ -76,6 +76,9 @@ cc_object {
+ // Configuration for the linker binary and any of its static libraries.
+ cc_defaults {
+     name: "linker_defaults",
++    defaults: [
++        "shim_libs_defaults",
++    ],
+     arch: {
+         arm: {
+             cflags: ["-D__work_around_b_24465209__"],
 diff --git a/linker/linker.cpp b/linker/linker.cpp
-index 4cf93b9ba..63485b975 100644
+index 8f7891558..c33183bf5 100644
 --- a/linker/linker.cpp
 +++ b/linker/linker.cpp
 @@ -696,6 +696,68 @@ enum walk_action_result_t : uint32_t {
@@ -341,7 +339,7 @@ index 4cf93b9ba..63485b975 100644
  // This function walks down the tree of soinfo dependencies
  // in breadth-first order and
  //   * calls action(soinfo* si) for each node, and
-@@ -1296,6 +1358,12 @@ static bool load_library(android_namespace_t* ns,
+@@ -1307,6 +1369,12 @@ static bool load_library(android_namespace_t* ns,
    }
  #endif
  
@@ -351,10 +349,10 @@ index 4cf93b9ba..63485b975 100644
 +  });
 +#endif
 +
-   for (const ElfW(Dyn)* d = elf_reader.dynamic(); d->d_tag != DT_NULL; ++d) {
-     if (d->d_tag == DT_NEEDED) {
-       const char* name = fix_dt_needed(elf_reader.get_string(d->d_un.d_val), elf_reader.name());
-@@ -2231,6 +2299,9 @@ void* do_dlopen(const char* name, int flags,
+   for_each_dt_needed(task->get_elf_reader(), [&](const char* name) {
+     LD_LOG(kLogDlopen, "load_library(ns=%s, task=%s): Adding DT_NEEDED task: %s",
+            ns->get_name(), task->get_name(), name);
+@@ -2239,6 +2307,9 @@ void* do_dlopen(const char* name, int flags,
      }
    }
    ProtectedDataGuard guard;
@@ -365,7 +363,7 @@ index 4cf93b9ba..63485b975 100644
    loading_trace.End();
  
 diff --git a/linker/linker.h b/linker/linker.h
-index 86ef762a5..2b5387bdd 100644
+index 7afa0d730..38d025151 100644
 --- a/linker/linker.h
 +++ b/linker/linker.h
 @@ -42,6 +42,10 @@
@@ -379,7 +377,7 @@ index 86ef762a5..2b5387bdd 100644
  #include <string>
  #include <vector>
  
-@@ -77,6 +81,20 @@ soinfo* find_containing_library(const void* p);
+@@ -81,6 +85,20 @@ soinfo* find_containing_library(const void* p);
  
  int open_executable(const char* path, off64_t* file_offset, std::string* realpath);
  
@@ -401,10 +399,10 @@ index 86ef762a5..2b5387bdd 100644
  void do_android_update_LD_LIBRARY_PATH(const char* ld_library_path);
  void* do_dlopen(const char* name,
 diff --git a/linker/linker_main.cpp b/linker/linker_main.cpp
-index 425bcda67..c6d01ab38 100644
+index f65f82d5b..460c523c9 100644
 --- a/linker/linker_main.cpp
 +++ b/linker/linker_main.cpp
-@@ -411,6 +411,11 @@ static ElfW(Addr) linker_main(KernelArgumentBlock& args, const char* exe_to_load
+@@ -410,6 +410,11 @@ static ElfW(Addr) linker_main(KernelArgumentBlock& args, const char* exe_to_load
    parse_LD_LIBRARY_PATH(ldpath_env);
    parse_LD_PRELOAD(ldpreload_env);
  
@@ -416,7 +414,7 @@ index 425bcda67..c6d01ab38 100644
    std::vector<android_namespace_t*> namespaces = init_default_namespaces(exe_info.path.c_str());
  
    if (!si->prelink_image()) __linker_cannot_link(g_argv[0]);
-@@ -436,6 +441,12 @@ static ElfW(Addr) linker_main(KernelArgumentBlock& args, const char* exe_to_load
+@@ -435,6 +440,12 @@ static ElfW(Addr) linker_main(KernelArgumentBlock& args, const char* exe_to_load
      ++ld_preloads_count;
    }
  
@@ -426,9 +424,9 @@ index 425bcda67..c6d01ab38 100644
 +  });
 +#endif
 +
-   for (const ElfW(Dyn)* d = si->dynamic; d->d_tag != DT_NULL; ++d) {
-     if (d->d_tag == DT_NEEDED) {
-       const char* name = fix_dt_needed(si->get_string(d->d_un.d_val), si->get_realpath());
+   for_each_dt_needed(si, [&](const char* name) {
+     needed_library_name_list.push_back(name);
+   });
 -- 
 2.51.0
 
