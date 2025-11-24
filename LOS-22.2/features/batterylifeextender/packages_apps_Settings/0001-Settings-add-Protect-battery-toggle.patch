@@ -1,7 +1,7 @@
-From 52a96a19b278a92018050e4dbaa32eb17fa2e297 Mon Sep 17 00:00:00 2001
+From 9bccc0f034661abf47d4fdd90b49b7f77ae57a36 Mon Sep 17 00:00:00 2001
 From: Francescodario Cuzzocrea <bosconovic@gmail.com>
 Date: Sat, 31 Jul 2021 10:18:02 +0200
-Subject: [PATCH 1/1] Settings: add Protect battery toggle
+Subject: [PATCH] Settings: add Protect battery toggle
 
 Change-Id: I877dfe127aff0bfb5ebb042830346070809374a2
 ---
@@ -13,22 +13,22 @@ Change-Id: I877dfe127aff0bfb5ebb042830346070809374a2
  create mode 100644 src/com/android/settings/fuelgauge/BatteryLifeExtenderPreferenceController.java
 
 diff --git a/Android.bp b/Android.bp
-index 4108b7264d7..36791a7acf4 100644
+index a9ead689e09..8a89b636153 100644
 --- a/Android.bp
 +++ b/Android.bp
-@@ -115,6 +115,7 @@ android_library {
-         // Lineage dependencies
+@@ -117,6 +117,7 @@ android_library {
          "org.lineageos.platform.internal",
          "LineagePreferenceLib",
-+        "vendor.lineage.batterylifeextender-V1.0-java",
          "vendor.lineage.fastcharge-V1.0-java",
-         "SystemUISharedLib",
++        "vendor.lineage.batterylifeextender-V1.0-java",
      ],
+ 
+     plugins: [
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index f6e4e274926..85ce7db43b5 100644
+index b3e7df2a079..a71eb6b8030 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -217,4 +217,8 @@
+@@ -197,4 +197,8 @@
      <string name="battery_maximum_capacity">Maximum capacity</string>
      <string name="battery_maximum_capacity_summary">%1$d mAh (%2$d%%)</string>
      <string name="battery_maximum_capacity_not_available" translatable="false">@string/battery_cycle_count_not_available</string>
@@ -38,10 +38,10 @@ index f6e4e274926..85ce7db43b5 100644
 +    <string name="battery_life_extender_summary">To extend the lifespan of your battery, limit the maximum charge capacity level</string>
  </resources>
 diff --git a/res/xml/power_usage_summary.xml b/res/xml/power_usage_summary.xml
-index 89914a66975..559f368bf6d 100644
+index bf033cd6c44..8c6eaaa694b 100644
 --- a/res/xml/power_usage_summary.xml
 +++ b/res/xml/power_usage_summary.xml
-@@ -81,6 +81,12 @@
+@@ -97,6 +97,12 @@
          android:summary="@string/fast_charging_summary"
          settings:controller="com.android.settings.fuelgauge.FastChargingPreferenceController"/>
  
@@ -145,5 +145,5 @@ index 00000000000..38fd61055f8
 +    }
 +}
 -- 
-2.45.2
+2.51.0
 
