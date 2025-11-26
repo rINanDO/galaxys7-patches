@@ -12,7 +12,6 @@ declare -A patches=(
     ["packages/modules/NetworkStack"]="packages_modules_NetworkStack"
     ["system/bpf"]="system_bpf"
     ["system/core"]="system_core"
-    ["system/mkbootimg"]="system_core"
     ["system/netd"]="system_netd"
     ["system/security"]="system_security"
 )
