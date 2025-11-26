@@ -1,4 +1,4 @@
-From 42717eeb8d17e783a9e84abea433b1187ba74250 Mon Sep 17 00:00:00 2001
+From 3c68a55bd6926a14f6eb869a4f7aec0c364c2ea0 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Tue, 21 Jan 2025 14:52:01 -0500
 Subject: [PATCH] loader: Support no bpf usecase
@@ -10,10 +10,10 @@ Change-Id: I5b99fb83001debd08d910569387e08970b78e8d3
  2 files changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/loader/Loader.cpp b/loader/Loader.cpp
-index 2a0cf42..7750e67 100644
+index 940ce19..6940a5f 100644
 --- a/loader/Loader.cpp
 +++ b/loader/Loader.cpp
-@@ -1008,7 +1008,8 @@ void initLogging() {
+@@ -977,7 +977,8 @@ void initLogging() {
  void createBpfFsSubDirectories() {
      for (const auto& location : android::bpf::locations) {
          if (android::bpf::createSysFsBpfSubDir(location.prefix)) {
@@ -23,20 +23,20 @@ index 2a0cf42..7750e67 100644
          }
      }
  }
-@@ -1021,9 +1022,9 @@ void legacyBpfLoader() {
+@@ -990,9 +991,9 @@ void legacyBpfLoader() {
              ALOGE("If this triggers reliably, you're probably missing kernel options or patches.");
              ALOGE("If this triggers randomly, you might be hitting some memory allocation "
                    "problems or startup script race.");
 -            ALOGE("--- DO NOT EXPECT SYSTEM TO BOOT SUCCESSFULLY ---");
 -            sleep(20);
 -            exit(121);
-+            ALOGE("BPF Ignored 122: CONTINUE SYSTEM TO BOOT ---");
++            ALOGE("BPF Ignored 121: CONTINUE SYSTEM TO BOOT ---");
 +//            sleep(20);
 +//            exit(121);
          }
      }
  }
-@@ -1031,8 +1032,8 @@ void legacyBpfLoader() {
+@@ -1000,6 +1001,6 @@ void legacyBpfLoader() {
  void execNetBpfLoadDone() {
      const char* args[] = {"/apex/com.android.tethering/bin/netbpfload", "done", NULL};
      execve(args[0], (char**)args, environ);
@@ -45,10 +45,8 @@ index 2a0cf42..7750e67 100644
 +    ALOGE("BPF Ignored 122: execve(): %d[%s]", errno, strerror(errno));
 +//     exit(122);
  }
- 
- void logVerbose(const char* msg) {
 diff --git a/loader/include/libbpf_android.h b/loader/include/libbpf_android.h
-index 8e5a887..ce9c3f6 100644
+index ae4a36d..01281db 100644
 --- a/loader/include/libbpf_android.h
 +++ b/loader/include/libbpf_android.h
 @@ -51,7 +51,7 @@ extern "C" {
@@ -58,8 +56,8 @@ index 8e5a887..ce9c3f6 100644
 -__noreturn void execNetBpfLoadDone();
 +void execNetBpfLoadDone();
  
- // For logging from rust
- void logVerbose(const char* msg);
+ #ifdef __cplusplus
+ }  // extern C
 -- 
-2.45.2
+2.51.0
 
