@@ -14,6 +14,7 @@ declare -A patches=(
     ["system/core"]="system_core"
     ["system/netd"]="system_netd"
     ["system/security"]="system_security"
+    ["system/tools/mkbootimg"]="system_tools_mkbootimg"
 )
 
 # Base path for the patches
