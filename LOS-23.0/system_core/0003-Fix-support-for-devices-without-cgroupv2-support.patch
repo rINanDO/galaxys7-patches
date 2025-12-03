@@ -1,7 +1,7 @@
-From 185add2d7a0015072c97849e25aa14736b04def2 Mon Sep 17 00:00:00 2001
+From c31708834893d6530f8fd61fdb739e5f1bb85b83 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 26 Oct 2022 17:59:11 -0400
-Subject: [PATCH 3/3] Fix support for devices without cgroupv2 support
+Subject: [PATCH 3/4] Fix support for devices without cgroupv2 support
 
 This is technically a revert of 1bd1746447.
 The warning inside the commit doesn't really apply to us, because the
@@ -12,7 +12,7 @@ devices without cgroupv2 simply won't freeze processes at all
  1 file changed, 3 insertions(+)
 
 diff --git a/init/service.cpp b/init/service.cpp
-index cae415aa40..c73df7f4bd 100644
+index cae415aa4..c73df7f4b 100644
 --- a/init/service.cpp
 +++ b/init/service.cpp
 @@ -728,12 +728,15 @@ Result<void> Service::Start() {
