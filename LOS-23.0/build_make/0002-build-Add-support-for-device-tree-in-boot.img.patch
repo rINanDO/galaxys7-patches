@@ -1,7 +1,7 @@
-From 53f3efd423fa8d68d378f194dc5d3f9640944d88 Mon Sep 17 00:00:00 2001
+From d5b6fc13561ae9a4962a9f802187e434b7461b62 Mon Sep 17 00:00:00 2001
 From: David Ng <dave@codeaurora.org>
 Date: Fri, 27 Jul 2012 18:39:48 -0700
-Subject: [PATCH 2/2] build: Add support for device tree in boot.img
+Subject: [PATCH 2/3] build: Add support for device tree in boot.img
 
 Add support for optional device tree image (dt.img)
 to boot and recovery images.  Some devices use kernel device

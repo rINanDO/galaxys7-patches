@@ -3,6 +3,7 @@
 # Array of directories and corresponding patches
 declare -A patches=(
     ["build/make"]="build_make"
+    ["build/soong"]="build_soong"
     ["frameworks/av"]="frameworks_av"
     ["frameworks/base"]="frameworks_base"
     ["frameworks/native"]="frameworks_native"
