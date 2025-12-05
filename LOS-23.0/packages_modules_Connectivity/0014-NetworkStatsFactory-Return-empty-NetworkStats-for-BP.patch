@@ -1,0 +1,28 @@
+From bd1ad1482e158511986acbf9a5784b689c741eb4 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Wed, 3 Dec 2025 16:24:04 +0100
+Subject: [PATCH 14/15] NetworkStatsFactory: Return empty NetworkStats for
+ BPF-less devices
+
+Change-Id: Iee7fe2f22640de07608b67f212b7549835d54488
+---
+ service-t/src/com/android/server/net/NetworkStatsFactory.java | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/service-t/src/com/android/server/net/NetworkStatsFactory.java b/service-t/src/com/android/server/net/NetworkStatsFactory.java
+index c5a69c0551..9cf4f58a22 100644
+--- a/service-t/src/com/android/server/net/NetworkStatsFactory.java
++++ b/service-t/src/com/android/server/net/NetworkStatsFactory.java
+@@ -112,7 +112,8 @@ public class NetworkStatsFactory {
+             final NetworkStats stats = new NetworkStats(SystemClock.elapsedRealtime(), 0);
+             final int ret = nativeReadNetworkStatsDetail(stats);
+             if (ret != 0) {
+-                throw new IOException("Failed to parse network stats");
++		Log.wtf(TAG, "Failed to parse network stats", e);
++                return new NetworkStats(0, 0);
+             }
+             return stats;
+         }
+-- 
+2.51.0
+

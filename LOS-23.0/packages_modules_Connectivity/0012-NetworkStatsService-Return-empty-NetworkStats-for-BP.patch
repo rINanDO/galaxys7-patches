@@ -1,7 +1,7 @@
 From 4abb58f4fdcd400d51cc1bdf1a63d37b694b8fd9 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Fri, 14 Feb 2025 16:50:24 -0500
-Subject: [PATCH 14/15] NetworkStatsService: Return empty NetworkStats for
+Subject: [PATCH 12/15] NetworkStatsService: Return empty NetworkStats for
  BPF-less devices
 
 Change-Id: I147527c3fc3a5b7b0a988716d231188058b7af70
