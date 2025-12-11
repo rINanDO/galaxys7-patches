@@ -1,7 +1,7 @@
-From 03c6e51c19096b22d7504efe2bd66dbd7bfe4a1b Mon Sep 17 00:00:00 2001
+From 0176220eea5f76e03790543afb0c71e8ca6fac40 Mon Sep 17 00:00:00 2001
 From: Ricardo Cerqueira <cyanogenmod@cerqueira.org>
 Date: Tue, 12 Apr 2011 10:57:22 +0100
-Subject: [PATCH 3/3] build: Squash of allowing a device to generically define
+Subject: [PATCH 3/4] build: Squash of allowing a device to generically define
  its own headers
 
 Author: Ricardo Cerqueira <cyanogenmod@cerqueira.org>
