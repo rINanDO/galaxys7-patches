@@ -1,0 +1,38 @@
+From 9d9a16c02bd0b18e71f942d926df621c738085e7 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Fri, 14 Feb 2025 16:50:24 -0500
+Subject: [PATCH 14/17] NetworkStatsService: Return empty NetworkStats for
+ BPF-less devices
+
+Change-Id: I147527c3fc3a5b7b0a988716d231188058b7af70
+---
+ .../src/com/android/server/net/NetworkStatsService.java     | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/service-t/src/com/android/server/net/NetworkStatsService.java b/service-t/src/com/android/server/net/NetworkStatsService.java
+index 2aec0e6c60..cefc6d91a2 100644
+--- a/service-t/src/com/android/server/net/NetworkStatsService.java
++++ b/service-t/src/com/android/server/net/NetworkStatsService.java
+@@ -3390,7 +3390,8 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         try {
+             return mStatsFactory.readNetworkStatsSummaryXt();
+         } catch (IOException e) {
+-            throw new IllegalStateException(e);
++            Log.wtf(TAG, "problem readNetworkStatsSummaryXt", e);
++            return new NetworkStats(0, 0);
+         }
+     }
+ 
+@@ -3398,7 +3399,8 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
+         try {
+             return mStatsFactory.readNetworkStatsDetail(uid, ifaces, tag);
+         } catch (IOException e) {
+-            throw new IllegalStateException(e);
++            Log.wtf(TAG, "problem readNetworkStatsSummaryXt", e);
++            return new NetworkStats(0, 0);
+         }
+     }
+ 
+-- 
+2.51.0
+

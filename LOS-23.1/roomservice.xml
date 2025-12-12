@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <!--Device tree-->
+  <!--8890-->
+  <project name="rinando/android_device_samsung_herolte" path="device/samsung/herolte" revision="lineage-23.0" remote="github"/>
+  <project name="rinando/android_device_samsung_universal8890-common" path="device/samsung/universal8890-common" revision="lineage-23.0" remote="github"/>
+  <!--Kernel-->
+  <!--8890-->
+  <project name="rinando/android_kernel_samsung_universal8890" path="kernel/samsung/universal8890" revision="lineage-23.0" remote="github"/>
+  <!--Blobs-->
+  <project name="rinando/proprietary_vendor_samsung" path="vendor/samsung" revision="lineage-23.0" remote="github"/>
+  <!--Lineage HW repos-->
+  <project name="rinando/android_device_samsung_slsi_sepolicy" path="device/samsung_slsi/sepolicy" revision="lineage-23.0" remote="github" />
+  <project name="rinando/android_hardware_samsung-8890q" path="hardware/samsung" revision="lineage-23.0" remote="github" />
+  <!--Linaro BSP-->
+  <project name="rinando/android_hardware_samsung_slsi-linaro_config" path="hardware/samsung_slsi-linaro/config" revision="lineage-23.0" remote="github"/>
+  <project name="rinando/android_hardware_samsung_slsi-linaro_exynos" path="hardware/samsung_slsi-linaro/exynos" revision="lineage-23.0" remote="github"/>
+  <project name="rinando/android_hardware_samsung_slsi-linaro_exynos5" path="hardware/samsung_slsi-linaro/exynos5" revision="lineage-23.0" remote="github"/>
+  <project name="rinando/android_hardware_samsung_slsi-linaro_graphics" path="hardware/samsung_slsi-linaro/graphics" revision="lineage-23.0" remote="github"/>
+  <project name="rinando/android_hardware_samsung_slsi-linaro_openmax" path="hardware/samsung_slsi-linaro/openmax" revision="lineage-23.0" remote="github"/>
+
+  <project path="prebuilts/vndk/v29" name="platform/prebuilts/vndk/v29" groups="pdk" clone-depth="1" remote="aosp" revision="refs/tags/android-15.0.0_r31"/>
+</manifest>
