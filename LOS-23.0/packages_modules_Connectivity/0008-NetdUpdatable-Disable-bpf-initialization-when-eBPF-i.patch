@@ -1,7 +1,7 @@
 From 04aecf29a2ace8752a1f9360708b77d623ae747c Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Wed, 12 Oct 2022 15:27:37 +0200
-Subject: [PATCH 06/15] NetdUpdatable: Disable bpf initialization when eBPF is
+Subject: [PATCH 08/17] NetdUpdatable: Disable bpf initialization when eBPF is
  not available
 
 Change-Id: I9d2b933311797af6386c89faa73f2e1e1d2ef8d5

@@ -1,7 +1,7 @@
 From 96f41a1ddb6906116b867176912c31ac8ba4e22e Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sun, 30 Nov 2025 13:08:24 +0100
-Subject: [PATCH 13/15] netbpfload: Add more Android W support no-bpf usecase
+Subject: [PATCH 15/17] netbpfload: Add more Android W support no-bpf usecase
 
 Change-Id: I697dbf88edf64552ce0ce8577b7b8f107340dda4
 ---

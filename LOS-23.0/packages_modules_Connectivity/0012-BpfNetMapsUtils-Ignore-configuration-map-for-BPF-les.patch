@@ -1,7 +1,7 @@
 From 5e853dd83e91c8b335da844efb4b0cff471c4159 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sun, 9 Feb 2025 12:04:21 -0500
-Subject: [PATCH 10/15] BpfNetMapsUtils: Ignore configuration map for BPF-less
+Subject: [PATCH 12/17] BpfNetMapsUtils: Ignore configuration map for BPF-less
  devices
 
 Change-Id: I4ef4da9503eb4ac8e49e9351bce5462fe7d8a7ce
