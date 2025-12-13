@@ -15,6 +15,7 @@ declare -A patches=(
     ["system/core"]="system_core"
     ["system/netd"]="system_netd"
     ["system/security"]="system_security"
+    ["system/memory/lmkd"]="system_memory_lmkd"
     ["system/tools/mkbootimg"]="system_tools_mkbootimg"
 )
 
