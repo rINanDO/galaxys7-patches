@@ -1,0 +1,101 @@
+From 6035ea551991bb1b14b66fd5e381b278828b14bc Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sun, 14 Dec 2025 23:31:26 +0100
+Subject: [PATCH 2/2] batterylifeextender: Convert to blueprint
+
+Change-Id: I1c0a8a298dccb5e291543c91ce33570107b6466d
+---
+ hidl/batterylifeextender/Android.bp | 28 ++++++++++++++++++
+ hidl/batterylifeextender/Android.mk | 44 -----------------------------
+ 2 files changed, 28 insertions(+), 44 deletions(-)
+ create mode 100644 hidl/batterylifeextender/Android.bp
+ delete mode 100644 hidl/batterylifeextender/Android.mk
+
+diff --git a/hidl/batterylifeextender/Android.bp b/hidl/batterylifeextender/Android.bp
+new file mode 100644
+index 0000000..e5f97c8
+--- /dev/null
++++ b/hidl/batterylifeextender/Android.bp
+@@ -0,0 +1,28 @@
++//
++// SPDX-FileCopyrightText: 2025 The LineageOS Project
++// SPDX-License-Identifier: Apache-2.0
++//
++
++cc_binary {
++    name: "vendor.lineage.batterylifeextender@1.0-service.samsung",
++    defaults: ["samsung_header_path_defaults"],
++    init_rc: ["vendor.lineage.batterylifeextender@1.0-service.samsung.rc"],
++    vintf_fragments: ["vendor.lineage.batterylifeextender@1.0-service.samsung.xml"],
++    relative_install_path: "hw",
++    proprietary: true,
++    srcs: [
++        "BatteryLifeExtender.cpp",
++        "service.cpp"
++    ],
++    local_include_dirs: [
++        "include"
++    ],
++    shared_libs: [
++        "libbase",
++        "libbinder",
++        "libcutils",
++        "libhidlbase",
++        "libutils",
++        "vendor.lineage.batterylifeextender@1.0"
++    ],
++}
+\ No newline at end of file
+diff --git a/hidl/batterylifeextender/Android.mk b/hidl/batterylifeextender/Android.mk
+deleted file mode 100644
+index c5bb069..0000000
+--- a/hidl/batterylifeextender/Android.mk
++++ /dev/null
+@@ -1,44 +0,0 @@
+-#
+-# Copyright (C) 2020-2021 The LineageOS Project
+-#
+-# Licensed under the Apache License, Version 2.0 (the "License");
+-# you may not use this file except in compliance with the License.
+-# You may obtain a copy of the License at
+-#
+-#      http://www.apache.org/licenses/LICENSE-2.0
+-#
+-# Unless required by applicable law or agreed to in writing, software
+-# distributed under the License is distributed on an "AS IS" BASIS,
+-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-# See the License for the specific language governing permissions and
+-# limitations under the License.
+-#
+-
+-LOCAL_PATH := $(call my-dir)
+-
+-include $(CLEAR_VARS)
+-
+-LOCAL_SRC_FILES := \
+-    BatteryLifeExtender.cpp \
+-    service.cpp
+-
+-LOCAL_C_INCLUDES := \
+-    $(LOCAL_PATH)/include \
+-
+-LOCAL_SHARED_LIBRARIES := \
+-    libbase \
+-    libbinder \
+-    libcutils \
+-    libhidlbase \
+-    libutils \
+-    vendor.lineage.batterylifeextender@1.0
+-
+-LOCAL_MODULE := vendor.lineage.batterylifeextender@1.0-service.samsung
+-LOCAL_INIT_RC := vendor.lineage.batterylifeextender@1.0-service.samsung.rc
+-LOCAL_MODULE_RELATIVE_PATH := hw
+-LOCAL_MODULE_TAGS := optional
+-LOCAL_MODULE_OWNER := samsung
+-LOCAL_VINTF_FRAGMENTS := vendor.lineage.batterylifeextender@1.0-service.samsung.xml
+-LOCAL_VENDOR_MODULE := true
+-
+-include $(BUILD_EXECUTABLE)
+-- 
+2.51.0
+

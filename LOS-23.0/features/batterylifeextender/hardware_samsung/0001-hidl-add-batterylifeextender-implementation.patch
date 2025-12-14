@@ -1,7 +1,7 @@
-From 2ccfa3d0e313db85fc363b267f2aa1ddb1748a2b Mon Sep 17 00:00:00 2001
+From 9b5c37ae192785dbc024e62b7a90cba23768f0d2 Mon Sep 17 00:00:00 2001
 From: Francescodario Cuzzocrea <bosconovic@gmail.com>
 Date: Sat, 31 Jul 2021 10:18:52 +0200
-Subject: [PATCH] hidl: add batterylifeextender implementation
+Subject: [PATCH 1/2] hidl: add batterylifeextender implementation
 
 Change-Id: I147f3ef36db556317467bb0f0fc1e68967a8c378
 ---
@@ -352,5 +352,5 @@ index 0000000..834ae99
 +    </hal>
 +</manifest>
 -- 
-2.41.0
+2.51.0
 

@@ -1,0 +1,32 @@
+From 90e5780deb157f86203f4db4d1223736e7b131bc Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sun, 14 Dec 2025 14:54:02 +0100
+Subject: [PATCH 2/2] compatibility_matrices: Register Battery life extender
+ HAL
+
+Change-Id: Id52f908b7028e4b3fb04311c86882d2d8e2e5512
+---
+ compatibility_matrices/compatibility_matrix.lineage.xml | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/compatibility_matrices/compatibility_matrix.lineage.xml b/compatibility_matrices/compatibility_matrix.lineage.xml
+index a040337..8210c58 100644
+--- a/compatibility_matrices/compatibility_matrix.lineage.xml
++++ b/compatibility_matrices/compatibility_matrix.lineage.xml
+@@ -107,4 +107,13 @@
+             <instance>default</instance>
+         </interface>
+     </hal>
++    <!-- Battery life extender -->
++    <hal format="hidl" optional="true">
++        <name>vendor.lineage.batterylifeextender</name>
++        <version>1.0</version>
++        <interface>
++            <name>IBatteryLifeExtender</name>
++           <instance>default</instance>
++        </interface>
++    </hal>
+ </compatibility-matrix>
+-- 
+2.51.0
+

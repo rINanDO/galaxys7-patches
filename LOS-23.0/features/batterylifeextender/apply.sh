@@ -7,14 +7,13 @@ declare -A patches=(
     ["hardware/lineage/interfaces"]="hardware_lineage_interfaces"
     ["hardware/samsung"]="hardware_samsung"
     ["packages/apps/Settings"]="packages_apps_Settings"
-    ["vendor/lineage"]="vendor_lineage"
 )
 
 # Base path for the patches
 patches_base_path=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 for dir in "${!patches[@]}"; do
-    cd $dir || { echo "Directory $dir not found"; exit 1; }
+    cd $dir || { echo "Directory $dir not found"; continue; }
 
     patch_dir=${patches[$dir]}
     patch_files=($patches_base_path/$patch_dir/*.patch)

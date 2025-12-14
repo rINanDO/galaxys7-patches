@@ -1,4 +1,4 @@
-From 52a96a19b278a92018050e4dbaa32eb17fa2e297 Mon Sep 17 00:00:00 2001
+From d13a7e0681ad69cd4f4b095b6d470adaef2c403d Mon Sep 17 00:00:00 2001
 From: Francescodario Cuzzocrea <bosconovic@gmail.com>
 Date: Sat, 31 Jul 2021 10:18:02 +0200
 Subject: [PATCH 1/1] Settings: add Protect battery toggle
@@ -13,22 +13,22 @@ Change-Id: I877dfe127aff0bfb5ebb042830346070809374a2
  create mode 100644 src/com/android/settings/fuelgauge/BatteryLifeExtenderPreferenceController.java
 
 diff --git a/Android.bp b/Android.bp
-index 4108b7264d7..36791a7acf4 100644
+index 9969f4c7df1..1c5d5d2ba74 100644
 --- a/Android.bp
 +++ b/Android.bp
-@@ -115,6 +115,7 @@ android_library {
+@@ -119,6 +119,7 @@ android_library {
+ 
          // Lineage dependencies
          "org.lineageos.platform.internal",
-         "LineagePreferenceLib",
 +        "vendor.lineage.batterylifeextender-V1.0-java",
-         "vendor.lineage.fastcharge-V1.0-java",
-         "SystemUISharedLib",
+         "LineagePreferenceLib",
      ],
+ 
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index f6e4e274926..85ce7db43b5 100644
+index 86e43a83329..e261e55d8da 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -217,4 +217,8 @@
+@@ -193,4 +193,8 @@
      <string name="battery_maximum_capacity">Maximum capacity</string>
      <string name="battery_maximum_capacity_summary">%1$d mAh (%2$d%%)</string>
      <string name="battery_maximum_capacity_not_available" translatable="false">@string/battery_cycle_count_not_available</string>
@@ -38,12 +38,12 @@ index f6e4e274926..85ce7db43b5 100644
 +    <string name="battery_life_extender_summary">To extend the lifespan of your battery, limit the maximum charge capacity level</string>
  </resources>
 diff --git a/res/xml/power_usage_summary.xml b/res/xml/power_usage_summary.xml
-index 89914a66975..559f368bf6d 100644
+index 9b345c2874d..2e2972fdf43 100644
 --- a/res/xml/power_usage_summary.xml
 +++ b/res/xml/power_usage_summary.xml
-@@ -81,6 +81,12 @@
-         android:summary="@string/fast_charging_summary"
-         settings:controller="com.android.settings.fuelgauge.FastChargingPreferenceController"/>
+@@ -95,6 +95,12 @@
+         android:summary="@string/battery_percentage_description"
+         settings:controller="com.android.settings.display.BatteryPercentagePreferenceController" />
  
 +    <SwitchPreference
 +        android:key="battery_life_extender"
@@ -145,5 +145,5 @@ index 00000000000..38fd61055f8
 +    }
 +}
 -- 
-2.45.2
+2.51.0
 
