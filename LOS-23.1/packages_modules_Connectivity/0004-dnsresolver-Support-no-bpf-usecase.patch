@@ -1,7 +1,7 @@
-From 003ec3481f3077d90974989bd7032f344abb18e4 Mon Sep 17 00:00:00 2001
+From 48a3853e9f5b32351346d1f29c3fd25df3c5bbd1 Mon Sep 17 00:00:00 2001
 From: z3DD3r <z3dd3r@gmail.com>
 Date: Tue, 16 Apr 2024 12:36:46 +0300
-Subject: [PATCH 04/17] dnsresolver: Support no-bpf usecase
+Subject: [PATCH 04/18] dnsresolver: Support no-bpf usecase
 
 Change-Id: I5659e4f37e0187dc0361ceaf7ca4137e673fe416
 ---

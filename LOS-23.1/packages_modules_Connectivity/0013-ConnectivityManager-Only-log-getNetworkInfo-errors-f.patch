@@ -1,7 +1,7 @@
-From f09d015f911512791595de1eedb310ae23243ce9 Mon Sep 17 00:00:00 2001
+From 38f0fd1c464f38f39ba5d5286c41a75975b647a7 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sun, 9 Feb 2025 12:05:53 -0500
-Subject: [PATCH 13/17] ConnectivityManager: Only log getNetworkInfo errors for
+Subject: [PATCH 13/18] ConnectivityManager: Only log getNetworkInfo errors for
  BPF-less devices
 
 Change-Id: I581038e831fd7344888bd52a8f66960a5ecbb1f4
