@@ -1,7 +1,7 @@
-From 7016e65fd4e0335b8baeba5faf675c6864bc08e8 Mon Sep 17 00:00:00 2001
+From 32efb6a152ce105589e2f4a48a4afcc59c943989 Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Mon, 20 Feb 2023 20:38:39 +0300
-Subject: [PATCH 1/4] reboot must be fast on legacy too
+Subject: [PATCH 1/5] reboot must be fast on legacy too
 
 Change-Id: I591d36fe86e68f391a8e11773bd91368c946b477
 ---
@@ -9,7 +9,7 @@ Change-Id: I591d36fe86e68f391a8e11773bd91368c946b477
  1 file changed, 16 insertions(+), 67 deletions(-)
 
 diff --git a/init/reboot.cpp b/init/reboot.cpp
-index 3d65aabf8..80c9dbba3 100644
+index 3d65aabf82..80c9dbba3f 100644
 --- a/init/reboot.cpp
 +++ b/init/reboot.cpp
 @@ -473,24 +473,6 @@ static void StartRebootMonitorThread(unsigned int cmd, const Timer& shutdown_tim
