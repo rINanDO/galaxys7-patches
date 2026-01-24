@@ -1,4 +1,4 @@
-From 884801c3da8bf0916cd1bb04e119cd84fbb8870e Mon Sep 17 00:00:00 2001
+From cb273fba43416bd833e2190ac52ac024790ac5c2 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Jan 2026 22:26:04 +0100
 Subject: [PATCH 2/2] radio: Fix linker errors for legacy /vendor/bin/hw/rild
@@ -6,8 +6,7 @@ Subject: [PATCH 2/2] radio: Fix linker errors for legacy /vendor/bin/hw/rild
 Change-Id: I5ce4240cf43146f9cabb6647cb1f268bb264274f
 ---
  radio/aidl/compat/libradiocompat/Android.bp | 1 -
- radio/deprecated/1.0/Android.bp             | 1 +
- 2 files changed, 1 insertion(+), 1 deletion(-)
+ 1 file changed, 1 deletion(-)
 
 diff --git a/radio/aidl/compat/libradiocompat/Android.bp b/radio/aidl/compat/libradiocompat/Android.bp
 index 04aed77c93..6809faf61c 100644
@@ -21,17 +20,6 @@ index 04aed77c93..6809faf61c 100644
      vendor: true,
      cflags: [
          "-Wall",
-diff --git a/radio/deprecated/1.0/Android.bp b/radio/deprecated/1.0/Android.bp
-index a607644b37..40a5758e71 100644
---- a/radio/deprecated/1.0/Android.bp
-+++ b/radio/deprecated/1.0/Android.bp
-@@ -22,5 +22,6 @@ hidl_interface {
-         "android.hardware.radio@1.0",
-         "android.hidl.base@1.0",
-     ],
-+    vendor: true,
-     gen_java: true,
- }
 -- 
 2.51.0
 
