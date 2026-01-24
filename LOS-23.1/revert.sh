@@ -2,6 +2,7 @@
 
 # Array of directories and corresponding patches
 declare -A patches=(
+    ["bionic"]="bionic"
     ["build/make"]="build_make"
     ["build/soong"]="build_soong"
     ["frameworks/av"]="frameworks_av"
