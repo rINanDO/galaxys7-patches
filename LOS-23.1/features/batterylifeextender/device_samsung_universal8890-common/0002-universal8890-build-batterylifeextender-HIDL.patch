@@ -1,4 +1,4 @@
-From 3291d8c2d88cdec348970e92026749270bf02580 Mon Sep 17 00:00:00 2001
+From 2cbd9391c13998ef3e74f6137800579bc95c5c5b Mon Sep 17 00:00:00 2001
 From: Francescodario Cuzzocrea <bosconovic@gmail.com>
 Date: Sat, 31 Jul 2021 10:20:35 +0200
 Subject: [PATCH 2/2] universal8890: build batterylifeextender HIDL
@@ -10,10 +10,10 @@ Signed-off-by: Dominggoes Isakh <drjisakh@gmail.com>
  1 file changed, 4 insertions(+)
 
 diff --git a/device-common.mk b/device-common.mk
-index b2d776c..25abea6 100644
+index fb9b2f5..685d422 100644
 --- a/device-common.mk
 +++ b/device-common.mk
-@@ -69,6 +69,10 @@ PRODUCT_COPY_FILES += \
+@@ -74,6 +74,10 @@ PRODUCT_COPY_FILES += \
      frameworks/av/services/audiopolicy/config/r_submix_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/r_submix_audio_policy_configuration.xml \
      frameworks/av/services/audiopolicy/config/usb_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/usb_audio_policy_configuration.xml
  
@@ -25,5 +25,5 @@ index b2d776c..25abea6 100644
  PRODUCT_PACKAGES += \
      android.hardware.bluetooth@1.0-impl:64 \
 -- 
-2.41.0
+2.51.0
 

@@ -1,4 +1,4 @@
-From 295f017624a6d662fcafb46a1b8bb2f33aa39a3a Mon Sep 17 00:00:00 2001
+From 04e6564d8d363f51a57583db62cd280597620b11 Mon Sep 17 00:00:00 2001
 From: Francescodario Cuzzocrea <bosconovic@gmail.com>
 Date: Sat, 31 Jul 2021 10:19:40 +0200
 Subject: [PATCH 1/2] universal8890: sepolicy: add
@@ -16,22 +16,22 @@ Signed-off-by: Dominggoes Isakh <drjisakh@gmail.com>
  create mode 100644 sepolicy/vendor/hal_lineage_batterylifeextender_default.te
 
 diff --git a/sepolicy/vendor/file_contexts b/sepolicy/vendor/file_contexts
-index a6676de..c26d201 100644
+index 6d111c4..1f95899 100644
 --- a/sepolicy/vendor/file_contexts
 +++ b/sepolicy/vendor/file_contexts
-@@ -91,6 +91,7 @@
+@@ -93,6 +93,7 @@
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.atrace@1\.0-service\.universal8890      u:object_r:hal_atrace_default_exec:s0
  /(vendor|system/vendor)/bin/hw/android\.hardware\.neuralnetworks@1\.1-service-armnn       u:object_r:hal_neuralnetworks_default_exec:s0
- /(vendor|system/vendor)/bin/hw/vendor\.lineage\.livedisplay@2\.1-service\.grace           u:object_r:hal_lineage_livedisplay_exynos_exec:s0
- /(vendor|system/vendor)/bin/hw/vendor\.lineage\.livedisplay@2\.1-service\.universal8890   u:object_r:hal_lineage_livedisplay_exynos_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.thermal@2\.0-service\.samsung           u:object_r:hal_thermal_default_exec:s0
 +/(vendor|system/vendor)/bin/hw/vendor\.lineage\.batterylifeextender@[0-9]\.[0-9]-service\.samsung          u:object_r:hal_lineage_batterylifeextender_default_exec:s0
  
  ####################################
  # Same-process HAL files and their dependencies
 diff --git a/sepolicy/vendor/genfs_contexts b/sepolicy/vendor/genfs_contexts
-index 4ccffa9..0515f82 100644
+index 2bcc3aa..2871526 100644
 --- a/sepolicy/vendor/genfs_contexts
 +++ b/sepolicy/vendor/genfs_contexts
-@@ -97,6 +97,7 @@ genfscon sysfs /devices/15660000.pcie0                      u:object_r:sysfs_pci
+@@ -101,6 +101,7 @@ genfscon sysfs /devices/15660000.pcie0                      u:object_r:sysfs_pci
  
  # Power supply devices
  genfscon sysfs /devices/battery/power_supply                              u:object_r:sysfs_batteryinfo:s0
@@ -63,10 +63,10 @@ index 6e5082c..5cb580b 100644
 +# Battery life extender
 +vendor_internal_prop(vendor_batterylifeextender_prop)
 diff --git a/sepolicy/vendor/property_contexts b/sepolicy/vendor/property_contexts
-index b0250c5..a61251b 100644
+index 5afaada..3a97da9 100644
 --- a/sepolicy/vendor/property_contexts
 +++ b/sepolicy/vendor/property_contexts
-@@ -35,3 +35,6 @@ wifi.active.interface            u:object_r:wifi_prop:s0
+@@ -39,3 +39,6 @@ wifi.active.interface            u:object_r:wifi_prop:s0
  wifi.direct.interface            u:object_r:wifi_prop:s0
  wifi.interface                   u:object_r:wifi_prop:s0
  wlan.driver.status               u:object_r:wifi_prop:s0
@@ -74,5 +74,5 @@ index b0250c5..a61251b 100644
 +# Battery life extender
 +persist.vendor.sec.battlifeext_enabled     u:object_r:vendor_batterylifeextender_prop:s0
 -- 
-2.41.0
+2.51.0
 

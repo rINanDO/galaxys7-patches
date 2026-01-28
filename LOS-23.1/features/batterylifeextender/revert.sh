@@ -7,7 +7,6 @@ declare -A patches=(
     ["hardware/lineage/interfaces"]="hardware_lineage_interfaces"
     ["hardware/samsung"]="hardware_samsung"
     ["packages/apps/Settings"]="packages_apps_Settings"
-    ["vendor/lineage"]="vendor_lineage"
 )
 
 # Base path for the patches
