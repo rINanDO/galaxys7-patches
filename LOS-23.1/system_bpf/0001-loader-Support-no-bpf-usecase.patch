@@ -1,7 +1,7 @@
-From 3c68a55bd6926a14f6eb869a4f7aec0c364c2ea0 Mon Sep 17 00:00:00 2001
+From 503343199c1a71c1c355fbc684086962cf9067be Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Tue, 21 Jan 2025 14:52:01 -0500
-Subject: [PATCH] loader: Support no bpf usecase
+Subject: [PATCH 1/2] loader: Support no bpf usecase
 
 Change-Id: I5b99fb83001debd08d910569387e08970b78e8d3
 ---
@@ -10,10 +10,10 @@ Change-Id: I5b99fb83001debd08d910569387e08970b78e8d3
  2 files changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/loader/Loader.cpp b/loader/Loader.cpp
-index 940ce19..6940a5f 100644
+index 9fbea05..2fcd6c6 100644
 --- a/loader/Loader.cpp
 +++ b/loader/Loader.cpp
-@@ -977,7 +977,8 @@ void initLogging() {
+@@ -978,7 +978,8 @@ void initLogging() {
  void createBpfFsSubDirectories() {
      for (const auto& location : android::bpf::locations) {
          if (android::bpf::createSysFsBpfSubDir(location.prefix)) {
@@ -23,7 +23,7 @@ index 940ce19..6940a5f 100644
          }
      }
  }
-@@ -990,9 +991,9 @@ void legacyBpfLoader() {
+@@ -991,9 +992,9 @@ void legacyBpfLoader() {
              ALOGE("If this triggers reliably, you're probably missing kernel options or patches.");
              ALOGE("If this triggers randomly, you might be hitting some memory allocation "
                    "problems or startup script race.");
@@ -36,7 +36,7 @@ index 940ce19..6940a5f 100644
          }
      }
  }
-@@ -1000,6 +1001,6 @@ void legacyBpfLoader() {
+@@ -1001,6 +1002,6 @@ void legacyBpfLoader() {
  void execNetBpfLoadDone() {
      const char* args[] = {"/apex/com.android.tethering/bin/netbpfload", "done", NULL};
      execve(args[0], (char**)args, environ);
