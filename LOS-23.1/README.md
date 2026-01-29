@@ -1,16 +1,16 @@
-# LineageOS 22.1/Android 15 patches for Galaxy S7 (HeroLTE) support
+# LineageOS 23.1/Android 16 patches for Galaxy S7 (HeroLTE) support
 
 These instructions assumes that:
 
-- you have installed LineageOS 22.1 sources installed in ```~/android/system```
-  (See <https://github.com/LineageOS/android/tree/lineage-22.1>)
+- you have installed LineageOS 23.1 sources installed in ```~/android/system```
+  (See <https://github.com/LineageOS/android/tree/lineage-23.1>)
 
   ```#!/bin/bash
-  repo init -u <https://github.com/LineageOS/android.git> -b lineage-22.1 --git-lfs
+  repo init -u <https://github.com/LineageOS/android.git> -b lineage-23.1 --git-lfs
   repo sync
   ```
 
-- you have installed these patches to ```~/patches```
+- you have cloned this repository in ```~/patches```
 
 ## 1. Apply device specific repo's
 
@@ -59,4 +59,4 @@ cd ~/android/system
 Have fun!
 
 These patches were last tested on:
-17 aug 2025.
+29 jan 2026.
