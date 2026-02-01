@@ -1,4 +1,4 @@
-From 78e342b063d59457df9d6c25822f13b32f8b07e0 Mon Sep 17 00:00:00 2001
+From f35c638d109377c1c39e7bf9fe2df33d4fc5a9a9 Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Tue, 2 Apr 2024 23:47:30 +0300
 Subject: [PATCH 2/8] Revert "[BR10] Skip tcp info for uids which blocked by
@@ -62,10 +62,10 @@ index d01847d7a..0a8e2aedb 100644
       * Dependencies class for testing.
       */
 diff --git a/src/com/android/server/connectivity/NetworkMonitor.java b/src/com/android/server/connectivity/NetworkMonitor.java
-index 3ae8557f5..df55b5a8a 100755
+index fe0ac5f6c..d4a7190c2 100755
 --- a/src/com/android/server/connectivity/NetworkMonitor.java
 +++ b/src/com/android/server/connectivity/NetworkMonitor.java
-@@ -1008,7 +1008,6 @@ public class NetworkMonitor extends StateMachine {
+@@ -1047,7 +1047,6 @@ public class NetworkMonitor extends StateMachine {
                  // Initialization.
                  tst.setOpportunisticMode(false);
                  tst.setLinkProperties(mLinkProperties);
@@ -73,7 +73,7 @@ index 3ae8557f5..df55b5a8a 100755
              }
              Log.d(TAG, "Starting on network " + mNetwork
                      + " with capport HTTPS URL " + Arrays.toString(mCaptivePortalHttpsUrls)
-@@ -1239,10 +1238,6 @@ public class NetworkMonitor extends StateMachine {
+@@ -1278,10 +1277,6 @@ public class NetworkMonitor extends StateMachine {
              // VPN.
              sendMessage(CMD_FORCE_REEVALUATION, NO_UID, 0 /* forceAccept */);
          }
@@ -167,10 +167,10 @@ index 065441e12..d9bde6611 100644
      public void testTcpInfoParsingWithMultipleMsgs() throws Exception {
          final TcpSocketTracker tst = new TcpSocketTracker(mDependencies, mNetwork);
 diff --git a/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java b/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java
-index 809824ebf..e7bf81a20 100644
+index 7ee7045b4..99e315d42 100644
 --- a/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java
 +++ b/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java
-@@ -2698,19 +2698,6 @@ public class NetworkMonitorTest {
+@@ -2785,19 +2785,6 @@ public class NetworkMonitorTest {
          assertEquals(INITIAL_REEVALUATE_DELAY_MS, wnm.getReevaluationDelayMs());
      }
  

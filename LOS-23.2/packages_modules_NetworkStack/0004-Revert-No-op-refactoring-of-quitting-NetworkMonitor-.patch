@@ -1,4 +1,4 @@
-From 58e00119edd4d893f44cf5d3b02365fa9d466285 Mon Sep 17 00:00:00 2001
+From 306001a0a632310152dd30415b47760598482708 Mon Sep 17 00:00:00 2001
 From: khalvat-M <mmba313@gmail.com>
 Date: Wed, 26 Jun 2024 15:27:10 +0330
 Subject: [PATCH 4/8] Revert "No-op refactoring of quitting NetworkMonitor in
@@ -10,10 +10,10 @@ This reverts commit 434aa342c28e1a8f45bd728051eb4a43e35632e9.
  1 file changed, 24 insertions(+), 40 deletions(-)
 
 diff --git a/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java b/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java
-index e7bf81a20..0c8bd59e3 100644
+index 99e315d42..989afeaf5 100644
 --- a/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java
 +++ b/tests/unit/src/com/android/server/connectivity/NetworkMonitorTest.java
-@@ -279,10 +279,8 @@ public class NetworkMonitorTest {
+@@ -280,10 +280,8 @@ public class NetworkMonitorTest {
      private @Mock TcpSocketTracker.Dependencies mTstDependencies;
      private @Mock INetd mNetd;
      private @Mock TcpSocketTracker mTst;
@@ -26,7 +26,7 @@ index e7bf81a20..0c8bd59e3 100644
      private @Mock Context mMccContext;
      private @Mock Resources mMccResource;
      private @Mock WifiInfo mWifiInfo;
-@@ -495,22 +493,16 @@ public class NetworkMonitorTest {
+@@ -496,22 +494,16 @@ public class NetworkMonitorTest {
          mFakeDns.setAnswer(PRIVATE_DNS_PROBE_HOST_SUFFIX, new String[]{"2001:db8::1"}, TYPE_AAAA);
  
          doAnswer((invocation) -> {
@@ -52,7 +52,7 @@ index e7bf81a20..0c8bd59e3 100644
              return null;
          }).when(mContext).unregisterReceiver(any());
  
-@@ -520,26 +512,8 @@ public class NetworkMonitorTest {
+@@ -521,26 +513,8 @@ public class NetworkMonitorTest {
          setDataStallEvaluationType(DATA_STALL_EVALUATION_TYPE_DNS);
          setValidDataStallDnsTimeThreshold(TEST_MIN_VALID_STALL_DNS_TIME_THRESHOLD_MS);
          setConsecutiveDnsTimeoutThreshold(5);
@@ -81,7 +81,7 @@ index e7bf81a20..0c8bd59e3 100644
      }
  
      private void quitExecutorServices() throws Exception {
-@@ -575,7 +549,20 @@ public class NetworkMonitorTest {
+@@ -576,7 +550,20 @@ public class NetworkMonitorTest {
      @After
      public void tearDown() throws Exception {
          mFakeDns.clearAll();
@@ -103,7 +103,7 @@ index e7bf81a20..0c8bd59e3 100644
          // Clear mocks to prevent from stubs holding instances and cause memory leaks.
          Mockito.framework().clearInlineMocks();
      }
-@@ -660,6 +647,7 @@ public class NetworkMonitorTest {
+@@ -661,6 +648,7 @@ public class NetworkMonitorTest {
          @Override
          protected void onQuitting() {
              super.onQuitting();
@@ -111,7 +111,7 @@ index e7bf81a20..0c8bd59e3 100644
              mQuitCv.open();
          }
  
-@@ -981,9 +969,7 @@ public class NetworkMonitorTest {
+@@ -982,9 +970,7 @@ public class NetworkMonitorTest {
          verify(mContext, never()).registerReceiver(receiverCaptor.capture(),
                  argThat(receiver -> ACTION_CONFIGURATION_CHANGED.equals(receiver.getAction(0))));
          nm.start();
@@ -122,7 +122,7 @@ index e7bf81a20..0c8bd59e3 100644
          HandlerUtils.waitForIdle(nm.getHandler(), HANDLER_TIMEOUT_MS);
          verify(mContext, times(1)).registerReceiver(receiverCaptor.capture(),
                  argThat(receiver -> ACTION_CONFIGURATION_CHANGED.equals(receiver.getAction(0))));
-@@ -3901,8 +3887,6 @@ public class NetworkMonitorTest {
+@@ -3988,8 +3974,6 @@ public class NetworkMonitorTest {
          // started. If captive portal app receiver is registered, then the size of the registered
          // receivers will be 2. Otherwise, mRegisteredReceivers should only contain 1 configuration
          // change receiver.

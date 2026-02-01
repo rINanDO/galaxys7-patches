@@ -1,4 +1,4 @@
-From f82a53f376ad5aa717bfe0d3d4b0dc64a3a94b01 Mon Sep 17 00:00:00 2001
+From 29222352f0bcb5c1e2259af6d13c717db3e43cda Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Tue, 2 Apr 2024 23:47:20 +0300
 Subject: [PATCH 1/8] Revert "[BR05] Disable doze mode workaround when ignore

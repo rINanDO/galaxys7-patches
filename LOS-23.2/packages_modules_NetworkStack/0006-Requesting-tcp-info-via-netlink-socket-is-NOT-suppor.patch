@@ -1,4 +1,4 @@
-From 7b6fa59710dfef5846fe5c1379eb5ef3a2b7edfa Mon Sep 17 00:00:00 2001
+From 94417a6c32d9f4de64b250bad1da5ecc4377c68e Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Sun, 31 Mar 2024 21:32:02 +0300
 Subject: [PATCH 6/8] Requesting tcp info via netlink socket is NOT supported

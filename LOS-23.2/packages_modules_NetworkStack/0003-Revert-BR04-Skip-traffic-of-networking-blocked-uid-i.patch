@@ -1,4 +1,4 @@
-From 2ced02284c5fc8ad1ae1e3b45a4b8669f3bc38c7 Mon Sep 17 00:00:00 2001
+From 16259cac161f814bc045dd3e08edb2419037b8cb Mon Sep 17 00:00:00 2001
 From: Yaroslav Zviezda <acroreiser@gmail.com>
 Date: Tue, 2 Apr 2024 23:47:42 +0300
 Subject: [PATCH 3/8] Revert "[BR04] Skip traffic of networking-blocked uid in
@@ -126,10 +126,10 @@ index 0a8e2aedb..4b66c0ae3 100644
      }
  }
 diff --git a/src/com/android/networkstack/util/NetworkStackUtils.java b/src/com/android/networkstack/util/NetworkStackUtils.java
-index 46f44c744..20a9fba79 100755
+index 6a124ddae..232a99681 100755
 --- a/src/com/android/networkstack/util/NetworkStackUtils.java
 +++ b/src/com/android/networkstack/util/NetworkStackUtils.java
-@@ -309,12 +309,6 @@ public class NetworkStackUtils {
+@@ -308,12 +308,6 @@ public class NetworkStackUtils {
      public static final String REEVALUATE_WHEN_RESUME = "reevaluate_when_resume";
  
      /**
