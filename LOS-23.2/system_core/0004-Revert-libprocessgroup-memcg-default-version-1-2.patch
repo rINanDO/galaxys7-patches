@@ -1,4 +1,4 @@
-From fc8d270c78b406d7a80bda0604f6afa77452c603 Mon Sep 17 00:00:00 2001
+From 0e539ae6c1cac1f94a8da53e6a1f58369451629a Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Wed, 3 Dec 2025 12:33:52 +0100
 Subject: [PATCH 4/5] Revert "libprocessgroup: memcg default version 1 -> 2"
@@ -11,10 +11,10 @@ Change-Id: I109844bbfbd6de2370555885fedaa7c723bf546f
  1 file changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/libprocessgroup/profiles/cgroups.json b/libprocessgroup/profiles/cgroups.json
-index 9cae20e69d..444338e201 100644
+index 4eb18c4b97..542130e790 100644
 --- a/libprocessgroup/profiles/cgroups.json
 +++ b/libprocessgroup/profiles/cgroups.json
-@@ -35,6 +35,14 @@
+@@ -34,6 +34,14 @@
        "Mode": "0755",
        "UID": "system",
        "GID": "system"
@@ -29,7 +29,7 @@ index 9cae20e69d..444338e201 100644
      }
    ],
    "Cgroups2": {
-@@ -46,13 +54,6 @@
+@@ -45,13 +53,6 @@
        {
          "Controller": "freezer",
          "Path": "."
