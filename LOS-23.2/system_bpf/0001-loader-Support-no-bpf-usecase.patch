@@ -1,63 +1,51 @@
-From 503343199c1a71c1c355fbc684086962cf9067be Mon Sep 17 00:00:00 2001
+From 832b8f22f784d403b27fc59111f5b2168675f9e9 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Tue, 21 Jan 2025 14:52:01 -0500
 Subject: [PATCH 1/2] loader: Support no bpf usecase
 
 Change-Id: I5b99fb83001debd08d910569387e08970b78e8d3
 ---
- loader/Loader.cpp               | 13 +++++++------
+ loader/Loader.cpp               | 14 ++------------
  loader/include/libbpf_android.h |  2 +-
- 2 files changed, 8 insertions(+), 7 deletions(-)
+ 2 files changed, 3 insertions(+), 13 deletions(-)
 
 diff --git a/loader/Loader.cpp b/loader/Loader.cpp
-index 9fbea05..2fcd6c6 100644
+index cde6447..2699e14 100644
 --- a/loader/Loader.cpp
 +++ b/loader/Loader.cpp
-@@ -978,7 +978,8 @@ void initLogging() {
- void createBpfFsSubDirectories() {
-     for (const auto& location : android::bpf::locations) {
-         if (android::bpf::createSysFsBpfSubDir(location.prefix)) {
--            exit(120);
-+    ALOGE("BPF Ignored 120: createSysFsBpfSubDir(%s)", location.prefix);
-+//          exit(120);
-         }
-     }
- }
-@@ -991,9 +992,9 @@ void legacyBpfLoader() {
-             ALOGE("If this triggers reliably, you're probably missing kernel options or patches.");
-             ALOGE("If this triggers randomly, you might be hitting some memory allocation "
-                   "problems or startup script race.");
--            ALOGE("--- DO NOT EXPECT SYSTEM TO BOOT SUCCESSFULLY ---");
--            sleep(20);
--            exit(121);
-+            ALOGE("BPF Ignored 121: CONTINUE SYSTEM TO BOOT ---");
-+//            sleep(20);
-+//            exit(121);
-         }
-     }
- }
-@@ -1001,6 +1002,6 @@ void legacyBpfLoader() {
- void execNetBpfLoadDone() {
+@@ -683,18 +683,8 @@ void vendorBpfLoader() {
+     android::base::InitLogging(const_cast<char**>(argv), &android::base::KernelLogger);
+ 
+     // Load all ELF objects, create programs and maps, and pin them
+-    if (android::bpf::loadAllElfObjects()) {
+-        ALOGE("=== CRITICAL FAILURE LOADING BPF PROGRAMS FROM /vendor/etc/bpf ===");
+-        ALOGE("If this triggers reliably, you're probably missing kernel options or patches.");
+-        ALOGE("If this triggers randomly, you might be hitting some memory allocation "
+-              "problems or startup script race.");
+-        ALOGE("--- DO NOT EXPECT SYSTEM TO BOOT SUCCESSFULLY ---");
+-        sleep(20);
+-        exit(121);
+-    }
+-
++    android::bpf::loadAllElfObjects();
++        
      const char* args[] = {"/apex/com.android.tethering/bin/netbpfload", "done", NULL};
      execve(args[0], (char**)args, environ);
 -    ALOGE("FATAL: execve(): %d[%s]", errno, strerror(errno));
 -    exit(122);
-+    ALOGE("BPF Ignored 122: execve(): %d[%s]", errno, strerror(errno));
-+//     exit(122);
  }
 diff --git a/loader/include/libbpf_android.h b/loader/include/libbpf_android.h
-index ae4a36d..01281db 100644
+index 706c0e8..d5a25bd 100644
 --- a/loader/include/libbpf_android.h
 +++ b/loader/include/libbpf_android.h
-@@ -51,7 +51,7 @@ extern "C" {
- void initLogging();
- void createBpfFsSubDirectories();
- void legacyBpfLoader();
--__noreturn void execNetBpfLoadDone();
-+void execNetBpfLoadDone();
+@@ -19,6 +19,6 @@
  
+ // The C++ portion of the BpfLoader is exposed as a terminal function.
  #ifdef __cplusplus
- }  // extern C
+-extern "C" __noreturn
++extern "C"
+ #endif
+ void vendorBpfLoader();
 -- 
 2.51.0
 
