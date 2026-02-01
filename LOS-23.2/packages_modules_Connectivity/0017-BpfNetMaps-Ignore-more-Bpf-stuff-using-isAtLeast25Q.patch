@@ -1,0 +1,34 @@
+From 1778e2b281117399c3beebeb229027e9c1923072 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Fri, 5 Dec 2025 20:57:57 +0100
+Subject: [PATCH 17/18] BpfNetMaps: Ignore more Bpf stuff using isAtLeast25Q
+
+Change-Id: Id801add9feb35054ade06169d3e389b61cce94fb
+---
+ service/src/com/android/server/BpfNetMaps.java | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/service/src/com/android/server/BpfNetMaps.java b/service/src/com/android/server/BpfNetMaps.java
+index 5bd5afa491..20bcff9fb1 100644
+--- a/service/src/com/android/server/BpfNetMaps.java
++++ b/service/src/com/android/server/BpfNetMaps.java
+@@ -115,6 +115,7 @@ public class BpfNetMaps {
+     private final Dependencies mDeps;
+     // Use legacy netd for releases before T.
+     private static boolean sInitialized = false;
++    private static final boolean hasBpf = false;
+ 
+     // Lock for sConfigurationMap entry for UID_RULES_CONFIGURATION_KEY.
+     // This entry is not accessed by others.
+@@ -481,6 +482,8 @@ public class BpfNetMaps {
+      NetworkStackUtils.isAtLeast25Q2 when it is moved to a static lib.
+      */
+     public static boolean isAtLeast25Q2() {
++        if (!hasBpf) return false;
++
+         return SdkLevel.isAtLeastB()  || (SdkLevel.isAtLeastV()
+                 && "Baklava".equals(Build.VERSION.CODENAME));
+     }
+-- 
+2.51.0
+

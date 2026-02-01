@@ -1,0 +1,33 @@
+From 78f35fac30e22b5a4478298665cd89c385b454a4 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sat, 13 Dec 2025 10:51:11 +0100
+Subject: [PATCH 1/1] lmkd: Drop "per-node stats" for parsing to allow parsing
+
+Change-Id: I8ff0f7db0e09476f54cc9b298ae41cc0e283c6f5
+---
+ lmkd.cpp | 9 ---------
+ 1 file changed, 9 deletions(-)
+
+diff --git a/lmkd.cpp b/lmkd.cpp
+index 3cb458d..b199f85 100644
+--- a/lmkd.cpp
++++ b/lmkd.cpp
+@@ -1864,15 +1864,6 @@ static int zoneinfo_parse(struct zoneinfo *zi) {
+         int node_id;
+         if (sscanf(line, "Node %d, zone %" STRINGIFY(LINE_MAX) "s", &node_id, zone_name) == 2) {
+             if (!node || node->id != node_id) {
+-                line = strtok_r(NULL, "\n", &save_ptr);
+-                if (strncmp(line, NODE_STATS_MARKER, strlen(NODE_STATS_MARKER)) != 0) {
+-                    /*
+-                     * per-node stats are only present in the first non-empty zone of
+-                     * the node.
+-                     */
+-                    continue;
+-                }
+-
+                 /* new node is found */
+                 if (node) {
+                     node->zone_count = zone_idx + 1;
+-- 
+2.51.0
+

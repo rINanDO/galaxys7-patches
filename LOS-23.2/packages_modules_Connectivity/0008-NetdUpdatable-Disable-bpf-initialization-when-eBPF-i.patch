@@ -1,0 +1,45 @@
+From dab3a22df57ee556117c21e1b208e59757111a48 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Wed, 12 Oct 2022 15:27:37 +0200
+Subject: [PATCH 08/18] NetdUpdatable: Disable bpf initialization when eBPF is
+ not available
+
+Change-Id: I9d2b933311797af6386c89faa73f2e1e1d2ef8d5
+---
+ bpf/netd/NetdUpdatable.cpp | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/bpf/netd/NetdUpdatable.cpp b/bpf/netd/NetdUpdatable.cpp
+index 8b9e5a759c..e3e59268ee 100644
+--- a/bpf/netd/NetdUpdatable.cpp
++++ b/bpf/netd/NetdUpdatable.cpp
+@@ -19,6 +19,7 @@
+ #include "BpfHandler.h"
+ 
+ #include <android-base/logging.h>
++#include <cutils/properties.h>
+ #include <netdutils/Status.h>
+ 
+ #include "NetdUpdatablePublic.h"
+@@ -29,10 +30,14 @@ int libnetd_updatable_init(const char* cg2_path) {
+     android::base::InitLogging(/*argv=*/nullptr);
+     LOG(INFO) << __func__ << ": Initializing";
+ 
+-    android::netdutils::Status ret = sBpfHandler.init(cg2_path);
+-    if (!android::netdutils::isOk(ret)) {
+-        LOG(ERROR) << __func__ << ": Failed. " << ret.code() << " " << ret.msg();
+-        return -ret.code();
++    char value[PROP_VALUE_MAX] = "";
++    bool ebpf_supported = __system_property_get("ro.kernel.ebpf.supported", value) == 0 || strcmp(value, "true") == 0;
++    if (ebpf_supported) {
++        android::netdutils::Status ret = sBpfHandler.init(cg2_path);
++        if (!android::netdutils::isOk(ret)) {
++            LOG(ERROR) << __func__ << ": Failed. " << ret.code() << " " << ret.msg();
++            return -ret.code();
++        }
+     }
+     return 0;
+ }
+-- 
+2.51.0
+
