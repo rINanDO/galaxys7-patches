@@ -1,18 +1,18 @@
-From 48a3853e9f5b32351346d1f29c3fd25df3c5bbd1 Mon Sep 17 00:00:00 2001
-From: z3DD3r <z3dd3r@gmail.com>
-Date: Tue, 16 Apr 2024 12:36:46 +0300
-Subject: [PATCH 04/18] dnsresolver: Support no-bpf usecase
+From 1e64bf9f218f25991ab6a60b3c4c341fe1205532 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sat, 31 Jan 2026 16:18:32 +0100
+Subject: [PATCH 2/6] DnsBpfHelper: Support no bpf usecase
 
-Change-Id: I5659e4f37e0187dc0361ceaf7ca4137e673fe416
+Change-Id: I9fdcfd1e9aaa4d34e0429b06572e470a9292b1af
 ---
- bpf/dns_helper/DnsBpfHelper.cpp | 56 +++++++++------------------------
- 1 file changed, 15 insertions(+), 41 deletions(-)
+ bpf/dns_helper/DnsBpfHelper.cpp | 49 +++++----------------------------
+ 1 file changed, 7 insertions(+), 42 deletions(-)
 
 diff --git a/bpf/dns_helper/DnsBpfHelper.cpp b/bpf/dns_helper/DnsBpfHelper.cpp
-index 20add47b60..d0e951958b 100644
+index 20add47b60..9d7bb1f69d 100644
 --- a/bpf/dns_helper/DnsBpfHelper.cpp
 +++ b/bpf/dns_helper/DnsBpfHelper.cpp
-@@ -32,53 +32,25 @@ namespace net {
+@@ -32,53 +32,16 @@ namespace net {
      }                                                                                              \
    } while (0)
  
@@ -58,18 +58,10 @@ index 20add47b60..d0e951958b 100644
 -      LOG(INFO) << "Networking BPF programs are loaded";
 -    }
 -    return {};
-+  auto ret1 = mConfigurationMap.init(CONFIGURATION_MAP_PATH);
-+  if (!ret1.ok()) {
-+    LOG(ERROR) << __func__ << ": Failed mConfigurationMap.init";
-+  }
-+  auto ret2 = mUidOwnerMap.init(UID_OWNER_MAP_PATH);
-+  if (!ret2.ok()) {
-+    LOG(ERROR) << __func__ << ": Failed mConfigurationMap.init";
-+  }
-+  auto ret3 = mDataSaverEnabledMap.init(DATA_SAVER_ENABLED_MAP_PATH);
-+  if (!ret3.ok()) {
-+    LOG(ERROR) << __func__ << ":  Failed mConfigurationMap.init";
-   }
+-  }
++  mConfigurationMap.init(CONFIGURATION_MAP_PATH);
++  mUidOwnerMap.init(UID_OWNER_MAP_PATH);
++  mDataSaverEnabledMap.init(DATA_SAVER_ENABLED_MAP_PATH);
  
 -  RETURN_IF_RESULT_NOT_OK(mConfigurationMap.init(CONFIGURATION_MAP_PATH));
 -  RETURN_IF_RESULT_NOT_OK(mUidOwnerMap.init(UID_OWNER_MAP_PATH));
@@ -77,7 +69,7 @@ index 20add47b60..d0e951958b 100644
    return {};
  }
  
-@@ -87,11 +59,13 @@ base::Result<bool> DnsBpfHelper::isUidNetworkingBlocked(uid_t uid, bool metered)
+@@ -87,11 +50,13 @@ base::Result<bool> DnsBpfHelper::isUidNetworkingBlocked(uid_t uid, bool metered)
    if (!mConfigurationMap.isValid() || !mUidOwnerMap.isValid()) {
      LOG(ERROR) << __func__
                 << ": BPF maps are not ready. Forgot to call ADnsHelper_init?";
