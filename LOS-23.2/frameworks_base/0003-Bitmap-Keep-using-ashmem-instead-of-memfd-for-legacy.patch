@@ -1,4 +1,4 @@
-From d8e8634e9c54d7c053ab7ee4262e0ddaefa9e62c Mon Sep 17 00:00:00 2001
+From 1dbc7f1873bcfb6db1a16bcbd18b00fa335f5149 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sun, 25 Jan 2026 12:44:07 +0100
 Subject: [PATCH 3/3] Bitmap: Keep using ashmem instead of memfd for legacy
@@ -43,10 +43,10 @@ Change-Id: Ie55906e6433eacc22c7de387eb9099bdfec1bfd7
  1 file changed, 12 insertions(+), 40 deletions(-)
 
 diff --git a/libs/hwui/jni/Bitmap.cpp b/libs/hwui/jni/Bitmap.cpp
-index 03ffddfa9160..3aaf5e3c02e9 100644
+index 1d4576156d51..29862d0fea4c 100644
 --- a/libs/hwui/jni/Bitmap.cpp
 +++ b/libs/hwui/jni/Bitmap.cpp
-@@ -775,50 +775,22 @@ static binder_status_t writeBlob(AParcel* parcel, uint64_t bitmapId, const SkBit
+@@ -782,50 +782,22 @@ static binder_status_t writeBlob(AParcel* parcel, uint64_t bitmapId, const SkBit
          // Create new ashmem region with read/write priv
          auto ashmemId = Bitmap::getAshmemId("writeblob", bitmapId,
                                              bitmap.width(), bitmap.height(), size);
