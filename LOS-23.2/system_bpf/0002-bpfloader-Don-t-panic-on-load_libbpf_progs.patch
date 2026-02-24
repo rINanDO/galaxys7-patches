@@ -1,7 +1,7 @@
-From e715ff9d4e03dd91a419e76e6f6e83cc5b16f9d2 Mon Sep 17 00:00:00 2001
+From 7464d81bf511f08683be3b992554fa3b33aced05 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Fri, 16 Jan 2026 08:32:40 +0100
-Subject: [PATCH 2/2] bpfloader: Don't panic on load_libbpf_progs
+Subject: [PATCH 2/3] bpfloader: Don't panic on load_libbpf_progs
 
 Change-Id: I32cbbda8239e289468f84a239c3a9a2eec226623
 ---
