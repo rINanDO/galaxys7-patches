@@ -1,7 +1,7 @@
-From b550b4f1c0e5b8f74688595b20317e646fd5c018 Mon Sep 17 00:00:00 2001
+From afb24bd7e262821f0bbd48411f0f76c12a030929 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 31 Jan 2026 16:33:34 +0100
-Subject: [PATCH 6/6] Netd: Support no bpf usecase
+Subject: [PATCH 6/8] Netd: Support no bpf usecase
 
 Change-Id: Iba5ea4931bd43c646a272f3d8525b97c31d14f78
 ---

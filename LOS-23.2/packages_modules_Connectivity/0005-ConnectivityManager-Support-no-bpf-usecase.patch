@@ -1,7 +1,7 @@
-From 076692bd35ede482c2160dfa1ada05b6efef119b Mon Sep 17 00:00:00 2001
+From 621c3a5a2d0fa0be59ed5f32ca0f43e2d5f21e65 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 31 Jan 2026 16:31:10 +0100
-Subject: [PATCH 5/6] ConnectivityManager: Support no bpf usecase
+Subject: [PATCH 5/8] ConnectivityManager: Support no bpf usecase
 
 Change-Id: I9a91214ae25ff00807517808f9aeec6efbeb0108
 ---

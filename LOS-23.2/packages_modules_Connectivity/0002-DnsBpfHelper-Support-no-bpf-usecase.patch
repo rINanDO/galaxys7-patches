@@ -1,7 +1,7 @@
-From 1e64bf9f218f25991ab6a60b3c4c341fe1205532 Mon Sep 17 00:00:00 2001
+From fe702d3f8be7626fef50cc88ccdea4e90f61eb07 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 31 Jan 2026 16:18:32 +0100
-Subject: [PATCH 2/6] DnsBpfHelper: Support no bpf usecase
+Subject: [PATCH 2/8] DnsBpfHelper: Support no bpf usecase
 
 Change-Id: I9fdcfd1e9aaa4d34e0429b06572e470a9292b1af
 ---
