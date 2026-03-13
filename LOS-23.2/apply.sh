@@ -8,6 +8,7 @@ declare -A patches=(
     ["frameworks/av"]="frameworks_av"
     ["frameworks/base"]="frameworks_base"
     ["frameworks/native"]="frameworks_native"
+    ["frameworks/hardware/interfaces"]="frameworks_hardware_interfaces"
     ["hardware/interfaces"]="hardware_interfaces"
     ["packages/modules/Connectivity"]="packages_modules_Connectivity"
     ["packages/modules/DnsResolver"]="packages_modules_DnsResolver"

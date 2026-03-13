@@ -1,7 +1,7 @@
-From 741e12818ae0d3f4602b25221b4ef16d2f76083b Mon Sep 17 00:00:00 2001
+From 6e17b7a1fef9f63621fa4fc2f2d15da4db945aeb Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Tue, 24 Feb 2026 22:40:18 +0100
-Subject: [PATCH 3/3] Revert "Use epoll_pwait2 for nanosecond timeouts"
+Subject: [PATCH 3/4] Revert "Use epoll_pwait2 for nanosecond timeouts"
 
 This reverts commit 1a3555a74057028ca2aafd790cbd6be13864d7a7.
 ---

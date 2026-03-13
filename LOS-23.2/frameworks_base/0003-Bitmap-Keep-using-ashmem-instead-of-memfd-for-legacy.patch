@@ -1,7 +1,7 @@
-From 1dbc7f1873bcfb6db1a16bcbd18b00fa335f5149 Mon Sep 17 00:00:00 2001
+From fd91bd5080ec67d211f44838664633d4e66a856c Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sun, 25 Jan 2026 12:44:07 +0100
-Subject: [PATCH 3/3] Bitmap: Keep using ashmem instead of memfd for legacy
+Subject: [PATCH 3/4] Bitmap: Keep using ashmem instead of memfd for legacy
  devices
 
 This has been introduced by
