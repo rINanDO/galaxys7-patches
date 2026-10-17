@@ -1,0 +1,26 @@
+From e9757ca0862b338cda6e2e39d47a1e67a66b5a18 Mon Sep 17 00:00:00 2001
+From: html6405 <peter.schelchshorn@mhs-solutions.at>
+Date: Fri, 9 Sep 2022 13:59:39 +0200
+Subject: [PATCH 05/11] wifi: hidl_struct_util.cpp:
+ convertLegacyWifiChannelWidthToHidl: create common return type to fix build
+
+Change-Id: Id61a0d382bf851c31e6b848177fd20b9fcc2a728
+---
+ wifi/1.0-legacy/hidl_struct_util.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/wifi/1.0-legacy/hidl_struct_util.cpp b/wifi/1.0-legacy/hidl_struct_util.cpp
+index d6cf68e..d05a89f 100644
+--- a/wifi/1.0-legacy/hidl_struct_util.cpp
++++ b/wifi/1.0-legacy/hidl_struct_util.cpp
+@@ -2300,6 +2300,7 @@ WifiChannelWidthInMhz convertLegacyWifiChannelWidthToHidl(
+             return WifiChannelWidthInMhz::WIDTH_INVALID;
+     };
+     CHECK(false) << "Unknown legacy type: " << type;
++     return WifiChannelWidthInMhz::WIDTH_INVALID;
+ }
+ 
+ legacy_hal::wifi_rtt_preamble convertHidlRttPreambleToLegacy(RttPreamble type) {
+-- 
+2.51.0
+

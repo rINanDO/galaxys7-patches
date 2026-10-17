@@ -1,0 +1,96 @@
+From 48e369550b28798215b49c5d3a01fdc71342f3b9 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Mon, 12 Oct 2026 08:49:34 +0200
+Subject: [PATCH 6/6] AdvancedProtectionConfigLoader: don't crash system_server
+ on unresolvable flag
+
+First successful boot past the power HAL / display fixes (bootanimation
+now shows), but the device never gets further: system_server crash-loops
+with the identical exception 9 times in the captured logcat:
+
+  E AndroidRuntime: *** FATAL EXCEPTION IN SYSTEM PROCESS: main
+  java.lang.RuntimeException: Failed to create service
+    com.android.server.security.advancedprotection.AdvancedProtectionService$Lifecycle:
+    service constructor threw an exception
+  Caused by: java.lang.IllegalArgumentException: Invalid feature flag:
+    android.security.aapm_feature_disable_insecure_wifi_autojoin
+
+Traced it: the flag is declared correctly
+(core/java/android/security/responsible_apis_flags.aconfig, package
+"android.security", container "system") and its name does show up in
+the compiled out/target/product/gts210wifi/system/etc/aconfig/flag.map
+for this build - the flag is genuinely packaged. The failure is at
+read time: AconfigFlags.getFlagValueFromNewStorage() resolves flags via
+AconfigPackage.load(), which reads from /metadata/aconfig/boot, kept in
+sync by the aconfigd-system daemon from the partition-local
+flag.{map,val} files at first boot. This device (device/samsung/gts2-common)
+has no /metadata partition at all - there's no fstab entry for one and
+no space in the original Lollipop-era partition table - so aconfigd can
+never populate that storage, and every new-storage flag lookup resolves
+to null here even though it's correctly declared and packaged.
+
+AdvancedProtectionConfigLoader.isFeatureFlagEnabled() was the one
+caller in the tree that treated a null/unresolvable flag as a hard
+error instead of "default to disabled", unlike the rest of the
+feature-flag infrastructure (see AconfigFlags#skip(), which explicitly
+treats flagValue == null as false). Made it consistent: log a warning
+and treat the protection as unavailable instead of throwing, so one
+unresolvable flag can no longer take down the entire system_server.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Change-Id: I91feae55d8a10c33f4ec84893fb2c9fcb6563900
+---
+ .../AdvancedProtectionConfigLoader.java          | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/services/core/java/com/android/server/security/advancedprotection/AdvancedProtectionConfigLoader.java b/services/core/java/com/android/server/security/advancedprotection/AdvancedProtectionConfigLoader.java
+index d2eb8e8fb5a3..90fa7c8b989f 100644
+--- a/services/core/java/com/android/server/security/advancedprotection/AdvancedProtectionConfigLoader.java
++++ b/services/core/java/com/android/server/security/advancedprotection/AdvancedProtectionConfigLoader.java
+@@ -21,6 +21,7 @@ import android.annotation.Nullable;
+ import android.os.Environment;
+ import android.security.advancedprotection.AdvancedProtectionManager;
+ import android.util.ArraySet;
++import android.util.Slog;
+ 
+ // config parser and classes are automatically generated based on advanced-protection-config.xsd
+ import com.android.internal.pm.pkg.component.AconfigFlags;
+@@ -50,6 +51,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
+  * @hide
+  */
+ public class AdvancedProtectionConfigLoader {
++    private static final String TAG = "AdvancedProtectionConfigLoader";
+     private static final String ADVANCED_PROTECTION_CONFIG_DIR = "advanced-protection-config";
+     private static final String ETC_DIR = "etc";
+     private static final String ADVANCED_PROTECTION_CONFIG_FILE_NAME =
+@@ -122,8 +124,7 @@ public class AdvancedProtectionConfigLoader {
+         }
+     }
+ 
+-    private static boolean isFeatureFlagEnabled(@NonNull String featureFlag)
+-            throws IllegalArgumentException {
++    private static boolean isFeatureFlagEnabled(@NonNull String featureFlag) {
+         boolean negated = false;
+         if (featureFlag.startsWith("!")) {
+             negated = true;
+@@ -131,7 +132,16 @@ public class AdvancedProtectionConfigLoader {
+         }
+         Boolean featureFlagValue = AconfigFlags.getInstance().getFlagValue(featureFlag);
+         if (featureFlagValue == null) {
+-            throw new IllegalArgumentException("Invalid feature flag: " + featureFlag);
++            // On devices without a /metadata partition, aconfigd can't populate the new
++            // aconfig storage backend, so any trunk-stable flag lookup here resolves to
++            // null even though the flag is declared and packaged correctly. This used to
++            // throw, which crashed AdvancedProtectionService's constructor and took down
++            // system_server in a boot loop. Treat an unresolvable flag the same as every
++            // other feature-flag check in the framework does (see AconfigFlags#skip):
++            // default to disabled rather than crash.
++            Slog.w(TAG, "Unable to resolve feature flag " + featureFlag
++                    + ", treating protection as unavailable");
++            return false;
+         }
+         return negated ? !featureFlagValue : featureFlagValue;
+     }
+-- 
+2.51.0
+

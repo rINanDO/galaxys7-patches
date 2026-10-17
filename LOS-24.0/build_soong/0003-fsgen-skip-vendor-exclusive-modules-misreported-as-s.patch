@@ -1,0 +1,47 @@
+From fe92eaddb969ba1c1012da9d5418f01fb800806f Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Wed, 7 Oct 2026 09:28:49 +0200
+Subject: [PATCH 3/3] fsgen: skip vendor-exclusive modules misreported as
+ system partition
+
+On devices without a separate vendor partition (TARGET_COPY_OUT_VENDOR ==
+"system/vendor"), PartitionTag() reports "system" for SoC-specific
+modules, since their files are installed under /system/vendor. But
+modules declared vendor: true (without vendor_available) only ever have
+a vendor (and maybe recovery) image variation, never a system/core one.
+Depending on such a module from the "system" filesystem comparison
+module then fails with a missing-variant error, even though the real
+image is still built the classic Make way (UseSoongSystemImage=false).
+
+Skip these the same way ramdisk/recovery modules misreported as
+"system" are already skipped.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Change-Id: Ie248c48e5aef3f0e6db41a75894a3eb76d52dd83
+---
+ fsgen/fsgen_mutators.go | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/fsgen/fsgen_mutators.go b/fsgen/fsgen_mutators.go
+index 080cb39dc..f542d07fd 100644
+--- a/fsgen/fsgen_mutators.go
++++ b/fsgen/fsgen_mutators.go
+@@ -454,6 +454,15 @@ func collectDepsMutator(mctx android.BottomUpMutatorContext) {
+ 			android.RamdiskVariation,
+ 			android.VendorRamdiskVariation,
+ 			android.RecoveryVariation,
++			// On devices without a separate vendor partition (TARGET_COPY_OUT_VENDOR ==
++			// "system/vendor"), PartitionTag() reports "system" for SoC-specific modules
++			// since their files are installed under /system/vendor. But modules declared
++			// "vendor: true" (without "vendor_available") only ever have a vendor (and
++			// maybe recovery) image variation, never a system/core one. Trying to depend
++			// on such a module from the "system" filesystem module then fails with a
++			// "missing variant" error. Skip them here too, the same way ramdisk/recovery
++			// modules misreported as "system" are skipped above.
++			android.VendorVariation,
+ 		})
+ 		if isEligibleForFsDeps(mctx) && !systemPartitionFalsePositive {
+ 			appendDepIfAppropriate(mctx, fsGenState.fsDeps[installPartition], installPartition, android.NativeBridgeDisabled, mctx.ModuleName())
+-- 
+2.51.0
+

@@ -1,0 +1,66 @@
+From dc648d086394d645a857582bf4fcf07384d49784 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sun, 11 Oct 2026 23:13:43 +0200
+Subject: [PATCH 11/11] power-libperfmgr: statically link libperfmgr instead of
+ dynamic linking
+
+Root cause trail (see device/samsung/gts2-common commits for the
+logcat evidence): system_server was being watchdog-killed 67s into
+boot, blocked in PowerManagerService.nativeInit(), because
+android.hardware.power.IPower/default never registers - the service
+binary fails to even start:
+
+  F linker: CANNOT LINK EXECUTABLE
+    ".../android.hardware.power-service.lineage-libperfmgr":
+    library "libperfmgr.so" not found
+
+libperfmgr.so itself builds and links fine (confirmed via readelf on
+the installed binary and the ninja dependency graph), but Soong never
+registers a standalone Make-bridged module for this particular
+vendor_available cc_library on this product - it only appears inline
+inside consumers' LOCAL_SHARED_LIBRARIES lists in the generated
+Android-lineage_gts210wifi.mk. That means there is no way to make
+PRODUCT_PACKAGES install it: both "libperfmgr" and "libperfmgr.vendor"
+fail Make's PRODUCT_PACKAGES existence check with "includes
+non-existent modules in PRODUCT_PACKAGES", since there's no CLEAR_VARS
+block for either name to resolve against.
+
+Sidestep the whole problem: this device already statically links two
+of this exact binary's other dependencies this same way
+(libaconfig_storage_read_api_cc, powerhal_flags-aconfig-cc) and
+whole-static-links libperfmgr-ext by default, so there's clear
+precedent for treating this internal-implementation library as a
+build-time-only dependency rather than an installed runtime artifact.
+Moving libperfmgr from shared_libs to static_libs removes the runtime
+.so dependency entirely - nothing needs to be installed for the binary
+to link and run.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Change-Id: I3a15b44f57597c9a8617b5757768e54b618a3f0c
+---
+ power-libperfmgr/Android.bp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/power-libperfmgr/Android.bp b/power-libperfmgr/Android.bp
+index af0b373..b98d645 100644
+--- a/power-libperfmgr/Android.bp
++++ b/power-libperfmgr/Android.bp
+@@ -31,7 +31,6 @@ cc_binary {
+         "libcutils",
+         "libdl",
+         "liblog",
+-        "libperfmgr",
+         "libprocessgroup",
+         "libutils",
+         "pixel-power-ext-V1-ndk",
+@@ -42,6 +41,7 @@ cc_binary {
+         "libaconfig_storage_read_api_cc",
+         "libgmock",
+         "libgtest",
++        "libperfmgr",
+         "powerhal_flags-aconfig-cc",
+     ],
+     whole_static_libs: select(soong_config_variable("power_libperfmgr", "mode_extension_lib"), {
+-- 
+2.51.0
+

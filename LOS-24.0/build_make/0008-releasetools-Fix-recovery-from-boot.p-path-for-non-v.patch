@@ -1,0 +1,60 @@
+From f525809b3a9cc8eecf32cfea26d0b7dafb271928 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Fri, 9 Oct 2026 07:53:53 +0200
+Subject: [PATCH 8/8] releasetools: Fix recovery-from-boot.p path for
+ non-vendor-image devices
+
+MakeRecoveryPatch wrote the patch via output_sink("recovery-from-boot.p",
+...) -- a bare filename -- while every other file it writes in the same
+non-board_uses_vendorimage branch (recovery_img_path, sh_dir) is
+prefixed with "vendor/", and the install-recovery.sh script it embeds
+literally does `applypatch --patch /vendor/recovery-from-boot.p`. The
+bare filename landed at SYSTEM/recovery-from-boot.p instead of
+SYSTEM/vendor/recovery-from-boot.p, which is where non_ab_ota.py's
+HasRecoveryPatch() (and the device's own /vendor-mounted-at-boot
+expectation) looks for it. Without it, otapackage failed with
+"AssertionError" in WriteFullOTAPackage on any non-A/B device that
+doesn't use a separate vendor partition.
+
+An earlier attempt (86f3f07d2a, reverted in 3f59972e61) tried fixing
+this from the caller side in make_recovery_patch.py instead, but that
+broke install-recovery.sh's own path (doubled to vendor/vendor/bin/...)
+since make_recovery_patch.py's target_files_dir="SYSTEM" is already the
+correct base for every other file MakeRecoveryPatch writes -- only the
+patch's own bare filename was inconsistent.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Change-Id: Id67994a7c5657ea3c70e12199e47efcd0759cd0c
+---
+ tools/releasetools/common.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/tools/releasetools/common.py b/tools/releasetools/common.py
+index 6b21916314..73fabe7ff6 100644
+--- a/tools/releasetools/common.py
++++ b/tools/releasetools/common.py
+@@ -3869,10 +3869,12 @@ def MakeRecoveryPatch(input_dir, output_sink, recovery_img, boot_img,
+   if board_uses_vendorimage:
+     # In this case, the output sink is rooted at VENDOR
+     recovery_img_path = "etc/recovery.img"
++    recovery_patch_path = "recovery-from-boot.p"
+     sh_dir = "bin"
+   else:
+     # In this case the output sink is rooted at SYSTEM
+     recovery_img_path = "vendor/etc/recovery.img"
++    recovery_patch_path = "vendor/recovery-from-boot.p"
+     sh_dir = "vendor/bin"
+ 
+   if full_recovery_image:
+@@ -3881,7 +3883,7 @@ def MakeRecoveryPatch(input_dir, output_sink, recovery_img, boot_img,
+   else:
+     d = Difference(recovery_img, boot_img)
+     _, _, patch = d.ComputePatch()
+-    output_sink("recovery-from-boot.p", patch)
++    output_sink(recovery_patch_path, patch)
+ 
+   try:
+     # The following GetTypeAndDevice()s need to use the path in the target
+-- 
+2.51.0
+

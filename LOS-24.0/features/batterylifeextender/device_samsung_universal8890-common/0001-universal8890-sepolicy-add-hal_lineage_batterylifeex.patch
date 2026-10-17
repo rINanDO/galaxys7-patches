@@ -1,0 +1,78 @@
+From 04e6564d8d363f51a57583db62cd280597620b11 Mon Sep 17 00:00:00 2001
+From: Francescodario Cuzzocrea <bosconovic@gmail.com>
+Date: Sat, 31 Jul 2021 10:19:40 +0200
+Subject: [PATCH 1/2] universal8890: sepolicy: add
+ hal_lineage_batterylifeextender
+
+Change-Id: I57b0ac799f91c0bd730baa46a088d2af40985eff
+Signed-off-by: Dominggoes Isakh <drjisakh@gmail.com>
+---
+ sepolicy/vendor/file_contexts                              | 1 +
+ sepolicy/vendor/genfs_contexts                             | 1 +
+ sepolicy/vendor/hal_lineage_batterylifeextender_default.te | 6 ++++++
+ sepolicy/vendor/property.te                                | 3 +++
+ sepolicy/vendor/property_contexts                          | 3 +++
+ 5 files changed, 14 insertions(+)
+ create mode 100644 sepolicy/vendor/hal_lineage_batterylifeextender_default.te
+
+diff --git a/sepolicy/vendor/file_contexts b/sepolicy/vendor/file_contexts
+index 6d111c4..1f95899 100644
+--- a/sepolicy/vendor/file_contexts
++++ b/sepolicy/vendor/file_contexts
+@@ -93,6 +93,7 @@
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.atrace@1\.0-service\.universal8890      u:object_r:hal_atrace_default_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.neuralnetworks@1\.1-service-armnn       u:object_r:hal_neuralnetworks_default_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.thermal@2\.0-service\.samsung           u:object_r:hal_thermal_default_exec:s0
++/(vendor|system/vendor)/bin/hw/vendor\.lineage\.batterylifeextender@[0-9]\.[0-9]-service\.samsung          u:object_r:hal_lineage_batterylifeextender_default_exec:s0
+ 
+ ####################################
+ # Same-process HAL files and their dependencies
+diff --git a/sepolicy/vendor/genfs_contexts b/sepolicy/vendor/genfs_contexts
+index 2bcc3aa..2871526 100644
+--- a/sepolicy/vendor/genfs_contexts
++++ b/sepolicy/vendor/genfs_contexts
+@@ -101,6 +101,7 @@ genfscon sysfs /devices/15660000.pcie0                      u:object_r:sysfs_pci
+ 
+ # Power supply devices
+ genfscon sysfs /devices/battery/power_supply                              u:object_r:sysfs_batteryinfo:s0
++genfscon sysfs /devices/battery/power_supply/battery/store_mode           u:object_r:sysfs_battery_writable:s0
+ genfscon sysfs /devices/14e30000.hsi2c/i2c-8/8-0061/power_supply          u:object_r:sysfs_batteryinfo:s0
+ genfscon sysfs /devices/13650000.hsi2c/i2c-1/1-0066/max77854-charger      u:object_r:sysfs_batteryinfo:s0
+ genfscon sysfs /devices/13650000.hsi2c/i2c-1/1-0066/max77854-fuelgauge    u:object_r:sysfs_batteryinfo:s0
+diff --git a/sepolicy/vendor/hal_lineage_batterylifeextender_default.te b/sepolicy/vendor/hal_lineage_batterylifeextender_default.te
+new file mode 100644
+index 0000000..d0e3d69
+--- /dev/null
++++ b/sepolicy/vendor/hal_lineage_batterylifeextender_default.te
+@@ -0,0 +1,6 @@
++# hal_lineage_batterylifeextender_default
++
++# set_prop(hal_lineage_batterylifeextender, vendor_batterylifeextender_prop)
++
++allow hal_lineage_batterylifeextender_default sysfs_batteryinfo:dir search;
++allow hal_lineage_batterylifeextender_default sysfs_battery_writable:file rw_file_perms;
+diff --git a/sepolicy/vendor/property.te b/sepolicy/vendor/property.te
+index 6e5082c..5cb580b 100644
+--- a/sepolicy/vendor/property.te
++++ b/sepolicy/vendor/property.te
+@@ -9,3 +9,6 @@ vendor_internal_prop(vendor_omx_prop);
+ 
+ # Radio
+ vendor_internal_prop(clatd_radio_prop)
++
++# Battery life extender
++vendor_internal_prop(vendor_batterylifeextender_prop)
+diff --git a/sepolicy/vendor/property_contexts b/sepolicy/vendor/property_contexts
+index 5afaada..3a97da9 100644
+--- a/sepolicy/vendor/property_contexts
++++ b/sepolicy/vendor/property_contexts
+@@ -39,3 +39,6 @@ wifi.active.interface            u:object_r:wifi_prop:s0
+ wifi.direct.interface            u:object_r:wifi_prop:s0
+ wifi.interface                   u:object_r:wifi_prop:s0
+ wlan.driver.status               u:object_r:wifi_prop:s0
++
++# Battery life extender
++persist.vendor.sec.battlifeext_enabled     u:object_r:vendor_batterylifeextender_prop:s0
+-- 
+2.51.0
+

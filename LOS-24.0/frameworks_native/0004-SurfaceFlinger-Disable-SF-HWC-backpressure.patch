@@ -1,0 +1,36 @@
+From 2eeb9d4239c1a8d59e403f00a2c27399a3e12d06 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Thu, 15 Oct 2026 23:22:06 +0200
+Subject: [PATCH 4/6] SurfaceFlinger: Disable SF HWC backpressure
+
+Gate wouldBackpressureHwc() behind persist.sys.enable_sf_hwc_backpressure
+(default true, so stock behavior is unchanged unless overridden) -
+lets legacy-kernel/HWC devices disable HWC backpressure handling at
+runtime instead of relying on it unconditionally.
+
+Adapted for LineageOS 24.0: pacesetterFrameTarget was renamed to a
+pointer, pacesetterFrameTargetPtr, since the original 23.2-era patch.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Change-Id: I30bc9c4c0c45b952a81f82156002d619825d27ba
+---
+ services/surfaceflinger/SurfaceFlinger.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/services/surfaceflinger/SurfaceFlinger.cpp b/services/surfaceflinger/SurfaceFlinger.cpp
+index 9128394aa1..cf2e5107b9 100644
+--- a/services/surfaceflinger/SurfaceFlinger.cpp
++++ b/services/surfaceflinger/SurfaceFlinger.cpp
+@@ -3066,7 +3066,8 @@ bool SurfaceFlinger::commit(PhysicalDisplayId pacesetterId,
+         }
+     }
+ 
+-    if (pacesetterFrameTargetPtr->wouldBackpressureHwc()) {
++    if (base::GetBoolProperty("persist.sys.enable_sf_hwc_backpressure"s, true)
++            && pacesetterFrameTargetPtr->wouldBackpressureHwc()) {
+         if (mBackpressureGpuComposition || pacesetterFrameTargetPtr->didMissHwcFrame()) {
+             mScheduler->getVsyncSchedule()->getTracker().onFrameMissed(
+                     pacesetterFrameTargetPtr->expectedPresentTime());
+-- 
+2.51.0
+

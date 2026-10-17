@@ -1,0 +1,39 @@
+From c14886062e8c007776493cc91117e638b7befb5e Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Fri, 9 Oct 2026 07:32:01 +0200
+Subject: [PATCH 6/8] releasetools: Fix recovery-from-boot.p path for
+ non-vendor-image devices
+
+make_recovery_patch.py wrote the patch to SYSTEM/recovery-from-boot.p
+when board_uses_vendorimage is false, but non_ab_ota.py's
+HasRecoveryPatch() checks for SYSTEM/vendor/recovery-from-boot.p (or
+SYSTEM/vendor/etc/recovery.img) at that same setting -- matching the
+"vendor/etc/recovery.img" and "vendor/bin" paths common.MakeRecoveryPatch
+itself already uses for the other files it writes via the same
+output_sink. The mismatch meant the patch was silently written to a
+path nothing ever looks for, so otapackage failed with "AssertionError"
+in WriteFullOTAPackage on any non-A/B device that doesn't use a
+separate vendor partition. Match target_files_dir to "SYSTEM/vendor".
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Change-Id: Ia6f6a57f46f07a9034e5e4a9c4054688b2783c64
+---
+ tools/releasetools/make_recovery_patch.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/releasetools/make_recovery_patch.py b/tools/releasetools/make_recovery_patch.py
+index 1497d69ed7..6be9417024 100644
+--- a/tools/releasetools/make_recovery_patch.py
++++ b/tools/releasetools/make_recovery_patch.py
+@@ -53,7 +53,7 @@ def main(argv):
+   if board_uses_vendorimage:
+     target_files_dir = "VENDOR"
+   else:
+-    target_files_dir = "SYSTEM"
++    target_files_dir = "SYSTEM/vendor"
+ 
+   def output_sink(fn, data):
+     with open(os.path.join(output_dir, target_files_dir,
+-- 
+2.51.0
+

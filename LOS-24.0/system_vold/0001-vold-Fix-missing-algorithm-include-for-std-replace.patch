@@ -1,0 +1,32 @@
+From da90cfd65d37a56c916a12bc3186ac2424c5a56b Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Thu, 8 Oct 2026 16:34:19 +0200
+Subject: [PATCH] vold: Fix missing <algorithm> include for std::replace
+
+Same issue as bootable/recovery's volume_manager/PublicVolume.cpp:
+std::replace() is used but <algorithm> was never included directly,
+relying on it being pulled in transitively. The current libc++
+prebuilt no longer does that.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Change-Id: I70b95c25fe8f61950b96d01f2b0eab212e1b69c3
+---
+ model/PublicVolume.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/model/PublicVolume.cpp b/model/PublicVolume.cpp
+index bf7aaa6..04df4ae 100644
+--- a/model/PublicVolume.cpp
++++ b/model/PublicVolume.cpp
+@@ -33,6 +33,8 @@
+ #include <private/android_filesystem_config.h>
+ #include <utils/Timers.h>
+ 
++#include <algorithm>
++
+ #include <fcntl.h>
+ #include <stdlib.h>
+ #include <sys/mount.h>
+-- 
+2.51.0
+

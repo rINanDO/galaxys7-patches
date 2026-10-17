@@ -1,0 +1,35 @@
+From ace38751d8ba081b54273390ec2214f330c930f9 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Thu, 8 Oct 2026 17:04:53 +0200
+Subject: [PATCH 2/2] volume_manager: Fix missing <vector> include
+
+VolumeManager.h uses std::vector in its VolumeWatcher interface and
+elsewhere but never included <vector> directly. Without it,
+std::vector<std::string> fails to parse in VolumeWatcher::handleEvent's
+pure virtual declaration, and the resulting error-recovery type
+mismatch then makes VolumeClient::handleEvent (volclient.h) look like
+it hides an overload with a different signature -- a cascading
+-Werror=overloaded-virtual that goes away once the real parse error is
+fixed.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Change-Id: Ib5d52a62a3a752698c6a45e4de26e3d5220c0e52
+---
+ volume_manager/include/volume_manager/VolumeManager.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/volume_manager/include/volume_manager/VolumeManager.h b/volume_manager/include/volume_manager/VolumeManager.h
+index c2cb8dde..74d653b3 100644
+--- a/volume_manager/include/volume_manager/VolumeManager.h
++++ b/volume_manager/include/volume_manager/VolumeManager.h
+@@ -25,6 +25,7 @@
+ #include <list>
+ #include <mutex>
+ #include <string>
++#include <vector>
+ 
+ struct selabel_handle;
+ class NetlinkManager;
+-- 
+2.51.0
+

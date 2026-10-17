@@ -1,0 +1,27 @@
+From 4c4bd446a3c34307c9607e7543d48b8ee19e0e38 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Fri, 9 Oct 2026 07:51:42 +0200
+Subject: [PATCH 7/8] Revert "releasetools: Fix recovery-from-boot.p path for
+ non-vendor-image devices"
+
+This reverts commit 86f3f07d2a96e61d7ca984f6a08b1cde7598526a.
+---
+ tools/releasetools/make_recovery_patch.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/releasetools/make_recovery_patch.py b/tools/releasetools/make_recovery_patch.py
+index 6be9417024..1497d69ed7 100644
+--- a/tools/releasetools/make_recovery_patch.py
++++ b/tools/releasetools/make_recovery_patch.py
+@@ -53,7 +53,7 @@ def main(argv):
+   if board_uses_vendorimage:
+     target_files_dir = "VENDOR"
+   else:
+-    target_files_dir = "SYSTEM/vendor"
++    target_files_dir = "SYSTEM"
+ 
+   def output_sink(fn, data):
+     with open(os.path.join(output_dir, target_files_dir,
+-- 
+2.51.0
+

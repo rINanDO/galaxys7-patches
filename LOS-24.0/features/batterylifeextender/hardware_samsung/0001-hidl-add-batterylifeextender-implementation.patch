@@ -1,0 +1,349 @@
+From 3e6edfdaaf567cf0783211e9c47c8324db02594a Mon Sep 17 00:00:00 2001
+From: Francescodario Cuzzocrea <bosconovic@gmail.com>
+Date: Sat, 31 Jul 2021 10:18:52 +0200
+Subject: [PATCH] hidl: add batterylifeextender implementation
+
+Change-Id: I147f3ef36db556317467bb0f0fc1e68967a8c378
+---
+ hidl/batterylifeextender/Android.bp           | 37 +++++++
+ .../BatteryLifeExtender.cpp                   | 99 +++++++++++++++++++
+ .../batterylifeextender/BatteryLifeExtender.h | 54 ++++++++++
+ .../include/samsung_batterylifeextender.h     | 23 +++++
+ hidl/batterylifeextender/service.cpp          | 50 ++++++++++
+ ...batterylifeextender@1.0-service.samsung.rc |  7 ++
+ ...atterylifeextender@1.0-service.samsung.xml | 11 +++
+ 7 files changed, 281 insertions(+)
+ create mode 100644 hidl/batterylifeextender/Android.bp
+ create mode 100644 hidl/batterylifeextender/BatteryLifeExtender.cpp
+ create mode 100644 hidl/batterylifeextender/BatteryLifeExtender.h
+ create mode 100644 hidl/batterylifeextender/include/samsung_batterylifeextender.h
+ create mode 100644 hidl/batterylifeextender/service.cpp
+ create mode 100644 hidl/batterylifeextender/vendor.lineage.batterylifeextender@1.0-service.samsung.rc
+ create mode 100644 hidl/batterylifeextender/vendor.lineage.batterylifeextender@1.0-service.samsung.xml
+
+diff --git a/hidl/batterylifeextender/Android.bp b/hidl/batterylifeextender/Android.bp
+new file mode 100644
+index 0000000..54887bf
+--- /dev/null
++++ b/hidl/batterylifeextender/Android.bp
+@@ -0,0 +1,37 @@
++//
++// Copyright (C) 2020-2024 The LineageOS Project
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++//
++
++cc_binary {
++    name: "vendor.lineage.batterylifeextender@1.0-service.samsung",
++    defaults: ["samsung_header_path_defaults"],
++    relative_install_path: "hw",
++    init_rc: ["vendor.lineage.batterylifeextender@1.0-service.samsung.rc"],
++    local_include_dirs: ["include"],
++    vintf_fragments: ["vendor.lineage.batterylifeextender@1.0-service.samsung.xml"],
++    srcs: [
++        "BatteryLifeExtender.cpp",
++        "service.cpp",
++    ],
++    shared_libs: [
++        "libbase",
++        "libbinder",
++        "libcutils",
++        "libhidlbase",
++        "libutils",
++        "vendor.lineage.batterylifeextender@1.0",
++    ],
++    vendor: true,
++}
+diff --git a/hidl/batterylifeextender/BatteryLifeExtender.cpp b/hidl/batterylifeextender/BatteryLifeExtender.cpp
+new file mode 100644
+index 0000000..0fc7ece
+--- /dev/null
++++ b/hidl/batterylifeextender/BatteryLifeExtender.cpp
+@@ -0,0 +1,99 @@
++/*
++ * Copyright (C) 2020-2021 The LineageOS Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#define LOG_TAG "batterylifeextender@1.0-service.samsung"
++
++#include "BatteryLifeExtender.h"
++#include <android-base/logging.h>
++#include <cutils/properties.h>
++
++#include <fstream>
++#include <iostream>
++#include "samsung_batterylifeextender.h"
++
++namespace vendor {
++namespace lineage {
++namespace batterylifeextender {
++namespace V1_0 {
++namespace implementation {
++
++static constexpr const char* kBatteryLifeExtenderProp = "persist.vendor.sec.battlifeext_enabled";
++
++/*
++ * Write value to path and close file.
++ */
++template <typename T>
++static void set(const std::string& path, const T& value) {
++    std::ofstream file(path);
++
++    if (!file) {
++        PLOG(ERROR) << "Failed to open: " << path;
++        return;
++    }
++
++    LOG(DEBUG) << "write: " << path << " value: " << value;
++
++    file << value << std::endl;
++
++    if (!file) {
++        PLOG(ERROR) << "Failed to write: " << path << " value: " << value;
++    }
++}
++
++template <typename T>
++static T get(const std::string& path, const T& def) {
++    std::ifstream file(path);
++
++    if (!file) {
++        PLOG(ERROR) << "Failed to open: " << path;
++        return def;
++    }
++
++    T result;
++
++    file >> result;
++
++    if (file.fail()) {
++        PLOG(ERROR) << "Failed to read: " << path;
++        return def;
++    } else {
++        LOG(DEBUG) << "read: " << path << " value: " << result;
++        return result;
++    }
++}
++
++BatteryLifeExtender::BatteryLifeExtender() {
++    setEnabled(property_get_bool(kBatteryLifeExtenderProp, BATTERYLIFEEXTENDER_DEFAULT_SETTING));
++}
++
++Return<bool> BatteryLifeExtender::isEnabled() {
++    return get(BATTERYLIFEEXTENDER_PATH, 0) == 1;
++}
++
++Return<bool> BatteryLifeExtender::setEnabled(bool enable) {
++    set(BATTERYLIFEEXTENDER_PATH, enable ? 1 : 0);
++
++    bool enabled = isEnabled();
++    property_set(kBatteryLifeExtenderProp, enabled ? "true" : "false");
++
++    return enabled;
++}
++
++}  // namespace implementation
++}  // namespace V1_0
++}  // namespace batterylifeextender
++}  // namespace lineage
++}  // namespace vendor
+diff --git a/hidl/batterylifeextender/BatteryLifeExtender.h b/hidl/batterylifeextender/BatteryLifeExtender.h
+new file mode 100644
+index 0000000..f8fa6d4
+--- /dev/null
++++ b/hidl/batterylifeextender/BatteryLifeExtender.h
+@@ -0,0 +1,54 @@
++/*
++ * Copyright (C) 2020-2021 The LineageOS Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef VENDOR_LINEAGE_BATTERYLIFEEXTENDER_V1_0_BATTERYLIFEEXTENDER_H
++#define VENDOR_LINEAGE_BATTERYLIFEEXTENDER_V1_0_BATTERYLIFEEXTENDER_H
++
++#include <hidl/MQDescriptor.h>
++#include <hidl/Status.h>
++#include <vendor/lineage/batterylifeextender/1.0/IBatteryLifeExtender.h>
++
++namespace vendor {
++namespace lineage {
++namespace batterylifeextender {
++namespace V1_0 {
++namespace implementation {
++
++using ::android::sp;
++using ::android::hardware::hidl_array;
++using ::android::hardware::hidl_memory;
++using ::android::hardware::hidl_string;
++using ::android::hardware::hidl_vec;
++using ::android::hardware::Return;
++using ::android::hardware::Void;
++
++using ::vendor::lineage::batterylifeextender::V1_0::IBatteryLifeExtender;
++
++
++struct BatteryLifeExtender : public IBatteryLifeExtender {
++    BatteryLifeExtender();
++
++    Return<bool> isEnabled() override;
++    Return<bool> setEnabled(bool enable) override;
++};
++
++}  // namespace implementation
++}  // namespace V1_0
++}  // namespace batterylifeextender
++}  // namespace lineage
++}  // namespace vendor
++
++#endif  // VENDOR_LINEAGE_BATTERYLIFEEXTENDER_V1_0_BATTERYLIFEEXTENDER_H
+diff --git a/hidl/batterylifeextender/include/samsung_batterylifeextender.h b/hidl/batterylifeextender/include/samsung_batterylifeextender.h
+new file mode 100644
+index 0000000..ebad2e0
+--- /dev/null
++++ b/hidl/batterylifeextender/include/samsung_batterylifeextender.h
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (C) 2020-2021 The LineageOS Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef SAMSUNG_BATTERYLIFEEXTENDER_H
++#define SAMSUNG_BATTERYLIFEEXTENDER_H
++
++#define BATTERYLIFEEXTENDER_DEFAULT_SETTING true
++#define BATTERYLIFEEXTENDER_PATH "/sys/class/power_supply/battery/store_mode"
++
++#endif // SAMSUNG_BATTERYLIFEEXTENDER_H
+diff --git a/hidl/batterylifeextender/service.cpp b/hidl/batterylifeextender/service.cpp
+new file mode 100644
+index 0000000..50281a5
+--- /dev/null
++++ b/hidl/batterylifeextender/service.cpp
+@@ -0,0 +1,50 @@
++/*
++ * Copyright (C) 2020 The LineageOS Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#define LOG_TAG "batterylifeextender@1.0-service.samsung"
++
++#include <android-base/logging.h>
++#include <hidl/HidlTransportSupport.h>
++
++#include "BatteryLifeExtender.h"
++
++using android::hardware::configureRpcThreadpool;
++using android::hardware::joinRpcThreadpool;
++
++using vendor::lineage::batterylifeextender::V1_0::IBatteryLifeExtender;
++using vendor::lineage::batterylifeextender::V1_0::implementation::BatteryLifeExtender;
++
++using android::OK;
++using android::status_t;
++
++int main() {
++    android::sp<BatteryLifeExtender> service = new BatteryLifeExtender();
++
++    configureRpcThreadpool(1, true);
++
++    status_t status = service->registerAsService();
++    if (status != OK) {
++        LOG(ERROR) << "Cannot register BatteryLifeExtender HAL service.";
++        return 1;
++    }
++
++    LOG(INFO) << "BatteryLifeExtender HAL service ready.";
++
++    joinRpcThreadpool();
++
++    LOG(ERROR) << "BatteryLifeExtender HAL service failed to join thread pool.";
++    return 1;
++}
+diff --git a/hidl/batterylifeextender/vendor.lineage.batterylifeextender@1.0-service.samsung.rc b/hidl/batterylifeextender/vendor.lineage.batterylifeextender@1.0-service.samsung.rc
+new file mode 100644
+index 0000000..ea7568c
+--- /dev/null
++++ b/hidl/batterylifeextender/vendor.lineage.batterylifeextender@1.0-service.samsung.rc
+@@ -0,0 +1,7 @@
++on init
++    chown system radio /sys/class/power_supply/battery/store_mode
++
++service vendor.batterylifeextender-hal-1-0 /vendor/bin/hw/vendor.lineage.batterylifeextender@1.0-service.samsung
++    class hal
++    user system
++    group system
+diff --git a/hidl/batterylifeextender/vendor.lineage.batterylifeextender@1.0-service.samsung.xml b/hidl/batterylifeextender/vendor.lineage.batterylifeextender@1.0-service.samsung.xml
+new file mode 100644
+index 0000000..834ae99
+--- /dev/null
++++ b/hidl/batterylifeextender/vendor.lineage.batterylifeextender@1.0-service.samsung.xml
+@@ -0,0 +1,11 @@
++<manifest version="1.0" type="device">
++    <hal format="hidl">
++        <name>vendor.lineage.batterylifeextender</name>
++        <transport>hwbinder</transport>
++        <version>1.0</version>
++        <interface>
++            <name>IBatteryLifeExtender</name>
++            <instance>default</instance>
++        </interface>
++    </hal>
++</manifest>
+-- 
+2.51.0
+

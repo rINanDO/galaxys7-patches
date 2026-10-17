@@ -1,0 +1,62 @@
+From ea8896ffbd77e4e7eb816eef81e343177ff04d63 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Wed, 14 Oct 2026 14:02:25 +0200
+Subject: [PATCH] libsensor: fix null-pointer crash in
+ SensorManager::getSensorList
+
+getSensorList() declared its output buffer as ASensorList* (i.e. a
+pointer to ASensor const* const*) initialized to nullptr, then passed
+that null pointer directly to ASensorManager_getSensorList() instead of
+its address. The NDK function's real signature is
+  int ASensorManager_getSensorList(ASensorManager*, ASensorList* list)
+and writes the resulting array pointer through *list - so it
+dereferenced the null pointer and crashed with SIGSEGV every time this
+was called, before ever returning. The follow-up indexing
+(`*aSensorList[i]`) was also one level of indirection off relative to
+the (fixed) ASensorList typedef.
+
+Fixed by declaring aSensorList as a plain ASensorList (matching the
+typedef, ASensorRef const*) and passing &aSensorList, with indexing
+corrected to match (aSensorList[i] directly yields an ASensorRef).
+
+This is the actual crash site behind the gpsd/libsensor_vendor.so
+SIGSEGV seen when something triggers sensor-assisted GNSS positioning
+on gts210wifi - device/samsung/gts2-common's libshim_gpsd/libsensor.cpp
+shim (separate repo) also had a related but distinct bug in the same
+call chain (Singleton<SensorManager>::sLock/sInstance defined as empty
+functions instead of real data), fixed alongside this.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Change-Id: I4b61b4c8032a36e41870e7d83e2dd0410379b28d
+---
+ libsensor/SensorManager.cpp | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/libsensor/SensorManager.cpp b/libsensor/SensorManager.cpp
+index cfe46fc..c2eb01e 100644
+--- a/libsensor/SensorManager.cpp
++++ b/libsensor/SensorManager.cpp
+@@ -42,17 +42,17 @@ SensorManager::SensorManager() : mInitCheck(NO_INIT) {
+ ssize_t SensorManager::getSensorList(Sensor const* const** list) {
+     Mutex::Autolock autoLock(mLock);
+ 
+-    ASensorList* aSensorList = nullptr;
++    ASensorList aSensorList;
+     int count;
+     ASensorRef aSensor;
+ 
+-    count = ASensorManager_getSensorList(mASensorManager, aSensorList);
++    count = ASensorManager_getSensorList(mASensorManager, &aSensorList);
+ 
+     mSensors = static_cast<Sensor const**>(malloc(count * sizeof(Sensor*)));
+     assert(mSensors != nullptr);
+ 
+     for (int i = 0; i < count; i++) {
+-        aSensor = *aSensorList[i];
++        aSensor = aSensorList[i];
+         mSensors[i] = new Sensor(aSensor);
+     }
+ 
+-- 
+2.51.0
+

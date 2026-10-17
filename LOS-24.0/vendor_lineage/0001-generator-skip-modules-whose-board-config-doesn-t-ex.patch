@@ -1,0 +1,75 @@
+From 13e5f5c57f99f75e0f7058ec9cc9a75005832e5e Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Thu, 8 Oct 2026 05:16:11 +0200
+Subject: [PATCH 1/2] generator: skip modules whose board config doesn't export
+ needed vars
+
+lineage_generator's cmd: property is first expanded against the
+lineageVarsPlugin soong config namespace (vars exported via
+BoardConfigSoong.mk's EXPORT_TO_SOONG list), then against Soong's own
+$(location)/$(genDir). Devices that don't include
+vendor/lineage/config/BoardConfigLineage.mk at all (this device tree's
+BoardConfig.mk never did) never export anything into that namespace,
+so any leftover $(SOME_VAR) reference falls through to the second pass
+and fails there with 'unknown variable', hard-failing the whole build
+even though the module (here, generated_kernel_includes /
+prebuilt_kernel_includes) is never referenced by anything.
+
+Detect a surviving uppercase Make-style placeholder after the first
+expansion pass and skip the module instead of erroring, since that
+means the device's board config simply doesn't participate in this
+mechanism.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Change-Id: I4b641e0ffb0f5489e4fa8f4d99419c68797dd6ee
+---
+ build/soong/generator/generator.go | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/build/soong/generator/generator.go b/build/soong/generator/generator.go
+index c70ef5f0..7716e29b 100644
+--- a/build/soong/generator/generator.go
++++ b/build/soong/generator/generator.go
+@@ -17,6 +17,7 @@ package generator
+ 
+ import (
+ 	"fmt"
++	"regexp"
+ 	"strings"
+ 
+ 	"github.com/google/blueprint"
+@@ -26,6 +27,16 @@ import (
+ 	"path/filepath"
+ )
+ 
++// Matches a leftover, unresolved Make-style variable reference such as
++// "$(KERNEL_BUILD_OUT_PREFIX)". lineageExpandVariables() only substitutes
++// names that are set in the lineageVarsPlugin soong config namespace (e.g.
++// via BoardConfigSoong.mk) and otherwise leaves them untouched, so if one
++// survives to this point the device's board config simply never exported
++// it, typically because it doesn't include
++// vendor/lineage/config/BoardConfigLineage.mk at all. $(location) and
++// $(genDir) are lowercase and never match this pattern.
++var unresolvedLineageVarPattern = regexp.MustCompile(`\$\([A-Z][A-Z0-9_]*\)`)
++
+ func init() {
+ 	android.RegisterModuleType("lineage_generator", GeneratorFactory)
+ }
+@@ -223,6 +234,14 @@ func (g *Module) GenerateAndroidBuildActions(ctx android.ModuleContext) {
+ 
+ 	cmd := lineageExpandVariables(ctx, String(g.properties.Cmd))
+ 
++	if unresolvedLineageVarPattern.MatchString(cmd) {
++		// The board config for this device doesn't export the lineage vars
++		// this command needs (see comment on unresolvedLineageVarPattern).
++		// Treat the module as inapplicable for this device rather than
++		// failing the whole build.
++		return
++	}
++
+ 	rawCommand, err := android.Expand(cmd, func(name string) (string, error) {
+ 		switch name {
+ 		case "location":
+-- 
+2.51.0
+
