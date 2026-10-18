@@ -1,7 +1,7 @@
-From 1c8b2bb547adbc76144009328e5853d91f7ac1d7 Mon Sep 17 00:00:00 2001
+From 1a66706faa5b41144b631222578dfb5237132422 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Oct 2026 18:00:19 +0200
-Subject: [PATCH 4/6] Makefile: Only pass -gcc-toolchain when the compiler
+Subject: [PATCH 4/7] Makefile: Only pass -gcc-toolchain when the compiler
  supports it
 
 -gcc-toolchain was removed from newer Clang releases; probe for it

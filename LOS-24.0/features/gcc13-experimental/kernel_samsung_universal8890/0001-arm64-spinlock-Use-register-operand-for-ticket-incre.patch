@@ -1,7 +1,7 @@
-From 3890f0cc5e1e3206fb3a78d78dae7cbddaa6d4c4 Mon Sep 17 00:00:00 2001
+From cf08d236383c356e050e4ef860529519edf46892 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Oct 2026 18:00:19 +0200
-Subject: [PATCH 1/6] arm64: spinlock: Use register operand for ticket
+Subject: [PATCH 1/7] arm64: spinlock: Use register operand for ticket
  increment
 
 1 << TICKET_SHIFT (65536) is a valid AArch64 ADD immediate only in its

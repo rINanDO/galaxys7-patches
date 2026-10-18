@@ -1,7 +1,7 @@
-From 5dadd49ce3d98c9e1ac5ec4e92808ac709848db7 Mon Sep 17 00:00:00 2001
+From 50d9495a94cbc2d56e667fbeaa058befa922f941 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Oct 2026 18:00:19 +0200
-Subject: [PATCH 2/6] arm64: thread_info: Read current_stack_pointer via inline
+Subject: [PATCH 2/7] arm64: thread_info: Read current_stack_pointer via inline
  asm
 
 Replace the GNU global register variable bound to "sp" with an inline

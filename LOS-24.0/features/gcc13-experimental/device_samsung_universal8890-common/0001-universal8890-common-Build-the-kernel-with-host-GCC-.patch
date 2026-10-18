@@ -1,4 +1,4 @@
-From 55d0b629a5783626ed04864122c2eb6937a6f3d0 Mon Sep 17 00:00:00 2001
+From 116e7f456abd697104a625e69f6473703ec595d2 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sun, 18 Oct 2026 13:07:07 +0200
 Subject: [PATCH] universal8890-common: Build the kernel with host GCC 13

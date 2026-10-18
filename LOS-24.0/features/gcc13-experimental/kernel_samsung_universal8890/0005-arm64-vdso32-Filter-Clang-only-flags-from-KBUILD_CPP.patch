@@ -1,7 +1,7 @@
-From 560a58d8545ec36cc27c03ad420c6d6a2d130f48 Mon Sep 17 00:00:00 2001
+From 39518dfbc24688f972ff06149473b887495a5219 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Oct 2026 18:00:20 +0200
-Subject: [PATCH 5/6] arm64: vdso32: Filter Clang-only flags from
+Subject: [PATCH 5/7] arm64: vdso32: Filter Clang-only flags from
  KBUILD_CPPFLAGS
 
 The 32-bit compat vDSO is always built with a real GCC

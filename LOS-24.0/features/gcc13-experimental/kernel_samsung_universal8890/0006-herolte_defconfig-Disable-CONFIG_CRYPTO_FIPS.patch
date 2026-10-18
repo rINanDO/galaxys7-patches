@@ -1,7 +1,7 @@
-From 9464542c7091dc6351914a521993169a576ca869 Mon Sep 17 00:00:00 2001
+From 2f803610c4a4846e537b4687052aa59a21f97e4c Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Oct 2026 18:00:20 +0200
-Subject: [PATCH 6/6] herolte_defconfig: Disable CONFIG_CRYPTO_FIPS
+Subject: [PATCH 6/7] herolte_defconfig: Disable CONFIG_CRYPTO_FIPS
 
 Skip Samsung's FIPS post-link HMAC step and boot-time crypto self-test
 for the GCC 13.3 experimental kernel build.

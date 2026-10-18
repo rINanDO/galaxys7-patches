@@ -1,8 +1,8 @@
-From 274647e5289ef62b12e0e2b4aba4e54736fc0d7a Mon Sep 17 00:00:00 2001
+From 00ae8699afffb8b14d75fbe10c986cee69911c1f Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sun, 18 Oct 2026 17:31:14 +0200
-Subject: [PATCH] dmaengine: pl330: Use volatile byte stores for the microcode
- buffer
+Subject: [PATCH 7/7] dmaengine: pl330: Use volatile byte stores for the
+ microcode buffer
 
 On Exynos the audio DMAC's microcode buffer is ioremap()ed SRAM
 (arm_exynos_dma_mcode_ops), i.e. Device memory, where misaligned
