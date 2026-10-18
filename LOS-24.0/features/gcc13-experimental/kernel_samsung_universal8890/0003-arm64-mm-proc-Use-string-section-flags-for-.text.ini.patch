@@ -1,0 +1,29 @@
+From 76db4640a88fa9ffe7bed839ec5012e381e74ccb Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sat, 17 Oct 2026 18:00:19 +0200
+Subject: [PATCH 3/6] arm64: mm: proc: Use string section flags for .text.init
+
+Newer assemblers reject the old "#alloc, #execinstr" section flag
+syntax; use the equivalent "ax" form.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ arch/arm64/mm/proc.S | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/mm/proc.S b/arch/arm64/mm/proc.S
+index 7ee3dd82592..ccc8639051d 100644
+--- a/arch/arm64/mm/proc.S
++++ b/arch/arm64/mm/proc.S
+@@ -147,7 +147,7 @@ ENTRY(cpu_do_switch_mm)
+ 	b	post_ttbr_update_workaround	// Back to C code...
+ ENDPROC(cpu_do_switch_mm)
+ 
+-	.section ".text.init", #alloc, #execinstr
++	.section ".text.init", "ax"
+ 
+ /*
+  *	__cpu_setup
+-- 
+2.51.0
+

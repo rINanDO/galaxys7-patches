@@ -1,0 +1,32 @@
+From 55d0b629a5783626ed04864122c2eb6937a6f3d0 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sun, 18 Oct 2026 13:07:07 +0200
+Subject: [PATCH] universal8890-common: Build the kernel with host GCC 13
+ (experimental)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: I7933f3338fb68c9596b54bdef157aba1e03dec4b
+---
+ BoardConfigCommon.mk | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/BoardConfigCommon.mk b/BoardConfigCommon.mk
+index c3c6f92..7f8fefe 100644
+--- a/BoardConfigCommon.mk
++++ b/BoardConfigCommon.mk
+@@ -109,6 +109,12 @@ BOARD_KERNEL_SEPARATED_DT := true
+ BOARD_RAMDISK_USE_XZ := true
+ TARGET_KERNEL_CLANG_COMPILE := false
+ TARGET_KERNEL_LLVM_BINUTILS := false
++# Experimental: build the kernel with the host's GCC 13 cross-compilers
++# instead of the GCC 4.9 prebuilts. KERNEL_CC is the last argument on the
++# kernel make command line, so it also overrides the prebuilt GCC 4.9 used
++# for the 32-bit compat vDSO.
++TARGET_KERNEL_CROSS_COMPILE_PREFIX := /usr/bin/aarch64-linux-gnu-
++KERNEL_CC := CROSS_COMPILE_ARM32=/usr/bin/arm-linux-gnueabi- CROSS_COMPILE_COMPAT=/usr/bin/arm-linux-gnueabi-
+ BOARD_USES_FULL_RECOVERY_IMAGE := true
+ TARGET_KERNEL_ADDITIONAL_FLAGS := \
+     HOSTCFLAGS="-fuse-ld=lld -Wno-unused-command-line-argument" \
+-- 
+2.51.0
+

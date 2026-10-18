@@ -1,0 +1,59 @@
+From 3890f0cc5e1e3206fb3a78d78dae7cbddaa6d4c4 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sat, 17 Oct 2026 18:00:19 +0200
+Subject: [PATCH 1/6] arm64: spinlock: Use register operand for ticket
+ increment
+
+1 << TICKET_SHIFT (65536) is a valid AArch64 ADD immediate only in its
+shifted (imm12 << 12) form, which newer compilers' "I" constraint
+checking rejects. Pass it in a register instead.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ arch/arm64/include/asm/spinlock.h | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm64/include/asm/spinlock.h b/arch/arm64/include/asm/spinlock.h
+index 3c0bb9b303e..3cf0e28dd44 100644
+--- a/arch/arm64/include/asm/spinlock.h
++++ b/arch/arm64/include/asm/spinlock.h
+@@ -36,6 +36,12 @@ static inline void arch_spin_lock(arch_spinlock_t *lock)
+ 	unsigned int tmp;
+ 	arch_spinlock_t lockval, newval;
+ 
++	/*
++	 * 1 << TICKET_SHIFT (65536) is representable as an AArch64 ADD
++	 * immediate (imm12 << 12), but Clang's "I" constraint validator only
++	 * accepts the unshifted 0-4095 range, so use "r" instead; the %wN
++	 * template placeholder below is unaffected either way.
++	 */
+ 	asm volatile(
+ 	/* Atomically increment the next ticket. */
+ "	prfm	pstl1strm, %3\n"
+@@ -58,7 +64,7 @@ static inline void arch_spin_lock(arch_spinlock_t *lock)
+ 	/* We got the lock. Critical section starts here. */
+ "3:"
+ 	: "=&r" (lockval), "=&r" (newval), "=&r" (tmp), "+Q" (*lock)
+-	: "Q" (lock->owner), "I" (1 << TICKET_SHIFT)
++	: "Q" (lock->owner), "r" (1 << TICKET_SHIFT)
+ 	: "memory");
+ }
+ 
+@@ -72,12 +78,12 @@ static inline int arch_spin_trylock(arch_spinlock_t *lock)
+ "1:	ldaxr	%w0, %2\n"
+ "	eor	%w1, %w0, %w0, ror #16\n"
+ "	cbnz	%w1, 2f\n"
+-"	add	%w0, %w0, %3\n"
++"	add	%w0, %w0, %w3\n"
+ "	stxr	%w1, %w0, %2\n"
+ "	cbnz	%w1, 1b\n"
+ "2:"
+ 	: "=&r" (lockval), "=&r" (tmp), "+Q" (*lock)
+-	: "I" (1 << TICKET_SHIFT)
++	: "r" (1 << TICKET_SHIFT)
+ 	: "memory");
+ 
+ 	return !tmp;
+-- 
+2.51.0
+

@@ -1,0 +1,33 @@
+From 560a58d8545ec36cc27c03ad420c6d6a2d130f48 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sat, 17 Oct 2026 18:00:20 +0200
+Subject: [PATCH 5/6] arm64: vdso32: Filter Clang-only flags from
+ KBUILD_CPPFLAGS
+
+The 32-bit compat vDSO is always built with a real GCC
+(CROSS_COMPILE_ARM32), which doesn't understand -Qunused-arguments.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ arch/arm64/kernel/vdso32/Makefile | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/kernel/vdso32/Makefile b/arch/arm64/kernel/vdso32/Makefile
+index ceb84a17d15..660aad1bd29 100644
+--- a/arch/arm64/kernel/vdso32/Makefile
++++ b/arch/arm64/kernel/vdso32/Makefile
+@@ -25,7 +25,10 @@ cc32-ldoption = $(call try-run,\
+ # NOSTDINC_FLAGS
+ VDSO_CPPFLAGS := -nostdinc -isystem $(shell $(CC_ARM32) -print-file-name=include)
+ VDSO_CPPFLAGS += $(LINUXINCLUDE)
+-VDSO_CPPFLAGS += $(KBUILD_CPPFLAGS)
++# KBUILD_CPPFLAGS may carry Clang-only flags (e.g. -Qunused-arguments,
++# added by the top-level Makefile when the main 64-bit CC is clang) that
++# this real GCC-based 32-bit compat compiler doesn't understand.
++VDSO_CPPFLAGS += $(filter-out -Qunused-arguments,$(KBUILD_CPPFLAGS))
+ 
+ # Common C and assembly flags
+ # From top-level Makefile
+-- 
+2.51.0
+

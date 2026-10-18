@@ -1,0 +1,75 @@
+From 274647e5289ef62b12e0e2b4aba4e54736fc0d7a Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sun, 18 Oct 2026 17:31:14 +0200
+Subject: [PATCH] dmaengine: pl330: Use volatile byte stores for the microcode
+ buffer
+
+On Exynos the audio DMAC's microcode buffer is ioremap()ed SRAM
+(arm_exynos_dma_mcode_ops), i.e. Device memory, where misaligned
+accesses fault. GCC 7+ store merging combines the four byte stores in
+put_unaligned_le32() into one misaligned 32-bit store, so building the
+DMAGO instruction aborts in pl330_tasklet() and the kernel panics as
+soon as audio playback starts. _emit_ADDH() even does a misaligned u16
+store directly.
+
+Use volatile byte accesses that the compiler can't merge.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: Ib2bcae5c1b93e0b1581137f1dd85fb8dc2e448af
+---
+ drivers/dma/pl330.c | 24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/dma/pl330.c b/drivers/dma/pl330.c
+index 59b789b28f4..98b9f83b613 100644
+--- a/drivers/dma/pl330.c
++++ b/drivers/dma/pl330.c
+@@ -542,16 +542,34 @@ struct _xfer_spec {
+ 	struct dma_pl330_desc *desc;
+ };
+ 
+-static inline void put_unaligned_le32(u32 val, u8 *p)
++/*
++ * The microcode buffer can be ioremap()ed SRAM (arm_exynos_dma_mcode_ops),
++ * i.e. Device memory, where misaligned accesses fault. Use volatile byte
++ * accesses so the compiler can't merge them into wider, misaligned ones
++ * (GCC 7+ store merging does exactly that).
++ */
++static inline void put_unaligned_le32(u32 val, u8 *buf)
+ {
++	volatile u8 *p = buf;
++
+ 	*p++ = val;
+ 	*p++ = val >> 8;
+ 	*p++ = val >> 16;
+ 	*p++ = val >> 24;
+ }
+ 
+-static inline u32 get_unaligned_le32(u8 *p)
++static inline void put_unaligned_le16(u16 val, u8 *buf)
++{
++	volatile u8 *p = buf;
++
++	*p++ = val;
++	*p++ = val >> 8;
++}
++
++static inline u32 get_unaligned_le32(u8 *buf)
+ {
++	volatile u8 *p = buf;
++
+ 	return p[0] | p[1] << 8 | p[2] << 16 | p[3] << 24;
+ }
+ 
+@@ -589,7 +607,7 @@ static inline u32 _emit_ADDH(unsigned dry_run, u8 buf[],
+ 
+ 	buf[0] = CMD_DMAADDH;
+ 	buf[0] |= (da << 1);
+-	*((u16 *)&buf[1]) = val;
++	put_unaligned_le16(val, &buf[1]);
+ 
+ 	PL330_DBGCMD_DUMP(SZ_DMAADDH, "\tDMAADDH %s %u\n",
+ 		da == 1 ? "DA" : "SA", val);
+-- 
+2.51.0
+

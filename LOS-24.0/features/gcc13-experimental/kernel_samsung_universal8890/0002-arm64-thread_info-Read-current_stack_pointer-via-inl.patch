@@ -1,0 +1,42 @@
+From 5dadd49ce3d98c9e1ac5ec4e92808ac709848db7 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sat, 17 Oct 2026 18:00:19 +0200
+Subject: [PATCH 2/6] arm64: thread_info: Read current_stack_pointer via inline
+ asm
+
+Replace the GNU global register variable bound to "sp" with an inline
+asm accessor, which newer compilers accept on AArch64.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ arch/arm64/include/asm/thread_info.h | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/include/asm/thread_info.h b/arch/arm64/include/asm/thread_info.h
+index a41f9620b86..7556564d637 100644
+--- a/arch/arm64/include/asm/thread_info.h
++++ b/arch/arm64/include/asm/thread_info.h
+@@ -83,8 +83,19 @@ struct thread_info {
+ 
+ /*
+  * how to get the current stack pointer from C
++ *
++ * Clang's AArch64 backend doesn't support GNU global register variables
++ * (rejects "register ... asm (\"sp\")" for any register name on this
++ * target), so read it via inline asm instead - functionally identical,
++ * and still works fine under GCC.
+  */
+-register unsigned long current_stack_pointer asm ("sp");
++static inline unsigned long __current_stack_pointer(void)
++{
++	unsigned long sp;
++	asm volatile("mov %0, sp" : "=r" (sp));
++	return sp;
++}
++#define current_stack_pointer __current_stack_pointer()
+ 
+ /*
+  * how to get the thread information struct from C
+-- 
+2.51.0
+
