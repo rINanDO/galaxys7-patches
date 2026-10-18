@@ -1,4 +1,4 @@
-From 50d9495a94cbc2d56e667fbeaa058befa922f941 Mon Sep 17 00:00:00 2001
+From 5bf8517ecdd10260d39e8dd07e28b7db55190abb Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Oct 2026 18:00:19 +0200
 Subject: [PATCH 2/7] arm64: thread_info: Read current_stack_pointer via inline

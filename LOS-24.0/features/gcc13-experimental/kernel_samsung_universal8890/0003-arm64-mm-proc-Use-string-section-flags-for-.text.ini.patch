@@ -1,4 +1,4 @@
-From bc6b94c6c99ec083594d9b2bb7caa998914ecb34 Mon Sep 17 00:00:00 2001
+From d0bec15ca3115810412b3eb08d14b72870aa0344 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Oct 2026 18:00:19 +0200
 Subject: [PATCH 3/7] arm64: mm: proc: Use string section flags for .text.init
