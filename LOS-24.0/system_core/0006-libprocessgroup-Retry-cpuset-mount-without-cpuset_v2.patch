@@ -1,0 +1,42 @@
+From 79d952861258466c7c7d1dc752a1b774dbb566db Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Sun, 18 Oct 2026 09:13:30 +0200
+Subject: [PATCH 6/6] libprocessgroup: Retry cpuset mount without
+ cpuset_v2_mode
+
+cpuset_v2_mode only exists since Linux 4.17. Older kernels reject the
+unknown mount option (ENOENT), which leaves /dev/cpuset unmounted and
+breaks every cpuset-based task profile. Retry without it.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: I3df89a32cdd0b9a249c7be5a8565592b2e54a659
+---
+ libprocessgroup/setup/cgroup_map_write.cpp | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/libprocessgroup/setup/cgroup_map_write.cpp b/libprocessgroup/setup/cgroup_map_write.cpp
+index f497a8ae2..ea348145f 100644
+--- a/libprocessgroup/setup/cgroup_map_write.cpp
++++ b/libprocessgroup/setup/cgroup_map_write.cpp
+@@ -199,8 +199,16 @@ static bool MountV1CgroupController(const CgroupDescriptor& descriptor) {
+         options += ",noprefix,cpuset_v2_mode";
+     }
+ 
+-    if (mount("none", controller->path(), "cgroup", MS_NODEV | MS_NOEXEC | MS_NOSUID,
+-              options.c_str())) {
++    int ret = mount("none", controller->path(), "cgroup", MS_NODEV | MS_NOEXEC | MS_NOSUID,
++                    options.c_str());
++    if (ret && !strcmp(controller->name(), "cpuset")) {
++        // cpuset_v2_mode was introduced in Linux 4.17; older kernels reject the
++        // unknown option, so retry without it.
++        LOG(INFO) << "Mounting cpuset with cpuset_v2_mode failed. Retrying without.";
++        ret = mount("none", controller->path(), "cgroup", MS_NODEV | MS_NOEXEC | MS_NOSUID,
++                    "cpuset,noprefix");
++    }
++    if (ret) {
+         if (IsOptionalController(controller)) {
+             PLOG(INFO) << "Failed to mount optional controller " << controller->name();
+             return true;
+-- 
+2.51.0
+

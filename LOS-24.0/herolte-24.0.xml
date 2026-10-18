@@ -7,6 +7,9 @@
   <!--Kernel-->
   <!--8890-->
   <project name="rinando/android_kernel_samsung_universal8890" path="kernel/samsung/universal8890" revision="lineage-23.2" remote="github"/>
+  <!--Kernel GCC toolchains (dropped from the LineageOS 24.0 manifest)-->
+  <project name="LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9" path="prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9" groups="pdk,linux,arm" clone-depth="1" remote="github" revision="lineage-19.1" />
+  <project name="LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" groups="pdk,linux,arm" clone-depth="1" remote="github" revision="lineage-19.1" />
   <!--Blobs-->
   <project name="rinando/proprietary_vendor_samsung" path="vendor/samsung" revision="lineage-23.2" remote="github"/>
   <!--Lineage HW repos-->

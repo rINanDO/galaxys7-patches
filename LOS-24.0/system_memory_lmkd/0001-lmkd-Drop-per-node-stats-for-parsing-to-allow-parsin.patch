@@ -1,7 +1,7 @@
 From 266a16d9858538268e41740e49a37ddf1c26c815 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 13 Dec 2025 10:51:11 +0100
-Subject: [PATCH] lmkd: Drop "per-node stats" for parsing to allow parsing
+Subject: [PATCH 1/2] lmkd: Drop "per-node stats" for parsing to allow parsing
 
 Change-Id: I8ff0f7db0e09476f54cc9b298ae41cc0e283c6f5
 ---

@@ -12,17 +12,6 @@ These instructions assume that:
 
 - you have cloned this repository in ```~/patches```
 
-- you have a 32-bit ARM GCC cross-compiler installed on the host. HeroLTE's
-  arm64 kernel builds a 32-bit compat vDSO (`TARGET_2ND_ARCH := arm`), and
-  the kernel's own `arch/arm64/Makefile` hard-requires a real
-  `CROSS_COMPILE_ARM32`-prefixed GCC binary for this step - Clang cannot
-  substitute for it, unlike the rest of the (Clang-only) LineageOS 24.0
-  host toolchain:
-
-  ```#!/bin/bash
-  sudo apt-get install -y gcc-arm-linux-gnueabi
-  ```
-
 ## 1. Apply device specific repo's
 
 ```#!/bin/bash
@@ -102,10 +91,9 @@ live in:
   config path entirely (`PRODUCT_FULL_TREBLE` is now an obsolete,
   ignored variable - see `build/make/core/main.mk`). `system_linkerconfig`
   restores the pre-Treble linker configuration generator that this device
-  still needs; `vendor/lineage`'s board-config fixes keep the
-  device/kernel build config (including pre-clang kernel build flags)
-  from being silently dropped by newer `lineage_generator`/Soong
-  defaults.
+  still needs; `vendor/lineage`'s generator fix keeps the device
+  build config from being silently dropped by newer
+  `lineage_generator`/Soong defaults.
 - **Legacy (non-Treble) HIDL HALs** (`hardware_lineage_interfaces`,
   `hardware_libhardware_legacy`, `hardware_interfaces`): wifi, GNSS,
   health and power on this device are all pre-Treble legacy
@@ -132,16 +120,34 @@ live in:
   `gpuservice`/BPF-backed GPU memory accounting), and SurfaceFlinger's
   HWC backpressure handling made runtime-toggleable instead of assumed.
 
-- **Clang-only host toolchain vs. the kernel's 32-bit compat vDSO**
-  (`device/samsung/universal8890-common`): LineageOS 24.0's host build
-  toolchain is Clang-only (no `gcc` binary ships in the tree anymore), so
-  `BoardConfigCommon.mk` points the kernel's host-tool compilation
-  (`HOSTCC`/`HOSTCXX`) at Clang. That alone isn't enough, though: this is
-  an arm64 kernel with 32-bit app compat (`TARGET_2ND_ARCH := arm`), and
-  its `arch/arm64/Makefile` separately hard-requires a real
-  `CROSS_COMPILE_ARM32`-prefixed GCC binary to build the 32-bit compat
-  vDSO - Clang cannot satisfy that check. Install `gcc-arm-linux-gnueabi`
-  on the host (see prerequisites above) before building.
+- **No PSI, cgroup v1 only** (`system_memory_lmkd`, `system_core`): AOSP
+  now requires PSI (Linux 4.20+) in `lmkd`, but this 3.18 kernel has
+  neither PSI nor the in-kernel lowmemorykiller, so `lmkd` exits at once
+  and `system_server` deadlocks waiting for it ("Process system isn't
+  responding"). `system_memory_lmkd` reverts `lmkd: Require PSI, remove
+  support for vmpressure` so `lmkd` falls back to memcg vmpressure.
+  `system_core` also retries the cpuset cgroup mount without
+  `cpuset_v2_mode` (Linux 4.17+), which this kernel rejects.
+- **ION** (`system_sepolicy`): the camera, gralloc, hwcomposer and codec
+  blobs still allocate their buffers through `/dev/ion`. AOSP removed all
+  ION sepolicy, which leaves `/dev/ion` with the generic `device` label so
+  every ION user is denied once SELinux is enforcing. `system_sepolicy`
+  reverts `Remove ION sepolicy`. The camera also needs the real `libion`
+  implementation, which the device tree enables with
+  `$(call soong_config_set_bool,libion,legacy_impl,true)`, next to
+  `$(call soong_config_set_bool,libui,legacy_gralloc,true)` for the
+  gralloc 2.x mapper.
+- **GCC 4.9 kernel toolchain** (`vendor_lineage`, `herolte-24.0.xml`):
+  LineageOS 24.0 dropped the prebuilt GCC 4.9 toolchains from its
+  manifest and removed GCC support from its kernel build
+  (`kernel: Rip out GCC support`). This Linux 3.18 kernel predates
+  clang-built-linux support and is built with GCC 4.9, the same
+  compiler as in LineageOS 23.x. `herolte-24.0.xml` syncs
+  `LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9`
+  and `..._arm_arm-linux-androideabi-4.9` (branch `lineage-19.1`; the arm
+  one builds the 32-bit compat vDSO), and `vendor_lineage` reverts the
+  GCC removal. Building the kernel with the host's GCC 13 instead is
+  kept separately in `../../herolte-gcc-experimental`.
 
 **Explicitly not needed:** unlike gts210wifi, HeroLTE does not use the
 legacy Camera HAL v1 and does not carry (or need) any of the Camera

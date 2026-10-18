@@ -26,6 +26,7 @@ declare -A patches=(
     ["system/memory/lmkd"]="system_memory_lmkd"
     ["system/netd"]="system_netd"
     ["system/security"]="system_security"
+    ["system/sepolicy"]="system_sepolicy"
     ["system/tools/hidl"]="system_tools_hidl"
     ["system/tools/mkbootimg"]="system_tools_mkbootimg"
     ["system/vold"]="system_vold"

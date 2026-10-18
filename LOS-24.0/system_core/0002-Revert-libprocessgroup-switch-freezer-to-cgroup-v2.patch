@@ -1,7 +1,7 @@
 From c722380885c2e91c1b3c066a351629f454eb2446 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 31 Jan 2026 21:29:08 +0100
-Subject: [PATCH 2/5] Revert "libprocessgroup: switch freezer to cgroup v2"
+Subject: [PATCH 2/6] Revert "libprocessgroup: switch freezer to cgroup v2"
 
 This reverts commit 510f89ec0ed82b07638f0e08f7b70d4c232f49c0.
 

@@ -1,7 +1,7 @@
 From fbba82a1195ca40f215a2441aa0d442d6b0c2980 Mon Sep 17 00:00:00 2001
 From: hangl <quic_hangl@quicinc.com>
 Date: Mon, 21 Apr 2025 09:14:03 -0700
-Subject: [PATCH 5/5] Revert "libprocessgroup: CgroupSetup should fail if a
+Subject: [PATCH 5/6] Revert "libprocessgroup: CgroupSetup should fail if a
  required controller fails to mount"
 
 This reverts commit 70daa2851508e56af3fcf685851b40f7c7f997d0.
