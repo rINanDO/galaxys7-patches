@@ -28,14 +28,7 @@ cd ~/android/system
 . ~/patches/LOS-24.0/apply.sh
 ```
 
-## 3. Optional, apply the "Battery Life Extender"-feature patches
-
-```#!/bin/bash
-cd ~/android/system
-. ~/patches/LOS-24.0/features/batterylifeextender/apply.sh
-```
-
-## 4. Optional, experimental: build the kernel with host GCC 13
+## 3. Optional, experimental: build the kernel with host GCC 13
 
 See [features/gcc13-experimental/README.md](features/gcc13-experimental/README.md)
 for the requirements.
@@ -45,7 +38,7 @@ cd ~/android/system
 . ~/patches/LOS-24.0/features/gcc13-experimental/apply.sh
 ```
 
-## 5. Build the ROM
+## 4. Build the ROM
 
 ```#!/bin/bash
 cd ~/android/system
@@ -62,7 +55,6 @@ Your build will be put (after many hours) in:
 ```#!/bin/bash
 cd ~/android/system
 . ~/patches/LOS-24.0/features/gcc13-experimental/revert.sh
-. ~/patches/LOS-24.0/features/batterylifeextender/revert.sh
 . ~/patches/LOS-24.0/revert.sh
 ```
 
