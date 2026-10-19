@@ -1,4 +1,4 @@
-From 1cccdb2e70e7cc632d71bcba03f5c0f05c98977a Mon Sep 17 00:00:00 2001
+From d281657eae841fd929377825bdc98d71b1325b11 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Oct 2026 18:00:20 +0200
 Subject: [PATCH 6/7] herolte_defconfig: Disable CONFIG_CRYPTO_FIPS

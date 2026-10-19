@@ -1,4 +1,4 @@
-From b05d96400b2ea1bc2ebaa4251da29df6c377e57c Mon Sep 17 00:00:00 2001
+From f1202a69093546172d9bd9dfe02512014c55d6f2 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Oct 2026 18:00:19 +0200
 Subject: [PATCH 4/7] Makefile: Only pass -gcc-toolchain when the compiler

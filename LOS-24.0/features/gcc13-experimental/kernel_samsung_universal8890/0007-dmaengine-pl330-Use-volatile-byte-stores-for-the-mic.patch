@@ -1,4 +1,4 @@
-From e7defb45a242037023d480e16aa68900afbd3696 Mon Sep 17 00:00:00 2001
+From 02e964a7eb7586a668d06e9a4013cb7a40cd5f18 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sun, 18 Oct 2026 17:31:14 +0200
 Subject: [PATCH 7/7] dmaengine: pl330: Use volatile byte stores for the

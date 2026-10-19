@@ -1,4 +1,4 @@
-From b7edb751c8042c6caab3e060b350d25fe8b412e3 Mon Sep 17 00:00:00 2001
+From 450df4ed718111c84bd44641ca58e7053c6956f4 Mon Sep 17 00:00:00 2001
 From: Dominggoes Isakh <drjisakh@gmail.com>
 Date: Sat, 17 Oct 2026 18:00:19 +0200
 Subject: [PATCH 1/7] arm64: spinlock: Use register operand for ticket
