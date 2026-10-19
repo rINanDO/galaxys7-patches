@@ -129,6 +129,10 @@ live in:
   and `system_server` deadlocks waiting for it ("Process system isn't
   responding"). `system_memory_lmkd` reverts `lmkd: Require PSI, remove
   support for vmpressure` so `lmkd` falls back to memcg vmpressure.
+  It also reverts `Remove pidfd_supported check`, because 3.18 has no
+  `pidfd_open` and every process registration failed, and stops
+  requiring `RssAnon` (Linux 4.5+) in `/proc/<pid>/status`, which made
+  `lmkd` skip every kill candidate.
   `system_core` also retries the cpuset cgroup mount without
   `cpuset_v2_mode` (Linux 4.17+), which this kernel rejects.
 - **ION** (`system_sepolicy`): the camera, gralloc, hwcomposer and codec

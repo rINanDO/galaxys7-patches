@@ -1,0 +1,33 @@
+From 7715dd9bdff118803fd30bc78cb205c3ef4b38f6 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Mon, 19 Oct 2026 15:51:48 +0200
+Subject: [PATCH 4/4] lmkd: Don't require RssAnon in /proc/<pid>/status
+
+RssAnon was added in Linux 4.5, so on 3.18 kernels every kill candidate
+was skipped and lmkd could only free memory through its watchdog. The
+value is only used for kill stats, so report 0 when it is missing.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: I9a3a6c8a65becd428936acd3193878cb4794dc7c
+---
+ lmkd.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lmkd.cpp b/lmkd.cpp
+index 75f9ec1..545bbfa 100644
+--- a/lmkd.cpp
++++ b/lmkd.cpp
+@@ -2526,8 +2526,9 @@ static int kill_one_process(struct proc* procp, int min_oom_score, struct kill_i
+     if (!parse_status_tag(buf, PROC_STATUS_SWAP_FIELD, &swap_kb)) {
+         goto out;
+     }
++    // RssAnon is only reported by 4.5+ kernels and is only used for kill stats.
+     if (!parse_status_tag(buf, PROC_STATUS_ANON_RSS_FIELD, &anon_rss_kb)) {
+-        goto out;
++        anon_rss_kb = 0;
+     }
+ 
+     if (read_proc_dmabuf_stat("dmabuf_pss", pid, buf, sizeof(buf), &dmabuf_pss_bytes)) {
+-- 
+2.51.0
+

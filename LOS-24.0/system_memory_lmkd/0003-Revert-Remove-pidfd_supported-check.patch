@@ -1,0 +1,193 @@
+From 170f9579ff177416f5d109e2d66b678870677559 Mon Sep 17 00:00:00 2001
+From: Dominggoes Isakh <drjisakh@gmail.com>
+Date: Mon, 19 Oct 2026 09:52:53 +0200
+Subject: [PATCH 3/4] Revert "Remove pidfd_supported check"
+
+This reverts commit 2c6472d38c72963a48bf2505e3e504dc2f90a5f6.
+
+Legacy 3.18 kernels have no pidfd_open (ENOSYS). Without the check
+every process registration fails ("pidfd_open for pid N failed;
+errno=38"), lmkd tracks no processes and can never kill anything.
+Fall back to kill() and /proc/<pid> polling when pidfds are missing.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: I9d117dbdb9f329384c58a9c49eaf0b870329095c
+---
+ lmkd.cpp   | 75 ++++++++++++++++++++++++++++++++++++++++++------------
+ reaper.cpp |  5 +++-
+ 2 files changed, 63 insertions(+), 17 deletions(-)
+
+diff --git a/lmkd.cpp b/lmkd.cpp
+index 0d9ee5b..75f9ec1 100644
+--- a/lmkd.cpp
++++ b/lmkd.cpp
+@@ -193,6 +193,7 @@ static struct timespec kswapd_start_tm;
+ 
+ static int level_oomadj[VMPRESS_LEVEL_COUNT];
+ static int mpevfd[VMPRESS_LEVEL_COUNT] = { -1, -1, -1 };
++static bool pidfd_supported;
+ static int last_kill_pid_or_fd = -1;
+ static struct timespec last_kill_tm;
+ enum vmpressure_level prev_level = VMPRESS_LEVEL_LOW;
+@@ -1204,16 +1205,20 @@ static void register_oom_adj_proc(const struct lmk_procprio& proc, struct ucred*
+ 
+     procp = pid_lookup(proc.pid);
+     if (!procp) {
+-        int pidfd = TEMP_FAILURE_RETRY(pidfd_open(proc.pid, 0));
+-        if (pidfd < 0) {
+-            ALOGE("pidfd_open for pid %d failed; errno=%d", proc.pid, errno);
+-            return;
++        int pidfd = -1;
++
++        if (pidfd_supported) {
++            pidfd = TEMP_FAILURE_RETRY(pidfd_open(proc.pid, 0));
++            if (pidfd < 0) {
++                ALOGE("pidfd_open for pid %d failed; errno=%d", proc.pid, errno);
++                return;
++            }
+         }
+ 
+         procp = new (std::nothrow) struct proc();
+         if (!procp) {
+             // Oh, the irony.  May need to rebuild our state.
+-            close(pidfd);
++            if (pidfd >= 0) close(pidfd);
+             return;
+         }
+ 
+@@ -2371,7 +2376,27 @@ static void watchdog_callback() {
+ static Watchdog watchdog(WATCHDOG_TIMEOUT_SEC, watchdog_callback);
+ 
+ static bool is_kill_pending(void) {
+-    return last_kill_pid_or_fd >= 0;
++    char buf[24];
++
++    if (last_kill_pid_or_fd < 0) {
++        return false;
++    }
++
++    if (pidfd_supported) {
++        return true;
++    }
++
++    /* when pidfd is not supported base the decision on /proc/<pid> existence */
++    snprintf(buf, sizeof(buf), "/proc/%d/", last_kill_pid_or_fd);
++    if (access(buf, F_OK) == 0) {
++        return true;
++    }
++
++    return false;
++}
++
++static bool is_waiting_for_kill(void) {
++    return pidfd_supported && last_kill_pid_or_fd >= 0;
+ }
+ 
+ static void stop_wait_for_proc_kill(bool finished) {
+@@ -2401,13 +2426,15 @@ static void stop_wait_for_proc_kill(bool finished) {
+         }
+     }
+ 
+-    /* unregister fd */
+-    if (epoll_ctl(epollfd, EPOLL_CTL_DEL, last_kill_pid_or_fd, &epev)) {
+-        // Log an error and keep going
+-        ALOGE("epoll_ctl for last killed process failed; errno=%d", errno);
++    if (pidfd_supported) {
++        /* unregister fd */
++        if (epoll_ctl(epollfd, EPOLL_CTL_DEL, last_kill_pid_or_fd, &epev)) {
++            // Log an error and keep going
++            ALOGE("epoll_ctl for last killed process failed; errno=%d", errno);
++        }
++        maxevents--;
++        close(last_kill_pid_or_fd);
+     }
+-    maxevents--;
+-    close(last_kill_pid_or_fd);
+ 
+     last_kill_pid_or_fd = -1;
+ }
+@@ -2443,6 +2470,11 @@ static void start_wait_for_proc_kill(int pid_or_fd) {
+ 
+     last_kill_pid_or_fd = pid_or_fd;
+ 
++    if (!pidfd_supported) {
++        /* If pidfd is not supported just store PID and exit */
++        return;
++    }
++
+     epev.events = EPOLLIN;
+     epev.data.ptr = (void *)&kill_done_hinfo;
+     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, last_kill_pid_or_fd, &epev) != 0) {
+@@ -3153,8 +3185,8 @@ update_watermarks:
+     }
+ 
+ no_kill:
+-    /* Do not poll while waiting on pidfd */
+-    if (is_kill_pending()) {
++    /* Do not poll if kernel supports pidfd waiting */
++    if (is_waiting_for_kill()) {
+         /* Pause polling if we are waiting for process death notification */
+         poll_params->update = POLLING_PAUSE;
+         return;
+@@ -3435,7 +3467,7 @@ do_kill:
+ 
+         last_report_tm = curr_tm;
+     }
+-    if (is_kill_pending()) {
++    if (is_waiting_for_kill()) {
+         /* pause polling if we are waiting for process death notification */
+         poll_params->update = POLLING_PAUSE;
+     }
+@@ -3870,6 +3902,7 @@ static int init(void) {
+         .fd = -1,
+     };
+     struct epoll_event epev;
++    int pidfd;
+     int i;
+     int ret;
+ 
+@@ -3959,6 +3992,16 @@ static int init(void) {
+         ALOGE("Failed to read %s: %s", file_data.filename, strerror(errno));
+     }
+ 
++    /* check if kernel supports pidfd_open syscall */
++    pidfd = TEMP_FAILURE_RETRY(pidfd_open(getpid(), 0));
++    if (pidfd < 0) {
++        pidfd_supported = (errno != ENOSYS);
++    } else {
++        pidfd_supported = true;
++        close(pidfd);
++    }
++    ALOGI("Process polling is %s", pidfd_supported ? "supported" : "not supported" );
++
+     if (!lmkd_init_hook()) {
+         ALOGE("Failed to initialize LMKD hooks.");
+         return -1;
+@@ -4068,7 +4111,7 @@ static void mainloop(void) {
+                 call_handler(poll_params.poll_handler, &poll_params, 0);
+             }
+         } else {
+-            if (kill_timeout_ms && is_kill_pending()) {
++            if (kill_timeout_ms && is_waiting_for_kill()) {
+                 clock_gettime(CLOCK_MONOTONIC_COARSE, &curr_tm);
+                 delay = kill_timeout_ms - get_time_diff_ms(&last_kill_tm, &curr_tm);
+                 /* Wait for pidfds notification or kill timeout to expire */
+diff --git a/reaper.cpp b/reaper.cpp
+index 69b6a5e..c056f85 100644
+--- a/reaper.cpp
++++ b/reaper.cpp
+@@ -151,7 +151,10 @@ static bool kill_cgroup_or_process(const Reaper::target_proc& target) {
+         // Most, *but not all* processes are in their own cgroups managed by Android, for example
+         // children of adbd. For these processes, the best thing we can do is kill the individual
+         // process since we don't want to kill the entire cgroup.
+-        return pidfd_send_signal(target.pidfd, SIGKILL, NULL, 0) == 0;
++        if (target.pidfd >= 0) {
++            return pidfd_send_signal(target.pidfd, SIGKILL, NULL, 0) == 0;
++        }
++        return ::kill(target.pid, SIGKILL) == 0;
+     }
+ 
+     return true;
+-- 
+2.51.0
+
