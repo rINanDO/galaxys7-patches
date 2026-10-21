@@ -30,6 +30,7 @@ declare -A patches=(
     ["system/tools/hidl"]="system_tools_hidl"
     ["system/tools/mkbootimg"]="system_tools_mkbootimg"
     ["system/vold"]="system_vold"
+    ["system/zygote"]="system_zygote"
     ["vendor/lineage"]="vendor_lineage"
 )
 
