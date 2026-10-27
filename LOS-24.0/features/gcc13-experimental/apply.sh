@@ -1,23 +1,31 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Applies the experimental GCC 13 kernel patches. Apply the LOS-24.0
+# patches (../../apply.sh) first.
+#
+# Usage: ./apply.sh [source-root]
+#   source-root defaults to the current directory
+#
+# A repo whose patches don't apply is left in the middle of `git am` so it
+# can be resolved by hand; revert.sh cleans that up.
 
-# Array of directories and corresponding patches
-declare -A patches=(
-    ["device/samsung/universal8890-common"]="device_samsung_universal8890-common"
-    ["kernel/samsung/universal8890"]="kernel_samsung_universal8890"
+# When sourced, re-run in a child shell so `exit` and shell options can't
+# leak into (or close) the calling terminal.
+if (return 0 2>/dev/null); then
+    bash "${BASH_SOURCE[0]}" "$@"
+    return
+fi
+
+set -uo pipefail
+source "$(dirname -- "${BASH_SOURCE[0]}")/../../common.sh"
+
+PATCH_SET="gcc13-experimental patches"
+PATCHES_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PATCHED_REPOS=(
+    "device/samsung/universal8890-common   device_samsung_universal8890-common"
+    "kernel/samsung/universal8890          kernel_samsung_universal8890"
 )
 
-# Base path for the patches
-patches_base_path=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
-for dir in "${!patches[@]}"; do
-    cd $dir || { echo "Directory $dir not found"; break; }
-
-    patch_dir=${patches[$dir]}
-    patch_files=($patches_base_path/$patch_dir/*.patch)
-
-    for patch_file in "${patch_files[@]}"; do
-        git am --3way < "$patch_file"
-    done
-
-    cd - > /dev/null
-done
+init apply "${1:-}"
+apply_patches
+finish

@@ -1,54 +1,24 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Reverts the herolte patch set: aborts any unfinished `git am` and resets
+# each patched repository to its manifest revision with `repo sync`.
+#
+# Usage: ./revert.sh [source-root]
+#   source-root defaults to the current directory
+#
+# The repository list lives in common.sh. The optional features/*/ patch sets
+# have their own revert.sh.
 
-# Array of directories and corresponding patches
-declare -A patches=(
-    ["art"]="art"
-    ["bionic"]="bionic"
-    ["bootable/recovery"]="bootable_recovery"
-    ["build/make"]="build_make"
-    ["build/soong"]="build_soong"
-    ["external/perfetto"]="external_perfetto"
-    ["frameworks/av"]="frameworks_av"
-    ["frameworks/base"]="frameworks_base"
-    ["frameworks/native"]="frameworks_native"
-    ["frameworks/hardware/interfaces"]="frameworks_hardware_interfaces"
-    ["hardware/interfaces"]="hardware_interfaces"
-    ["hardware/libhardware_legacy"]="hardware_libhardware_legacy"
-    ["hardware/lineage/compat"]="hardware_lineage_compat"
-    ["hardware/lineage/interfaces"]="hardware_lineage_interfaces"
-    ["packages/modules/Connectivity"]="packages_modules_Connectivity"
-    ["packages/modules/DnsResolver"]="packages_modules_DnsResolver"
-    ["packages/modules/NetworkStack"]="packages_modules_NetworkStack"
-    ["prebuilts/build-tools"]="prebuilts_build-tools"
-    ["system/bpf"]="system_bpf"
-    ["system/core"]="system_core"
-    ["system/linkerconfig"]="system_linkerconfig"
-    ["system/memory/lmkd"]="system_memory_lmkd"
-    ["system/netd"]="system_netd"
-    ["system/security"]="system_security"
-    ["system/sepolicy"]="system_sepolicy"
-    ["system/tools/hidl"]="system_tools_hidl"
-    ["system/tools/mkbootimg"]="system_tools_mkbootimg"
-    ["system/vold"]="system_vold"
-    ["system/zygote"]="system_zygote"
-    ["vendor/lineage"]="vendor_lineage"
-)
+# When sourced, re-run in a child shell so `exit` and shell options can't
+# leak into (or close) the calling terminal.
+if (return 0 2>/dev/null); then
+    bash "${BASH_SOURCE[0]}" "$@"
+    return
+fi
 
-# Base path for the patches
-patches_base_path=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+set -uo pipefail
+source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
 
-for dir in "${!patches[@]}"; do
-    cd $dir || { echo "Directory $dir not found"; exit 1; }
-
-    patch_dir=${patches[$dir]}
-    patch_files=($patches_base_path/$patch_dir/*.patch)
-
-    num_patches=${#patch_files[@]}
-
-    if [ $num_patches -gt 0 ]; then
-        git am --abort
-	repo sync .
-    fi
-
-    cd - > /dev/null
-done
+init revert "${1:-}"
+revert_patches
+finish

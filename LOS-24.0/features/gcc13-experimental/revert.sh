@@ -1,28 +1,31 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Reverts the experimental GCC 13 kernel patches: aborts any unfinished
+# `git am` and resets each patched repository to its manifest revision with
+# `repo sync`.
+#
+# Usage: ./revert.sh [source-root]
+#   source-root defaults to the current directory
+#
+# The LOS-24.0 patches are left in place; ../../revert.sh reverts them.
 
-# Array of directories and corresponding patches
-declare -A patches=(
-    ["device/samsung/universal8890-common"]="device_samsung_universal8890-common"
-    ["kernel/samsung/universal8890"]="kernel_samsung_universal8890"
+# When sourced, re-run in a child shell so `exit` and shell options can't
+# leak into (or close) the calling terminal.
+if (return 0 2>/dev/null); then
+    bash "${BASH_SOURCE[0]}" "$@"
+    return
+fi
+
+set -uo pipefail
+source "$(dirname -- "${BASH_SOURCE[0]}")/../../common.sh"
+
+PATCH_SET="gcc13-experimental patches"
+PATCHES_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PATCHED_REPOS=(
+    "device/samsung/universal8890-common   device_samsung_universal8890-common"
+    "kernel/samsung/universal8890          kernel_samsung_universal8890"
 )
 
-# Base path for the patches
-patches_base_path=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
-for dir in "${!patches[@]}"; do
-    cd $dir || { echo "Directory $dir not found"; break; }
-
-    patch_dir=${patches[$dir]}
-    patch_files=($patches_base_path/$patch_dir/*.patch)
-
-    num_patches=${#patch_files[@]}
-
-    if [ $num_patches -gt 0 ]; then
-        git am --abort 2>/dev/null
-        # Drop only the applied commits; --keep refuses rather than
-        # discarding unrelated uncommitted work in these repos
-        git reset --keep HEAD~$num_patches
-    fi
-
-    cd - > /dev/null
-done
+init revert "${1:-}"
+revert_patches
+finish

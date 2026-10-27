@@ -2,45 +2,40 @@
 
 These instructions assume that:
 
-- you have LineageOS 24.0 sources installed in ```~/android/system```
-  (See <https://github.com/LineageOS/android/tree/lineage-24.0>)
+- the LineageOS 24.0 sources live (or will live) in `~/android/system`
+  (see <https://github.com/LineageOS/android/tree/lineage-24.0>)
+- this repository is cloned in `~/android/system/patches/galaxys7-patches`
+- `git`, `git-lfs`, `repo` and `xmllint` are installed, plus the usual
+  LineageOS build dependencies
 
-  ```#!/bin/bash
-  repo init -u <https://github.com/LineageOS/android.git> -b lineage-24.0 --git-lfs
-  repo sync
-  ```
+All scripts accept the source root as their last argument and default to the
+current directory. Run them directly (`./setup.sh`); sourcing them
+(`. setup.sh`) also works.
 
-- you have cloned this repository in ```~/patches```
+## Quick start: set up everything
 
-## 1. Apply device specific repo's
-
-```#!/bin/bash
-mkdir ~/android/system/.repo/local_manifests
-cp ~/patches/LOS-24.0/herolte-24.0.xml ~/android/system/.repo/local_manifests/
+```bash
 cd ~/android/system
-repo sync
+patches/galaxys7-patches/LOS-24.0/setup.sh
 ```
 
-## 2. Apply the patches
+`setup.sh` does the whole job and can be re-run at any time:
 
-```#!/bin/bash
-cd ~/android/system
-. ~/patches/LOS-24.0/apply.sh
-```
+1. `repo init -b lineage-24.0 --git-lfs` if the directory isn't a checkout yet
+2. `cleanup.sh`: removes local manifests of other devices and drops any
+   previously applied patches (herolte's or another device's)
+3. installs `herolte-24.0.xml` into `.repo/local_manifests/`
+4. `repo sync -d --force-sync`
+5. `apply.sh`
+6. with `--gcc13`: `features/gcc13-experimental/apply.sh`
 
-## 3. Optional, experimental: build the kernel with host GCC 13
+Options: `-y` (don't ask for confirmation), `--force` (see
+[Cleaning up](#cleaning-up)), `-j N` (parallel sync jobs), `--gcc13` (also
+apply the experimental GCC 13 kernel patches).
 
-See [features/gcc13-experimental/README.md](features/gcc13-experimental/README.md)
-for the requirements.
+## Build the ROM
 
-```#!/bin/bash
-cd ~/android/system
-. ~/patches/LOS-24.0/features/gcc13-experimental/apply.sh
-```
-
-## 4. Build the ROM
-
-```#!/bin/bash
+```bash
 cd ~/android/system
 . build/envsetup.sh
 brunch herolte
@@ -48,15 +43,65 @@ brunch herolte
 
 Your build will be put (after many hours) in:
 
-```~/android/system/out/target/product/herolte```
+`~/android/system/out/target/product/herolte`
 
-## How to revert the patches
+## Cleaning up
 
-```#!/bin/bash
+To return the tree to plain LineageOS 24.0, without any local manifest or
+patches:
+
+```bash
 cd ~/android/system
-. ~/patches/LOS-24.0/features/gcc13-experimental/revert.sh
-. ~/patches/LOS-24.0/revert.sh
+patches/galaxys7-patches/LOS-24.0/cleanup.sh
 ```
+
+This works on the whole tree, whichever device it was set up for. It lists
+what it is going to do and asks before doing it:
+
+- local manifests are moved to `.repo/local_manifests.backup/<date>/`
+- unfinished `git am`/rebase/cherry-pick operations are aborted
+- local commits (applied patches) are dropped and every project is synced to
+  its manifest revision; add `--fetch` to also fetch updates from the network
+
+It refuses to continue when a project has uncommitted changes, or when a
+device repo has commits that aren't pushed to any remote. Commit/push or stash
+that work first, or pass `--force` to throw it away.
+
+## Applying or reverting only the patches
+
+When the local manifest is already installed and synced:
+
+```bash
+cd ~/android/system
+patches/galaxys7-patches/LOS-24.0/apply.sh
+patches/galaxys7-patches/LOS-24.0/revert.sh
+```
+
+A repo whose patches don't apply is left in the middle of `git am` so it can
+be resolved by hand; the output points at a log with the details. `revert.sh`
+aborts that and resets the patched repos with `repo sync`.
+
+## Optional, experimental: build the kernel with host GCC 13
+
+See [features/gcc13-experimental/README.md](features/gcc13-experimental/README.md)
+for the requirements. Apply the LOS-24.0 patches first (or use
+`setup.sh --gcc13`):
+
+```bash
+cd ~/android/system
+patches/galaxys7-patches/LOS-24.0/features/gcc13-experimental/apply.sh
+patches/galaxys7-patches/LOS-24.0/features/gcc13-experimental/revert.sh
+```
+
+## Maintaining the patch set
+
+- The patched repositories are listed once, in `common.sh` (`PATCHED_REPOS`).
+  To track a new repo, add a line there and put its `git format-patch` output
+  in the matching directory. A feature's repositories are listed in its own
+  `apply.sh`/`revert.sh`.
+- Device, kernel, hardware and vendor repos are forks, listed in
+  `herolte-24.0.xml`. `create-lineage-24.0-branches.sh` creates and pushes
+  the `lineage-24.0` branch in each `rinando/` repo.
 
 ## What these patches address
 
@@ -161,7 +206,7 @@ live in:
   and `..._arm_arm-linux-androideabi-4.9` (branch `lineage-19.1`; the arm
   one builds the 32-bit compat vDSO), and `vendor_lineage` reverts the
   GCC removal. Building the kernel with the host's GCC 13 instead is
-  kept separately in `../../herolte-gcc-experimental`.
+  kept separately in `features/gcc13-experimental`.
 
 **Explicitly not needed:** unlike gts210wifi, HeroLTE does not use the
 legacy Camera HAL v1 and does not carry (or need) any of the Camera

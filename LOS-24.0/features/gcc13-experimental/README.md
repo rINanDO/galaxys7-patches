@@ -24,16 +24,18 @@ sudo apt-get install -y gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
 Apply the LOS-24.0 patches first, then:
 
-```#!/bin/bash
+```bash
 cd ~/android/system
-. ~/patches/LOS-24.0/features/gcc13-experimental/apply.sh
+patches/galaxys7-patches/LOS-24.0/features/gcc13-experimental/apply.sh
 ```
+
+`../../setup.sh --gcc13` does both in one go.
 
 ## Revert
 
-```#!/bin/bash
+```bash
 cd ~/android/system
-. ~/patches/LOS-24.0/features/gcc13-experimental/revert.sh
+patches/galaxys7-patches/LOS-24.0/features/gcc13-experimental/revert.sh
 ```
 
 ## Contents
